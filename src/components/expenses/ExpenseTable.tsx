@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ExpenseEntry, TransactionType } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import {
+  ArrowUpDown,
   Calendar,
   Check,
   ChevronDown,
@@ -18,13 +19,22 @@ import {
   Lock,
   MoreVertical,
   RefreshCw,
+  RotateCcw,
   Search,
   Sparkles,
   Target,
   Trash2,
   Zap,
 } from 'lucide-react';
-import { useDeleteExpense, useLogExpense, useToggleType } from '@/hooks/useFinancials';
+import {
+  useDeleteExpense,
+  useLogExpense,
+  useToggleType,
+  useSortExpenses,
+  useRestoreExpenseRow,
+  useRestoreExpensesOrder,
+} from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 import { EditExpenseModal } from './EditExpenseModal';
 
 interface ExpenseTableProps {
@@ -52,6 +62,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const [pageSize, setPageSize] = useState(50);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [editingEntry, setEditingEntry] = useState<ExpenseEntry | null>(null);
+  const [sortOrder, setSortOrder] = useState<'sheet' | 'asc' | 'desc'>('asc');
 
   // Rolling Window Controls
   const pastCutoff = useMemo(() => getMonthOffsetDate(referenceDate, -1), [referenceDate]);
@@ -66,6 +77,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const toggleTypeMutation = useToggleType();
   const deleteMutation = useDeleteExpense();
   const logMutation = useLogExpense();
+  const sortExpensesMutation = useSortExpenses();
+  const restoreRowMutation = useRestoreExpenseRow();
+  const restoreOrderMutation = useRestoreExpensesOrder();
+  const { pushUndo } = useUndo();
 
   // Find the transaction nearest to referenceDate (targeting the latest entry on or before referenceDate)
   const nearestEntry = useMemo(() => {
@@ -119,18 +134,24 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
     return baseFilteredExpenses.filter((e) => e.date >= pastCutoff && e.date <= futureCutoff).length;
   }, [baseFilteredExpenses, pastCutoff, futureCutoff]);
 
-  // Effective visible expenses after applying rolling window settings
+  // Effective visible expenses after applying rolling window settings and sorting
   const visibleExpenses = useMemo(() => {
-    if (!isWindowFilterActive) {
-      return baseFilteredExpenses;
+    let filtered = baseFilteredExpenses;
+    if (isWindowFilterActive) {
+      filtered = baseFilteredExpenses.filter((e) => {
+        if (!showEarlier && e.date < pastCutoff) return false;
+        if (!showFuture && e.date > futureCutoff) return false;
+        return true;
+      });
     }
 
-    return baseFilteredExpenses.filter((e) => {
-      if (!showEarlier && e.date < pastCutoff) return false;
-      if (!showFuture && e.date > futureCutoff) return false;
-      return true;
-    });
-  }, [baseFilteredExpenses, isWindowFilterActive, showEarlier, showFuture, pastCutoff, futureCutoff]);
+    if (sortOrder === 'asc') {
+      return [...filtered].sort((a, b) => a.date.localeCompare(b.date) || a.rowIndex - b.rowIndex);
+    } else if (sortOrder === 'desc') {
+      return [...filtered].sort((a, b) => b.date.localeCompare(a.date) || b.rowIndex - a.rowIndex);
+    }
+    return filtered;
+  }, [baseFilteredExpenses, isWindowFilterActive, showEarlier, showFuture, pastCutoff, futureCutoff, sortOrder]);
 
   // Pagination slice
   const totalPages = Math.ceil(visibleExpenses.length / pageSize) || 1;
@@ -174,8 +195,23 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
     }
   };
 
-  // Handle 1-Click Type cycle: DEBIT -> CREDIT -> SETTLEMENT -> DEBIT
-  const handleCycleType = (entry: ExpenseEntry) => {
+  // Permanently auto-sort all expenses in Google Sheets chronologically by date
+  const handleAutoSort = async () => {
+    try {
+      const res = await sortExpensesMutation.mutateAsync();
+      pushUndo({
+        description: `Auto-sorted ${res.sortedCount} expenses chronologically by date in Google Sheets`,
+        undo: async () => {
+          await restoreOrderMutation.mutateAsync(res.previousOrder);
+        },
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Failed to auto-sort expenses in Google Sheets');
+    }
+  };
+
+  // Handle 1-Click Type cycle: DEBIT -> CREDIT -> SETTLEMENT -> DEBIT with Undo
+  const handleCycleType = async (entry: ExpenseEntry) => {
     const cycleMap: Record<TransactionType, TransactionType> = {
       DEBIT: 'CREDIT',
       CREDIT: 'SETTLEMENT',
@@ -184,24 +220,73 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       OTHER: 'DEBIT',
       DIRECT: 'DEBIT',
     };
-    const nextType = cycleMap[entry.type] || 'DEBIT';
-    toggleTypeMutation.mutate({
+    const prevType = entry.type;
+    const nextType = cycleMap[prevType] || 'DEBIT';
+
+    await toggleTypeMutation.mutateAsync({
       rowIndex: entry.rowIndex,
       newType: nextType,
     });
+
+    pushUndo({
+      description: `Cycled Row ${entry.rowIndex} type from ${prevType} to ${nextType}`,
+      undo: async () => {
+        await toggleTypeMutation.mutateAsync({
+          rowIndex: entry.rowIndex,
+          newType: prevType,
+        });
+      },
+    });
   };
 
-  // Handle Clone
+  // Handle Clone with Undo
   const handleClone = async (entry: ExpenseEntry) => {
-    await logMutation.mutateAsync({
+    const res = await logMutation.mutateAsync({
       date: entry.date,
       description: `${entry.description} (Copy)`,
       amount: entry.amount,
       type: entry.type,
     });
+
+    if (res?.newRow) {
+      const newRowIdx = res.newRow;
+      pushUndo({
+        description: `Cloned: ${entry.description} (Row ${newRowIdx})`,
+        undo: async () => {
+          await deleteMutation.mutateAsync(newRowIdx);
+        },
+      });
+    }
   };
 
-  // Handle Bulk Delete
+  // Single Row Delete with Undo
+  const handleDeleteRow = async (entry: ExpenseEntry) => {
+    if (
+      confirm(
+        `Delete Row ${entry.rowIndex} (${entry.description} - ${formatINR(entry.amount)})? Google Sheets will re-index downstream formulas.`
+      )
+    ) {
+      const backup = { ...entry };
+      await deleteMutation.mutateAsync(backup.rowIndex);
+
+      pushUndo({
+        description: `Deleted Row ${backup.rowIndex}: ${backup.description} (${formatINR(backup.amount)})`,
+        undo: async () => {
+          await restoreRowMutation.mutateAsync({
+            rowIndex: backup.rowIndex,
+            data: {
+              date: backup.date,
+              description: backup.description,
+              amount: backup.amount,
+              type: backup.type,
+            },
+          });
+        },
+      });
+    }
+  };
+
+  // Handle Bulk Delete with Undo
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) return;
     if (
@@ -209,11 +294,32 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         `Are you sure you want to delete ${selectedRows.length} selected row(s)? Google Sheets will re-index downstream formulas.`
       )
     ) {
+      const targets = selectedRows
+        .map((r) => expenses.find((e) => e.rowIndex === r))
+        .filter(Boolean) as ExpenseEntry[];
+
       const sorted = [...selectedRows].sort((a, b) => b - a);
       for (const r of sorted) {
         await deleteMutation.mutateAsync(r);
       }
       setSelectedRows([]);
+
+      pushUndo({
+        description: `Deleted ${targets.length} rows in bulk`,
+        undo: async () => {
+          for (const t of targets) {
+            await restoreRowMutation.mutateAsync({
+              rowIndex: t.rowIndex,
+              data: {
+                date: t.date,
+                description: t.description,
+                amount: t.amount,
+                type: t.type,
+              },
+            });
+          }
+        },
+      });
     }
   };
 
@@ -253,6 +359,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
 
         {/* Action Pills & Focus Button */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Focus Today */}
           <button
             onClick={handleJumpToNearest}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium border border-amber-500/20 transition-all shadow-sm active:scale-95"
@@ -260,6 +367,21 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
           >
             <Target className="h-3.5 w-3.5 text-amber-500" />
             <span>Focus Today / Nearest</span>
+          </button>
+
+          {/* Auto-Sort Sheet Button */}
+          <button
+            onClick={handleAutoSort}
+            disabled={sortExpensesMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium border border-amber-500/20 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            title="Sort rows chronologically by date in Google Sheets (re-indexing Column E continuation formulas)"
+          >
+            {sortExpensesMutation.isPending ? (
+              <RefreshCw className="h-3.5 w-3.5 text-amber-500 animate-spin" />
+            ) : (
+              <ArrowUpDown className="h-3.5 w-3.5 text-amber-500" />
+            )}
+            <span>{sortExpensesMutation.isPending ? 'Sorting...' : 'Auto-Sort by Date'}</span>
           </button>
 
           {/* Rolling Window Scope Switcher */}
@@ -313,6 +435,32 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* View Sort Selector */}
+          <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+            <span className="text-[10px] font-mono text-zinc-500 px-1.5 flex items-center gap-1">
+              <ArrowUpDown className="h-3 w-3" />
+              <span>View:</span>
+            </span>
+            {[
+              { id: 'asc', label: 'Date Asc' },
+              { id: 'desc', label: 'Date Desc' },
+              { id: 'sheet', label: 'Sheet' },
+            ].map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSortOrder(s.id as any)}
+                className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  sortOrder === s.id
+                    ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title={`Sort table view by ${s.label}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
           {/* Type Filter */}
           <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
             {['ALL', 'DEBIT', 'CREDIT', 'SETTLEMENT'].map((t) => (
@@ -531,15 +679,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                           <Copy className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => {
-                            if (
-                              confirm(
-                                `Delete Row ${entry.rowIndex} (${entry.description} - ${formatINR(entry.amount)})? Google Sheets formulas will re-index downstream.`
-                              )
-                            ) {
-                              deleteMutation.mutate(entry.rowIndex);
-                            }
-                          }}
+                          onClick={() => handleDeleteRow(entry)}
                           disabled={deleteMutation.isPending}
                           className="rounded-lg p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                           title="Delete Row"

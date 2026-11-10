@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { TransactionType } from '@/lib/types';
-import { useLogExpense } from '@/hooks/useFinancials';
+import { useLogExpense, useDeleteExpense } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 import {
   Bookmark,
   Check,
@@ -52,6 +53,8 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
   const [newPresetType, setNewPresetType] = useState<TransactionType>('DEBIT');
 
   const logMutation = useLogExpense();
+  const deleteMutation = useDeleteExpense();
+  const { pushUndo } = useUndo();
 
   // Load user presets from localStorage
   useEffect(() => {
@@ -140,12 +143,22 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
     const loggedDesc = description.trim();
     const loggedAmt = Number(amount);
 
-    await logMutation.mutateAsync({
+    const res = await logMutation.mutateAsync({
       date,
       description: loggedDesc,
       amount: loggedAmt,
       type,
     });
+
+    if (res?.newRow) {
+      const createdRow = res.newRow;
+      pushUndo({
+        description: `Logged: ${loggedDesc} (${formatINR(loggedAmt)}) at Row ${createdRow}`,
+        undo: async () => {
+          await deleteMutation.mutateAsync(createdRow);
+        },
+      });
+    }
 
     setLogSuccessMessage(`Logged: ${loggedDesc} (${formatINR(loggedAmt)})`);
     setJustLogged(true);

@@ -296,6 +296,181 @@ export async function deleteExpenseRow(rowIndex: number): Promise<void> {
 }
 
 /**
+ * Inserts a transaction at a specific row index (for restoring deleted row during Undo)
+ * and re-establishes Column E formulas
+ */
+export async function insertExpenseRowAt(
+  rowIndex: number,
+  data: {
+    date: string;
+    description: string;
+    amount: number;
+    type: TransactionType;
+  }
+): Promise<void> {
+  const sheets = getSheets();
+
+  // 1. Insert row dimension
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          insertDimension: {
+            range: {
+              sheetId: 0,
+              dimension: 'ROWS',
+              startIndex: rowIndex - 1,
+              endIndex: rowIndex,
+            },
+            inheritFromBefore: true,
+          },
+        },
+      ],
+    },
+  });
+
+  // 2. Fetch new lastRow
+  const metaRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Expenses!A:A',
+  });
+  const lastRow = (metaRes.data.values || []).length;
+
+  // 3. Write data to inserted row
+  const formula = buildBalanceFormula(rowIndex);
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A${rowIndex}:E${rowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[data.date, data.description, data.amount, data.type, formula]],
+    },
+  });
+
+  // 4. Regenerate downstream Column E formulas from rowIndex to lastRow
+  if (rowIndex < lastRow) {
+    const downstreamFormulas: string[][] = [];
+    for (let r = rowIndex + 1; r <= lastRow; r++) {
+      downstreamFormulas.push([buildBalanceFormula(r)]);
+    }
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!E${rowIndex + 1}:E${lastRow}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: downstreamFormulas,
+      },
+    });
+  }
+}
+
+/**
+ * Automatically sorts all transactions in Expenses tab (Row 3 to lastRow)
+ * chronologically by date, preserving dynamic Column E continuation formulas.
+ * Returns previousOrder for full Undo capability.
+ */
+export async function sortExpensesSheet(): Promise<{
+  sortedCount: number;
+  previousOrder: Array<[any, any, any, any]>;
+}> {
+  const sheets = getSheets();
+
+  const metaRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Expenses!A:A',
+  });
+  const lastRow = (metaRes.data.values || []).length;
+  if (lastRow < 3) {
+    return { sortedCount: 0, previousOrder: [] };
+  }
+
+  // Fetch all transaction rows A3:D{lastRow}
+  const dataRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A3:D${lastRow}`,
+    valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+
+  const rawRows = dataRes.data.values || [];
+  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r) => [
+    r[0] ?? '',
+    r[1] ?? '',
+    r[2] ?? 0,
+    r[3] ?? 'DEBIT',
+  ]);
+
+  // Index rows for stable sorting
+  const indexed = rawRows.map((r, idx) => ({
+    origIdx: idx,
+    date: normalizeDate(r[0]),
+    row: [r[0] ?? '', r[1] ?? '', r[2] ?? 0, r[3] ?? 'DEBIT'],
+  }));
+
+  indexed.sort((a, b) => {
+    const cmp = a.date.localeCompare(b.date);
+    if (cmp !== 0) return cmp;
+    return a.origIdx - b.origIdx;
+  });
+
+  // Re-write A3:E{lastRow} with sorted values and regenerated dynamic Column E formulas
+  const valuesWithFormulas = indexed.map((item, idx) => {
+    const rowNum = 3 + idx;
+    return [
+      item.row[0],
+      item.row[1],
+      item.row[2],
+      item.row[3],
+      buildBalanceFormula(rowNum),
+    ];
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A3:E${lastRow}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: valuesWithFormulas,
+    },
+  });
+
+  return {
+    sortedCount: indexed.length,
+    previousOrder,
+  };
+}
+
+/**
+ * Restores previous row order in Expenses tab (e.g. from Undo sort)
+ */
+export async function restoreExpensesOrder(
+  previousOrder: Array<[any, any, any, any]>
+): Promise<void> {
+  const sheets = getSheets();
+  const lastRow = 2 + previousOrder.length;
+
+  const valuesWithFormulas = previousOrder.map((r, idx) => {
+    const rowNum = 3 + idx;
+    return [
+      r[0],
+      r[1],
+      r[2],
+      r[3],
+      buildBalanceFormula(rowNum),
+    ];
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A3:E${lastRow}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: valuesWithFormulas,
+    },
+  });
+}
+
+/**
  * Reads peer-to-peer expense split matrix from the Ledger tab
  */
 export async function getPeerLedgerFromSheet() {

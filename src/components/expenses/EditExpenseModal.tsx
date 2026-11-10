@@ -5,6 +5,7 @@ import { ExpenseEntry, TransactionType } from '@/lib/types';
 import { formatINR } from '@/lib/date-utils';
 import { Lock, Save, X } from 'lucide-react';
 import { useUpdateExpense } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 
 interface EditExpenseModalProps {
   entry: ExpenseEntry;
@@ -18,18 +19,38 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
   const [type, setType] = useState<TransactionType>(entry.type);
 
   const updateMutation = useUpdateExpense();
+  const { pushUndo } = useUndo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const prevData = {
+      date: entry.date,
+      description: entry.description,
+      amount: entry.amount,
+      type: entry.type,
+    };
+    const newAmount = Number(amount);
+
     await updateMutation.mutateAsync({
       rowIndex: entry.rowIndex,
       data: {
         date,
         description,
-        amount: Number(amount),
+        amount: newAmount,
         type,
       },
     });
+
+    pushUndo({
+      description: `Edited Row ${entry.rowIndex}: ${description} (${formatINR(newAmount)})`,
+      undo: async () => {
+        await updateMutation.mutateAsync({
+          rowIndex: entry.rowIndex,
+          data: prevData,
+        });
+      },
+    });
+
     onClose();
   };
 

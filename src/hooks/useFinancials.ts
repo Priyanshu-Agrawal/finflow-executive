@@ -247,3 +247,85 @@ export function useLoanAction() {
     },
   });
 }
+
+export function useSortExpenses() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/expenses/sort', {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to sort expenses');
+      }
+      return res.json() as Promise<{
+        success: boolean;
+        message: string;
+        sortedCount: number;
+        previousOrder: Array<[any, any, any, any]>;
+      }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financials'] });
+    },
+  });
+}
+
+export function useRestoreExpenseRow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      rowIndex,
+      data,
+    }: {
+      rowIndex: number;
+      data: { date: string; description: string; amount: number; type: TransactionType };
+    }) => {
+      const res = await fetch('/api/expenses/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'restore_row',
+          rowIndex,
+          data,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to restore deleted row');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financials'] });
+    },
+  });
+}
+
+export function useRestoreExpensesOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (previousOrder: Array<[any, any, any, any]>) => {
+      const res = await fetch('/api/expenses/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'restore_order',
+          previousOrder,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to restore expenses order');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financials'] });
+    },
+  });
+}

@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { DuplicateGroup, ExpenseEntry } from '@/lib/types';
 import { formatINR } from '@/lib/date-utils';
 import { AlertCircle, ChevronDown, ChevronUp, Copy, Trash2, CheckCircle2 } from 'lucide-react';
-import { useDeleteExpense } from '@/hooks/useFinancials';
+import { useDeleteExpense, useRestoreExpenseRow } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 
 interface DuplicateAlertBannerProps {
   duplicates: DuplicateGroup[];
@@ -14,6 +15,8 @@ interface DuplicateAlertBannerProps {
 export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: DuplicateAlertBannerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const deleteMutation = useDeleteExpense();
+  const restoreRowMutation = useRestoreExpenseRow();
+  const { pushUndo } = useUndo();
 
   if (!duplicates || duplicates.length === 0) {
     return null;
@@ -82,9 +85,24 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
                 {group.rows.slice(1).map((dupRow) => (
                   <button
                     key={dupRow.rowIndex}
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm(`Delete duplicate Row ${dupRow.rowIndex} (${dupRow.description} - ${formatINR(dupRow.amount)})?`)) {
-                        deleteMutation.mutate(dupRow.rowIndex);
+                        const backup = { ...dupRow };
+                        await deleteMutation.mutateAsync(backup.rowIndex);
+                        pushUndo({
+                          description: `Deleted Duplicate Row ${backup.rowIndex}: ${backup.description} (${formatINR(backup.amount)})`,
+                          undo: async () => {
+                            await restoreRowMutation.mutateAsync({
+                              rowIndex: backup.rowIndex,
+                              data: {
+                                date: backup.date,
+                                description: backup.description,
+                                amount: backup.amount,
+                                type: backup.type,
+                              },
+                            });
+                          },
+                        });
                       }
                     }}
                     disabled={deleteMutation.isPending}

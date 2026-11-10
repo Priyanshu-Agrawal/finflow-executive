@@ -9,8 +9,10 @@ import {
   TransactionType,
 } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
-import { useUpdateExpense, useToggleType } from '@/hooks/useFinancials';
+import { useUpdateExpense, useToggleType, useSortExpenses, useRestoreExpensesOrder } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 import {
+  ArrowUpDown,
   Check,
   ChevronDown,
   Download,
@@ -23,6 +25,7 @@ import {
   Lock,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
   Table,
   TableProperties,
@@ -58,6 +61,9 @@ export function ExcelSpreadsheet({
 
   const updateMutation = useUpdateExpense();
   const toggleMutation = useToggleType();
+  const sortExpensesMutation = useSortExpenses();
+  const restoreOrderMutation = useRestoreExpensesOrder();
+  const { pushUndo } = useUndo();
 
   const editInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -188,6 +194,13 @@ export function ExcelSpreadsheet({
       }
     }
 
+    const prevData = {
+      date: entry.date,
+      description: entry.description,
+      amount: entry.amount,
+      type: entry.type,
+    };
+
     try {
       await updateMutation.mutateAsync({
         rowIndex: row,
@@ -195,6 +208,16 @@ export function ExcelSpreadsheet({
       });
       setSaveSuccessMsg(`Cell ${col}${row} saved`);
       setTimeout(() => setSaveSuccessMsg(''), 3000);
+
+      pushUndo({
+        description: `Updated Cell ${col}${row}: "${editValue}"`,
+        undo: async () => {
+          await updateMutation.mutateAsync({
+            rowIndex: row,
+            data: prevData,
+          });
+        },
+      });
     } catch (err) {
       console.error('Failed to commit cell edit', err);
     }
@@ -357,6 +380,37 @@ export function ExcelSpreadsheet({
                 </button>
               </form>
             </>
+          )}
+
+          {/* Auto-Sort Sheet Button */}
+          {activeTab === 'expenses' && (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await sortExpensesMutation.mutateAsync();
+                  pushUndo({
+                    description: `Auto-sorted ${res.sortedCount} expenses chronologically by date in Google Sheets`,
+                    undo: async () => {
+                      await restoreOrderMutation.mutateAsync(res.previousOrder);
+                    },
+                  });
+                } catch (err: any) {
+                  alert(err?.message || 'Failed to auto-sort expenses in Google Sheets');
+                }
+              }}
+              disabled={sortExpensesMutation.isPending}
+              className="flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
+              title="Permanently sort expenses chronologically by date in Google Sheets"
+            >
+              {sortExpensesMutation.isPending ? (
+                <RefreshCw className="h-3.5 w-3.5 text-amber-500 animate-spin" />
+              ) : (
+                <ArrowUpDown className="h-3.5 w-3.5 text-amber-500" />
+              )}
+              <span className="hidden sm:inline">
+                {sortExpensesMutation.isPending ? 'Sorting...' : 'Auto-Sort Date'}
+              </span>
+            </button>
           )}
 
           {/* Export CSV */}

@@ -143,9 +143,10 @@ export function computeLoanPortfolio(loanRows: RawLoanRow[], b2RawValue: number,
   const bcaCurrent = bcaBaseline - bcaPaid;
 
   // 2. Bike loan (Royal Enfield Meteor Loan)
-  // Initial: 153022, Current as of Nov 2026: 105938
+  // Initial: 153022. With Dec 2026 EMI (₹11,770.92) prepaid on Nov 06,
+  // 5 of 13 installments completed (₹58,855 paid), 8 remaining (₹94,167 due).
   const bikeInitial = 153022;
-  const bikeCurrent = 105938;
+  const bikeCurrent = 94167;
   const bikePaid = bikeInitial - bikeCurrent;
 
   return [
@@ -160,8 +161,8 @@ export function computeLoanPortfolio(loanRows: RawLoanRow[], b2RawValue: number,
       progressPercent: Math.round((bikePaid / bikeInitial) * 100),
       isPaidOff: false,
       monthlyEmi: 11770.92,
-      targetPayoffDate: '2027-08-02',
-      notes: 'Amortizes at ₹11,770.92/mo. Debt-free milestone in Aug 2027.',
+      targetPayoffDate: '2027-07-02',
+      notes: 'Amortizes at ₹11,770.92/mo. Dec 2026 EMI prepaid early. Debt-free milestone accelerated to Jul 2027.',
     },
     {
       id: 'bca',

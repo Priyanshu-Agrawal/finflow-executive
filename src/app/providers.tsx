@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UndoProvider } from '@/context/UndoContext';
+import { UndoToast } from '@/components/common/UndoToast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -17,5 +19,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UndoProvider>
+        {children}
+        <UndoToast />
+      </UndoProvider>
+    </QueryClientProvider>
+  );
 }

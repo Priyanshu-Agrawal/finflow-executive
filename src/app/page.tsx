@@ -9,17 +9,14 @@ import { BalanceTimeline } from '@/components/dashboard/BalanceTimeline';
 import { SpendingBreakdown } from '@/components/dashboard/SpendingBreakdown';
 import { ExpenseTable } from '@/components/expenses/ExpenseTable';
 import { ExcelSpreadsheet } from '@/components/excel/ExcelSpreadsheet';
-import { BcaCyclePanel } from '@/components/loans/BcaCyclePanel';
 import { LoanPortfolio } from '@/components/loans/LoanPortfolio';
 import { MilestoneTimeline } from '@/components/loans/MilestoneTimeline';
 import { LoanSimulator } from '@/components/loans/LoanSimulator';
 import { PeerLedgerTable } from '@/components/ledger/PeerLedgerTable';
-import { MeteorHub } from '@/components/meteor/MeteorHub';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
 import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import {
   AlertCircle,
-  Compass,
   CreditCard,
   FileSpreadsheet,
   Gauge,
@@ -36,7 +33,7 @@ export default function DashboardPage() {
   const [referenceDate, setReferenceDate] = useState('2026-11-10');
   const [generalBudget, setGeneralBudget] = useState(15000);
   const [electricityBudget, setElectricityBudget] = useState(3200);
-  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'expenses' | 'excel' | 'loans' | 'ledger' | 'meteor'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'expenses' | 'excel' | 'loans' | 'ledger'>('overview');
 
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   const [isEmiSchedulerOpen, setIsEmiSchedulerOpen] = useState(false);
@@ -47,10 +44,6 @@ export default function DashboardPage() {
     electricityBudget
   );
 
-  const bikeLoan = data?.loans?.find(
-    (l) => l.name.toLowerCase().includes('bike') || l.id === 'bike'
-  );
-
   const tabItems = [
     { id: 'overview', label: 'Overview & Cash Flow', icon: LineChart },
     { id: 'budget', label: 'Budget Burn (₹15k)', icon: Gauge, badge: '525/d' },
@@ -58,7 +51,6 @@ export default function DashboardPage() {
     { id: 'excel', label: 'Excel Mode', icon: TableProperties, isGreen: true },
     { id: 'loans', label: 'Loans & Payoff', icon: CreditCard },
     { id: 'ledger', label: 'Peer Split', icon: Users },
-    { id: 'meteor', label: 'Meteor 350', icon: Compass },
   ];
 
   return (
@@ -166,8 +158,13 @@ export default function DashboardPage() {
                 {/* Spending Outflows & Discretionary Leaks */}
                 <SpendingBreakdown categories={data.spendingCategories} />
 
-                {/* Active BCA Education Cycle */}
-                <BcaCyclePanel bcaCycle={data.bcaCycle} />
+                {/* Unified Liabilities Portfolio (All Loans Clickable) */}
+                <LoanPortfolio
+                  loans={data.loans}
+                  referenceDate={referenceDate}
+                  recentExpenses={data.expenses}
+                  b2RawValue={data.bcaCycle?.b2Value}
+                />
 
                 {/* Milestone Roadmap */}
                 <MilestoneTimeline />
@@ -203,8 +200,6 @@ export default function DashboardPage() {
                   expenses={data.expenses}
                   loans={data.loans}
                   peerLedger={data.peerLedger}
-                  meteorAccessories={data.meteorAccessories}
-                  meteorCosts={data.meteorCosts}
                   onOpenQuickLog={() => setIsQuickLogOpen(true)}
                 />
               </div>
@@ -213,8 +208,12 @@ export default function DashboardPage() {
             {/* Tab: Loans & Amortization */}
             {activeTab === 'loans' && (
               <div className="space-y-6 animate-in fade-in duration-200">
-                <BcaCyclePanel bcaCycle={data.bcaCycle} />
-                <LoanPortfolio loans={data.loans} />
+                <LoanPortfolio
+                  loans={data.loans}
+                  referenceDate={referenceDate}
+                  recentExpenses={data.expenses}
+                  b2RawValue={data.bcaCycle?.b2Value}
+                />
                 <MilestoneTimeline />
                 <LoanSimulator />
               </div>
@@ -224,17 +223,6 @@ export default function DashboardPage() {
             {activeTab === 'ledger' && (
               <div className="animate-in fade-in duration-200">
                 <PeerLedgerTable entries={data.peerLedger || []} />
-              </div>
-            )}
-
-            {/* Tab: Meteor 350 Asset Hub */}
-            {activeTab === 'meteor' && (
-              <div className="animate-in fade-in duration-200">
-                <MeteorHub
-                  accessories={data.meteorAccessories || []}
-                  costs={data.meteorCosts || []}
-                  bikeLoan={bikeLoan}
-                />
               </div>
             )}
           </>

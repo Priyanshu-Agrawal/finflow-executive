@@ -442,3 +442,20 @@ export async function resetBCALoanToBaseline(): Promise<void> {
   });
 }
 
+/**
+ * Updates a cell directly in the Loans sheet (e.g. Loans!D2 or Loans!C2)
+ */
+export async function updateLoanCell(cellRange: string, value: any): Promise<void> {
+  const sheets = getSheets();
+  const cleanRange = cellRange.startsWith('Loans!') ? cellRange : `Loans!${cellRange}`;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: cleanRange,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[value]],
+    },
+  });
+}
+

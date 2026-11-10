@@ -6,8 +6,6 @@ import {
   LoanStatus,
   RawLoanRow,
   PeerLedgerEntry,
-  MeteorAccessory,
-  MeteorCapitalCost,
   TransactionType,
 } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
@@ -35,19 +33,15 @@ interface ExcelSpreadsheetProps {
   expenses: ExpenseEntry[];
   loans: LoanStatus[];
   peerLedger: PeerLedgerEntry[];
-  meteorAccessories: MeteorAccessory[];
-  meteorCosts: MeteorCapitalCost[];
   onOpenQuickLog?: () => void;
 }
 
-type SheetTab = 'expenses' | 'loans' | 'ledger' | 'meteor';
+type SheetTab = 'expenses' | 'loans' | 'ledger';
 
 export function ExcelSpreadsheet({
   expenses,
   loans,
   peerLedger,
-  meteorAccessories,
-  meteorCosts,
   onOpenQuickLog,
 }: ExcelSpreadsheetProps) {
   const [activeTab, setActiveTab] = useState<SheetTab>('expenses');
@@ -248,14 +242,6 @@ export function ExcelSpreadsheet({
       peerLedger.forEach((p) => {
         rows.push([p.rowIndex, p.date, p.description, p.splitWith, p.amount, p.perPersonShare]);
       });
-    } else if (activeTab === 'meteor') {
-      rows.push(['Type', 'Item Name', 'Variant / Details', 'RE Official', 'Aftermarket']);
-      meteorCosts.forEach((c) => {
-        rows.push(['Capital Invoice', c.label, 'On-Road Cost', c.amount, '']);
-      });
-      meteorAccessories.forEach((a) => {
-        rows.push(['Accessory', a.name, a.variant, a.rePrice, a.afterMarketPrice]);
-      });
     }
 
     const csvContent =
@@ -332,16 +318,6 @@ export function ExcelSpreadsheet({
               }`}
             >
               Ledger
-            </button>
-            <button
-              onClick={() => setActiveTab('meteor')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                activeTab === 'meteor'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Meteor
             </button>
           </div>
         </div>
@@ -728,52 +704,6 @@ export function ExcelSpreadsheet({
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Meteor */}
-        {activeTab === 'meteor' && (
-          <div className="p-4 space-y-4 font-sans">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2 font-mono">
-              <Table className="h-4 w-4 text-emerald-400" />
-              Sheet 'Meteor' • Capital Purchase Invoice & Accessories Catalog
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-slate-800 overflow-hidden">
-                <div className="bg-slate-900 p-2 text-xs font-bold text-slate-300 border-b border-slate-800">
-                  On-Road Vehicle Invoices
-                </div>
-                <table className="w-full text-xs font-mono">
-                  <tbody className="divide-y divide-slate-800/80">
-                    {meteorCosts.map((c, i) => (
-                      <tr key={i} className="hover:bg-slate-900/50">
-                        <td className="p-2 text-slate-300 font-sans">{c.label}</td>
-                        <td className="p-2 text-right text-white font-bold">{formatINR(c.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="rounded-xl border border-slate-800 overflow-hidden">
-                <div className="bg-slate-900 p-2 text-xs font-bold text-slate-300 border-b border-slate-800">
-                  Accessories Catalog
-                </div>
-                <table className="w-full text-xs font-mono">
-                  <tbody className="divide-y divide-slate-800/80">
-                    {meteorAccessories.map((a, i) => (
-                      <tr key={i} className="hover:bg-slate-900/50">
-                        <td className="p-2 text-slate-300 font-sans">{a.name}</td>
-                        <td className="p-2 text-right text-emerald-400">₹{a.rePrice}</td>
-                        <td className="p-2 text-right text-slate-500">
-                          {a.afterMarketPrice ? `₹${a.afterMarketPrice}` : '--'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         )}

@@ -190,3 +190,39 @@ export function useResetBCA() {
     },
   });
 }
+
+export interface LoanActionInput {
+  action: 'log_payment' | 'external_payment' | 'settle_loan' | 'settle_from_expense' | 'update_due' | 'reset_bca';
+  loanId?: string;
+  loanName?: string;
+  columnLetter?: string;
+  amount?: number;
+  date?: string;
+  payer?: string;
+  notes?: string;
+  cellRange?: string;
+  value?: number;
+  expenseRowIndex?: number;
+}
+
+export function useLoanAction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: LoanActionInput) => {
+      const res = await fetch('/api/loans/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to execute loan action');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financials'] });
+    },
+  });
+}

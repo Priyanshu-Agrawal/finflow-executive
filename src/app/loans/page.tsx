@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { Navbar } from '@/components/layout/Navbar';
-import { BcaCyclePanel } from '@/components/loans/BcaCyclePanel';
 import { LoanPortfolio } from '@/components/loans/LoanPortfolio';
 import { MilestoneTimeline } from '@/components/loans/MilestoneTimeline';
 import { LoanSimulator } from '@/components/loans/LoanSimulator';
@@ -62,16 +61,18 @@ export default function LoansPage() {
         {/* Content */}
         {data && (
           <>
-            {/* 1. Active BCA Cycle Panel with Reset Button */}
-            <BcaCyclePanel bcaCycle={data.bcaCycle} />
+            {/* Unified Liabilities Portfolio (All 7 Loans Clickable) */}
+            <LoanPortfolio
+              loans={data.loans}
+              referenceDate={referenceDate}
+              recentExpenses={data.expenses}
+              b2RawValue={data.bcaCycle?.b2Value}
+            />
 
-            {/* 2. Portfolio Health Cards (7 Loans) */}
-            <LoanPortfolio loans={data.loans} />
-
-            {/* 3. Milestone Timeline */}
+            {/* Milestone Timeline */}
             <MilestoneTimeline />
 
-            {/* 4. Interactive Loan & Interest Simulator */}
+            {/* Interactive Loan & Interest Simulator */}
             <LoanSimulator />
           </>
         )}

@@ -60,8 +60,6 @@ export default function ExcelPage() {
             expenses={data.expenses || []}
             loans={data.loans || []}
             peerLedger={data.peerLedger || []}
-            meteorAccessories={data.meteorAccessories || []}
-            meteorCosts={data.meteorCosts || []}
             onOpenQuickLog={() => setIsQuickLogOpen(true)}
           />
         )}

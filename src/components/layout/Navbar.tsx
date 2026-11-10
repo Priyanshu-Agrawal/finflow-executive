@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Calendar,
-  Compass,
   CreditCard,
   FileSpreadsheet,
   Grid,
   Home,
+  LogOut,
   Menu,
   MoreHorizontal,
   Plus,
@@ -21,6 +21,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { formatDisplayDate } from '@/lib/date-utils';
 
 interface NavbarProps {
@@ -40,9 +41,18 @@ export function Navbar({
   onRefresh,
   isRefreshing,
 }: NavbarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showMobileMore, setShowMobileMore] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    router.push('/login');
+    router.refresh();
+  };
 
   const navLinks = [
     { name: 'Dashboard', href: '/', icon: Home },
@@ -50,7 +60,6 @@ export function Navbar({
     { name: 'Excel Mode', href: '/excel', icon: TableProperties, isExcel: true },
     { name: 'Loans & Payoff', href: '/loans', icon: CreditCard },
     { name: 'Peer Split', href: '/ledger', icon: Users },
-    { name: 'Meteor 350', href: '/meteor', icon: Compass },
   ];
 
   const handleDatePreset = (preset: 'today' | 'nov10') => {
@@ -217,6 +226,15 @@ export function Navbar({
               </button>
             )}
 
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="hidden sm:flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+              title="Sign Out of Executive Cockpit"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+
             {/* Mobile More Drawer Button */}
             <button
               onClick={() => setShowMobileMore(!showMobileMore)}
@@ -254,8 +272,8 @@ export function Navbar({
                 );
               })}
             </div>
-            {onOpenEmiScheduler && (
-              <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-col gap-2">
+              {onOpenEmiScheduler && (
                 <button
                   onClick={() => {
                     setShowMobileMore(false);
@@ -266,8 +284,15 @@ export function Navbar({
                   <Sliders className="h-4 w-4 text-indigo-400" />
                   <span>Open EMI Scheduler</span>
                 </button>
-              </div>
-            )}
+              )}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-500/20 bg-rose-950/20 py-2.5 text-xs font-bold text-rose-300 hover:bg-rose-900/30 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         )}
       </header>

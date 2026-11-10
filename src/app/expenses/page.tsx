@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { Navbar } from '@/components/layout/Navbar';
 import { ExpenseTable } from '@/components/expenses/ExpenseTable';
-import { DuplicateAlertBanner } from '@/components/expenses/DuplicateAlertBanner';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
 import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import { AlertCircle, FileSpreadsheet, Loader2, Plus, Sliders, X } from 'lucide-react';
@@ -78,13 +77,7 @@ export default function ExpensesPage() {
 
         {/* Content */}
         {data && (
-          <>
-            {/* Duplicate Detection Alert Banner */}
-            <DuplicateAlertBanner duplicates={data.duplicates} />
-
-            {/* Expenses Table */}
-            <ExpenseTable expenses={data.expenses} referenceDate={referenceDate} />
-          </>
+          <ExpenseTable expenses={data.expenses} referenceDate={referenceDate} />
         )}
       </main>
 

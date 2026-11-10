@@ -8,7 +8,6 @@ import { ModernBudgetPacing } from '@/components/dashboard/ModernBudgetPacing';
 import { BalanceTimeline } from '@/components/dashboard/BalanceTimeline';
 import { SpendingBreakdown } from '@/components/dashboard/SpendingBreakdown';
 import { ExpenseTable } from '@/components/expenses/ExpenseTable';
-import { DuplicateAlertBanner } from '@/components/expenses/DuplicateAlertBanner';
 import { ExcelSpreadsheet } from '@/components/excel/ExcelSpreadsheet';
 import { BcaCyclePanel } from '@/components/loans/BcaCyclePanel';
 import { LoanPortfolio } from '@/components/loans/LoanPortfolio';
@@ -193,9 +192,6 @@ export default function DashboardPage() {
             {/* Tab: Expenses Ledger */}
             {activeTab === 'expenses' && (
               <div className="space-y-5 animate-in fade-in duration-200">
-                {data.duplicates.length > 0 && (
-                  <DuplicateAlertBanner duplicates={data.duplicates} />
-                )}
                 <ExpenseTable expenses={data.expenses} referenceDate={referenceDate} />
               </div>
             )}

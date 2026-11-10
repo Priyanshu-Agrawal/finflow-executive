@@ -34,48 +34,48 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+      <div className="w-full max-w-lg rounded-2xl border border-[rgba(246,239,227,0.1)] bg-[#161310] p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between pb-4 border-b border-[#514535]/30">
           <div>
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-base font-serif font-bold text-[#e9e1db]">
               Edit Transaction (Row {entry.rowIndex})
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Columns A–D are editable. Column E formula is protected.
+            <p className="text-xs text-[#9e8e7c] mt-0.5 font-mono">
+              Columns A–D are editable. Column E dynamic formula is strictly preserved.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="rounded-lg p-1 text-[#9e8e7c] hover:text-[#e9e1db] hover:bg-[#1e1b18] transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">
+            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
               Date (YYYY-MM-DD)
             </label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm font-mono text-white focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm font-mono text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">
+            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
               Description
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
               placeholder="e.g. Essence Salary, Bike EMI"
               required
             />
@@ -83,7 +83,7 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1">
+              <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
                 Amount (₹)
               </label>
               <input
@@ -91,19 +91,19 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm font-mono text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm font-serif font-bold text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1">
+              <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
                 Transaction Type
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as TransactionType)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
               >
                 <option value="DEBIT">DEBIT</option>
                 <option value="CREDIT">CREDIT</option>
@@ -116,36 +116,36 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
           </div>
 
           {/* Column E Formula Protection Box */}
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 space-y-2">
+          <div className="rounded-xl border border-[#f0a93c]/30 bg-[#f0a93c]/10 p-3.5 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-indigo-300 flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="font-semibold text-[#ffc981] flex items-center gap-1.5 font-mono">
+                <Lock className="h-3.5 w-3.5 text-[#f0a93c]" />
                 Column E (Remaining Balance) — Protected Formula
               </span>
-              <span className="font-mono text-white font-bold">
+              <span className="font-serif font-bold text-[#e9e1db]">
                 {formatINR(entry.balance)}
               </span>
             </div>
-            <div className="font-mono text-[11px] text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-800 break-all">
+            <div className="font-mono text-[11px] text-[#ffc981] bg-[#110e0b]/80 p-2 rounded-lg border border-[#514535]/40 break-all">
               {entry.formula || `=IF(OR(D${entry.rowIndex}="", ...), E${entry.rowIndex-1}, ...)`}
             </div>
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-[#9e8e7c]">
               Formula Lineage Defense: FinFlow automatically preserves continuation formulas. Static numbers are never written.
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#514535]/30">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-4 py-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="rounded-xl px-4 py-2 text-xs font-medium text-[#9e8e7c] hover:text-[#e9e1db] hover:bg-[#1e1b18] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] px-4 py-2 text-xs font-bold text-[#161310] hover:brightness-110 shadow-sm transition-all disabled:opacity-50 active:scale-95"
             >
               <Save className="h-4 w-4" />
               <span>{updateMutation.isPending ? 'Saving...' : 'Save Changes'}</span>

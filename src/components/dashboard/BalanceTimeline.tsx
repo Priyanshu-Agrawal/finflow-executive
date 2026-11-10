@@ -79,56 +79,56 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
   }, [chartData, anchorIndex]);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div className="obsidian-card rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] p-5 shadow-xl space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-indigo-400" />
+          <h2 className="text-base font-serif font-bold text-[#e9e1db] flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-[#f0a93c]" />
             Cash Flow & Running Balance Timeline
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            D3 Dynamic Curve: Settled Historical Actuals (≤ {formatDisplayDate(referenceDate)}) vs Future Projections (2026–2027)
+          <p className="text-xs font-mono text-[#9e8e7c] mt-0.5">
+            Dynamic Curve: Settled Historical Actuals (≤ {formatDisplayDate(referenceDate)}) vs Future Projections (2026–2027)
           </p>
         </div>
 
         {/* Range Filters */}
-        <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/80 p-1 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 rounded-xl border border-[#514535]/40 bg-[#1e1b18] p-1 self-start sm:self-auto text-xs">
           <button
             onClick={() => setRangeFilter('all')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
               rangeFilter === 'all'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
             }`}
           >
             All (314+)
           </button>
           <button
             onClick={() => setRangeFilter('near')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
               rangeFilter === 'near'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
             }`}
           >
             Q4 26 – Q1 27
           </button>
           <button
             onClick={() => setRangeFilter('2026')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
               rangeFilter === '2026'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
             }`}
           >
             2026
           </button>
           <button
             onClick={() => setRangeFilter('2027')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all ${
               rangeFilter === '2027'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
             }`}
           >
             2027
@@ -137,29 +137,30 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
       </div>
 
       {/* Main Area Chart */}
-      <div className="h-80 w-full">
+      <div className="h-80 w-full pt-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={continuousData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
-              {/* Actuals Gradient: Emerald to Indigo */}
+              {/* Actuals Gradient: Primary Obsidian Gold */}
               <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="#f0a93c" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="#f0a93c" stopOpacity={0.0} />
               </linearGradient>
 
-              {/* Projections Gradient: Indigo to Slate */}
+              {/* Projections Gradient: Secondary Gold */}
               <linearGradient id="projectedGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="#edbf70" stopOpacity={0.20} />
+                <stop offset="95%" stopColor="#edbf70" stopOpacity={0.0} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#514535" opacity={0.25} vertical={false} />
 
             <XAxis
               dataKey="date"
-              stroke="#64748b"
+              stroke="#9e8e7c"
               fontSize={11}
+              fontFamily="monospace"
               tickLine={false}
               axisLine={false}
               tickFormatter={(val) => {
@@ -170,8 +171,9 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
             />
 
             <YAxis
-              stroke="#64748b"
+              stroke="#9e8e7c"
               fontSize={11}
+              fontFamily="monospace"
               tickLine={false}
               axisLine={false}
               tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
@@ -185,16 +187,16 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
                   const isCredit = data.type === 'CREDIT';
                   const isSettlement = data.type === 'SETTLEMENT';
                   return (
-                    <div className="rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-2xl backdrop-blur-md">
+                    <div className="rounded-xl border border-[#514535]/50 bg-[#161310]/95 p-3 shadow-2xl backdrop-blur-md space-y-1">
                       <div className="flex items-center justify-between gap-3 text-xs">
-                        <span className="font-semibold text-white">{data.displayDate}</span>
+                        <span className="font-semibold text-[#e9e1db]">{data.displayDate}</span>
                         <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-bold ${
                             isCredit
-                              ? 'bg-emerald-500/20 text-emerald-400'
+                              ? 'bg-[#edbf70]/20 text-[#edbf70]'
                               : isSettlement
-                              ? 'bg-amber-500/20 text-amber-400'
-                              : 'bg-rose-500/20 text-rose-400'
+                              ? 'bg-[#f0a93c]/20 text-[#ffc981]'
+                              : 'bg-[#ffb4ab]/20 text-[#ffb4ab]'
                           }`}
                         >
                           {data.type}
@@ -228,34 +230,35 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
             {/* Vertical Marker at Reference Date (Anchor) */}
             <ReferenceLine
               x={referenceDate}
-              stroke="#ef4444"
+              stroke="#ffb4ab"
               strokeDasharray="4 4"
               strokeWidth={2}
               label={{
                 value: `Today (${formatDisplayDate(referenceDate)})`,
                 position: 'insideTopLeft',
-                fill: '#ef4444',
+                fill: '#ffb4ab',
                 fontSize: 11,
+                fontFamily: 'monospace',
                 fontWeight: 600,
               }}
             />
 
-            {/* Area 1: Settled Actuals (Solid line, Emerald gradient) */}
+            {/* Area 1: Settled Actuals (Solid line, Primary Gold gradient) */}
             <Area
               type="monotone"
               dataKey="actualBalance"
-              stroke="#10b981"
+              stroke="#f0a93c"
               strokeWidth={2.5}
               fill="url(#actualGradient)"
               isAnimationActive={false}
               connectNulls={false}
             />
 
-            {/* Area 2: Projections (Dashed stroke, Indigo gradient) */}
+            {/* Area 2: Projections (Dashed stroke, Secondary Gold gradient) */}
             <Area
               type="monotone"
               dataKey="projectedBalance"
-              stroke="#6366f1"
+              stroke="#edbf70"
               strokeWidth={2}
               strokeDasharray="5 5"
               fill="url(#projectedGradient)"
@@ -267,24 +270,24 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
       </div>
 
       {/* Chart Legend & Context Notes */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+      <div className="mt-4 pt-3 border-t border-[#514535]/30 flex flex-wrap items-center justify-between text-xs text-[#9e8e7c] gap-2 font-mono">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block" />
-            <span>Settled Historical Actuals</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-[#f0a93c] inline-block shadow-xs" />
+            <span className="text-[#e9e1db]">Settled Historical Actuals</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 border-t-2 border-dashed border-indigo-400 inline-block" />
-            <span>Future Projections (Formula Chain)</span>
+            <span className="h-0.5 w-4 border-t-2 border-dashed border-[#edbf70] inline-block" />
+            <span className="text-[#d6c4af]">Future Projections (Formula Chain)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-0.5 bg-red-500 inline-block" />
-            <span>Audit Anchor ({formatDisplayDate(referenceDate)})</span>
+            <span className="h-3 w-0.5 bg-[#ffb4ab] inline-block" />
+            <span className="text-[#ffb4ab]">Anchor ({formatDisplayDate(referenceDate)})</span>
           </div>
         </div>
 
-        <div className="font-mono text-[11px] text-slate-500">
-          Formula Lineage: <span className="text-indigo-400">=IF(OR(D...))</span>
+        <div className="text-[11px] text-[#9e8e7c]">
+          Formula Lineage: <span className="text-[#ffc981]">=IF(OR(D...))</span>
         </div>
       </div>
     </div>

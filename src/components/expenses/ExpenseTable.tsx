@@ -219,21 +219,21 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   };
 
   return (
-    <div className="rounded-3xl border border-white/[0.08] bg-[#0c0e14] p-4 sm:p-6 shadow-xl space-y-4">
+    <div className="obsidian-card p-4 sm:p-6 rounded-2xl shadow-xl space-y-4">
       {/* Top Controls & Rolling Scope Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#514535]/30">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
+            <span className="rounded-full bg-[#f0a93c]/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#ffc981] border border-[#f0a93c]/30 uppercase tracking-wider">
               LEDGER MASTER
             </span>
-            <span className="text-xs text-slate-400">Google Sheets Tab 'Expenses' (A1:E314+)</span>
+            <span className="text-xs font-mono text-[#9e8e7c]">Google Sheets Tab 'Expenses' (A1:E314+)</span>
           </div>
-          <h2 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+          <h2 className="text-xl font-serif font-bold text-[#e9e1db] mt-1.5 flex items-center gap-2">
             Transactions & Formula Lineage Ledger
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Default focus anchored to <strong className="text-emerald-400">{formatDisplayDate(referenceDate)}</strong>.
+          <p className="text-xs text-[#9e8e7c] mt-0.5">
+            Default focus anchored to <strong className="text-[#ffc981] font-mono">{formatDisplayDate(referenceDate)}</strong>.
             Showing 1 month prior ({formatDisplayDate(pastCutoff)}) to 2 months future ({formatDisplayDate(futureCutoff)}).
           </p>
         </div>
@@ -242,24 +242,24 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleJumpToNearest}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#f0a93c]/10 hover:bg-[#f0a93c]/20 text-[#ffc981] text-xs font-semibold border border-[#f0a93c]/30 transition-all shadow-sm active:scale-95"
             title="Focus row nearest to today's date"
           >
-            <Target className="h-3.5 w-3.5 text-emerald-400" />
+            <Target className="h-3.5 w-3.5 text-[#f0a93c]" />
             <span>Focus Today / Nearest</span>
           </button>
 
           {/* Rolling Window Scope Switcher */}
-          <div className="flex items-center rounded-xl bg-white/[0.04] p-1 border border-white/[0.06] text-xs">
+          <div className="flex items-center rounded-xl bg-[#1e1b18] p-1 border border-[#514535]/40 text-xs">
             <button
               onClick={() => {
                 setIsWindowFilterActive(true);
                 setCurrentPage(1);
               }}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                 isWindowFilterActive
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                  : 'text-[#9e8e7c] hover:text-[#e9e1db]'
               }`}
             >
               Rolling Focus
@@ -269,10 +269,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                 setIsWindowFilterActive(false);
                 setCurrentPage(1);
               }}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                 !isWindowFilterActive
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                  : 'text-[#9e8e7c] hover:text-[#e9e1db]'
               }`}
             >
               All ({expenses.length})
@@ -285,7 +285,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-1 items-center gap-2 max-w-md">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#9e8e7c]" />
             <input
               type="text"
               value={searchQuery}
@@ -294,14 +294,14 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                 setCurrentPage(1);
               }}
               placeholder="Search description, date, or row #..."
-              className="w-full rounded-xl border border-white/[0.08] bg-black/40 pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] pl-9 pr-4 py-2 text-xs text-[#e9e1db] placeholder-[#9e8e7c] focus:border-[#f0a93c] focus:outline-none transition-colors"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Type Filter */}
-          <div className="flex items-center gap-1 rounded-xl border border-white/[0.08] bg-black/40 p-1">
+          <div className="flex items-center gap-1 rounded-xl border border-[#514535]/40 bg-[#1e1b18] p-1">
             {['ALL', 'DEBIT', 'CREDIT', 'SETTLEMENT'].map((t) => (
               <button
                 key={t}
@@ -311,8 +311,8 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                 }}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
                   selectedType === t
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
+                    : 'text-[#9e8e7c] hover:text-[#e9e1db]'
                 }`}
               >
                 {t}
@@ -325,7 +325,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
             <button
               onClick={handleBulkDelete}
               disabled={deleteMutation.isPending}
-              className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/15 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/25 transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete ({selectedRows.length})</span>
@@ -338,31 +338,31 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       {isWindowFilterActive && earlierCount > 0 && (
         <div>
           {!showEarlier ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-xs">
-              <div className="flex items-center gap-2 text-slate-400">
-                <History className="h-4 w-4 text-indigo-400 shrink-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-[#514535]/30 bg-[#1e1b18] text-xs">
+              <div className="flex items-center gap-2 text-[#9e8e7c]">
+                <History className="h-4 w-4 text-[#ffc981] shrink-0" />
                 <span>
-                  <strong className="text-white font-mono">{earlierCount}</strong> earlier transactions before{' '}
-                  <strong className="text-slate-300">{formatDisplayDate(pastCutoff)}</strong> hidden to maintain immediate focus
+                  <strong className="text-[#e9e1db] font-mono">{earlierCount}</strong> earlier transactions before{' '}
+                  <strong className="text-[#ffc981]">{formatDisplayDate(pastCutoff)}</strong> hidden to maintain immediate focus
                 </span>
               </div>
               <button
                 onClick={() => setShowEarlier(true)}
-                className="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-semibold text-xs border border-indigo-500/30 transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                className="px-3 py-1.5 rounded-lg bg-[#f0a93c]/15 hover:bg-[#f0a93c]/25 text-[#ffc981] font-semibold text-xs border border-[#f0a93c]/30 transition-colors flex items-center justify-center gap-1.5 shrink-0"
               >
                 <ChevronUp className="h-3.5 w-3.5" />
                 <span>Load Earlier ({earlierCount})</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-2.5 rounded-2xl border border-indigo-500/30 bg-indigo-950/20 text-xs text-indigo-300">
+            <div className="flex items-center justify-between p-2.5 rounded-xl border border-[#f0a93c]/30 bg-[#f0a93c]/10 text-xs text-[#ffc981]">
               <span className="flex items-center gap-1.5">
-                <History className="h-3.5 w-3.5 text-indigo-400" />
+                <History className="h-3.5 w-3.5 text-[#f0a93c]" />
                 Showing {earlierCount} earlier transactions before {formatDisplayDate(pastCutoff)}
               </span>
               <button
                 onClick={() => setShowEarlier(false)}
-                className="text-xs text-indigo-400 hover:text-white underline font-semibold"
+                className="text-xs text-[#ffc981] hover:underline font-semibold"
               >
                 Collapse Earlier
               </button>
@@ -372,10 +372,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       )}
 
       {/* Table Container */}
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+      <div className="overflow-x-auto rounded-xl border border-[#514535]/30 bg-[#161310]">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-white/[0.08] bg-[#0c0e14] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <tr className="border-b border-[#514535]/30 bg-[#1e1b18] text-[11px] font-mono font-semibold text-[#9e8e7c] uppercase tracking-wider">
               <th className="py-3 px-3 w-10 text-center">
                 <input
                   type="checkbox"
@@ -384,27 +384,27 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     selectedRows.length === paginatedExpenses.length
                   }
                   onChange={toggleSelectAll}
-                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+                  className="rounded border-[#514535] bg-[#161310] text-[#f0a93c] focus:ring-0"
                 />
               </th>
-              <th className="py-3 px-2 w-14 font-mono text-slate-500"># Row</th>
-              <th className="py-3 px-3 w-32">Date</th>
+              <th className="py-3 px-2 w-14 font-mono text-[#9e8e7c]"># Row</th>
+              <th className="py-3 px-3 w-32 font-mono">Date</th>
               <th className="py-3 px-4">Description</th>
               <th className="py-3 px-4 text-right">Amount</th>
               <th className="py-3 px-3 text-center">Type (Click)</th>
               <th className="py-3 px-4 text-right">
                 <span className="flex items-center justify-end gap-1">
-                  <Lock className="h-3 w-3 text-indigo-400" />
+                  <Lock className="h-3 w-3 text-[#ffc981]" />
                   Balance (E)
                 </span>
               </th>
               <th className="py-3 px-3 w-28 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04] bg-slate-900/20 font-medium">
+          <tbody className="divide-y divide-[#514535]/15 bg-[#161310] font-medium">
             {paginatedExpenses.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-500">
+                <td colSpan={8} className="py-10 text-center text-[#9e8e7c]">
                   No transactions match your search and filter criteria.
                 </td>
               </tr>
@@ -422,10 +422,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     ref={isNearest ? nearestRowRef : undefined}
                     className={`transition-colors ${
                       isNearest
-                        ? 'bg-emerald-500/[0.08] border-l-4 border-l-emerald-500'
+                        ? 'bg-[#f0a93c]/10 border-l-4 border-l-[#f0a93c]'
                         : isSelected
-                        ? 'bg-indigo-950/40'
-                        : 'hover:bg-white/[0.02]'
+                        ? 'bg-[#2d2926]'
+                        : 'hover:bg-[#1e1b18]/70'
                     }`}
                   >
                     {/* Checkbox */}
@@ -434,21 +434,21 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelectRow(entry.rowIndex)}
-                        className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+                        className="rounded border-[#514535] bg-[#161310] text-[#f0a93c] focus:ring-0"
                       />
                     </td>
 
                     {/* Row Index */}
-                    <td className="py-2.5 px-2 font-mono text-[11px] text-slate-500">
+                    <td className="py-2.5 px-2 font-mono text-[11px] text-[#9e8e7c]">
                       #{entry.rowIndex}
                     </td>
 
                     {/* Date */}
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-slate-300">{formatDisplayDate(entry.date)}</span>
+                        <span className="font-mono text-[#d6c4af]">{formatDisplayDate(entry.date)}</span>
                         {isNearest && (
-                          <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300 border border-emerald-500/30 shrink-0">
+                          <span className="rounded bg-[#f0a93c]/20 px-1.5 py-0.2 text-[9px] font-bold text-[#ffc981] border border-[#f0a93c]/40 shrink-0">
                             ANCHOR
                           </span>
                         )}
@@ -456,20 +456,20 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     </td>
 
                     {/* Description */}
-                    <td className="py-2.5 px-4 text-white font-medium max-w-xs truncate" title={entry.description}>
-                      <span className={entry.description.startsWith('[External') ? 'text-purple-300 font-semibold' : ''}>
+                    <td className="py-2.5 px-4 text-[#e9e1db] font-medium max-w-xs truncate" title={entry.description}>
+                      <span className={entry.description.startsWith('[External') ? 'text-[#ffc981] font-semibold' : ''}>
                         {entry.description}
                       </span>
                     </td>
 
                     {/* Amount */}
                     <td
-                      className={`py-2.5 px-4 text-right font-mono font-bold whitespace-nowrap ${
+                      className={`py-2.5 px-4 text-right font-serif text-sm font-bold whitespace-nowrap ${
                         isCredit
-                          ? 'text-emerald-400'
+                          ? 'text-[#edbf70]'
                           : isSettlement
-                          ? 'text-purple-400'
-                          : 'text-slate-200'
+                          ? 'text-[#ffc981]'
+                          : 'text-[#ffb4ab]'
                       }`}
                     >
                       {isCredit ? '+' : isDebit ? '-' : ''}
@@ -481,12 +481,12 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                       <button
                         onClick={() => handleCycleType(entry)}
                         disabled={toggleTypeMutation.isPending}
-                        className={`rounded-lg px-2 py-0.5 text-[10px] font-bold border transition-all hover:scale-105 active:scale-95 ${
+                        className={`rounded-lg px-2.5 py-0.5 text-[10px] font-mono font-bold border transition-all hover:scale-105 active:scale-95 ${
                           isCredit
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-[#edbf70]/15 text-[#edbf70] border-[#edbf70]/30'
                             : isSettlement
-                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            ? 'bg-[#ffc981]/15 text-[#ffc981] border-[#ffc981]/30'
+                            : 'bg-[#ffb4ab]/15 text-[#ffb4ab] border-[#ffb4ab]/30'
                         }`}
                         title="Click to toggle type: DEBIT ➔ CREDIT ➔ SETTLEMENT"
                       >
@@ -495,7 +495,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     </td>
 
                     {/* Balance (Column E) */}
-                    <td className="py-2.5 px-4 text-right font-mono font-bold text-indigo-300 whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-right font-mono font-semibold text-[#ffc981] whitespace-nowrap">
                       {formatINR(entry.balance)}
                     </td>
 
@@ -504,7 +504,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => setEditingEntry(entry)}
-                          className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+                          className="rounded-lg p-1.5 text-[#9e8e7c] hover:text-[#ffc981] hover:bg-[#1e1b18] transition-colors"
                           title="Edit Transaction (Columns A-D)"
                         >
                           <Edit2 className="h-3.5 w-3.5" />
@@ -512,7 +512,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                         <button
                           onClick={() => handleClone(entry)}
                           disabled={logMutation.isPending}
-                          className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+                          className="rounded-lg p-1.5 text-[#9e8e7c] hover:text-[#ffc981] hover:bg-[#1e1b18] transition-colors"
                           title="Duplicate Transaction"
                         >
                           <Copy className="h-3.5 w-3.5" />
@@ -528,7 +528,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                             }
                           }}
                           disabled={deleteMutation.isPending}
-                          className="rounded-lg p-1.5 text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] transition-colors"
+                          className="rounded-lg p-1.5 text-[#9e8e7c] hover:text-[#ffb4ab] hover:bg-[#1e1b18] transition-colors"
                           title="Delete Row"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -547,31 +547,31 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       {isWindowFilterActive && futureCount > 0 && (
         <div>
           {!showFuture ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-xs">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Calendar className="h-4 w-4 text-emerald-400 shrink-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-[#514535]/30 bg-[#1e1b18] text-xs">
+              <div className="flex items-center gap-2 text-[#9e8e7c]">
+                <Calendar className="h-4 w-4 text-[#ffc981] shrink-0" />
                 <span>
-                  <strong className="text-white font-mono">{futureCount}</strong> long-term projections beyond{' '}
-                  <strong className="text-slate-300">{formatDisplayDate(futureCutoff)}</strong> hidden
+                  <strong className="text-[#e9e1db] font-mono">{futureCount}</strong> long-term projections beyond{' '}
+                  <strong className="text-[#ffc981]">{formatDisplayDate(futureCutoff)}</strong> hidden
                 </span>
               </div>
               <button
                 onClick={() => setShowFuture(true)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-semibold text-xs border border-emerald-500/30 transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                className="px-3 py-1.5 rounded-lg bg-[#f0a93c]/15 hover:bg-[#f0a93c]/25 text-[#ffc981] font-semibold text-xs border border-[#f0a93c]/30 transition-colors flex items-center justify-center gap-1.5 shrink-0"
               >
                 <ChevronDown className="h-3.5 w-3.5" />
                 <span>Load Further Projections ({futureCount})</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 text-xs text-emerald-300">
+            <div className="flex items-center justify-between p-2.5 rounded-xl border border-[#f0a93c]/30 bg-[#f0a93c]/10 text-xs text-[#ffc981]">
               <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+                <Calendar className="h-3.5 w-3.5 text-[#f0a93c]" />
                 Showing all {futureCount} projections beyond {formatDisplayDate(futureCutoff)}
               </span>
               <button
                 onClick={() => setShowFuture(false)}
-                className="text-xs text-emerald-400 hover:text-white underline font-semibold"
+                className="text-xs text-[#ffc981] hover:underline font-semibold"
               >
                 Collapse Future Projections
               </button>
@@ -581,19 +581,19 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       )}
 
       {/* Pagination Footer */}
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#9e8e7c]">
         <div>
           Showing{' '}
-          <strong className="text-white">
+          <strong className="text-[#e9e1db] font-mono">
             {visibleExpenses.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
           </strong>{' '}
           to{' '}
-          <strong className="text-white">
+          <strong className="text-[#e9e1db] font-mono">
             {Math.min(currentPage * pageSize, visibleExpenses.length)}
           </strong>{' '}
-          of <strong className="text-white">{visibleExpenses.length}</strong> transactions
+          of <strong className="text-[#e9e1db] font-mono">{visibleExpenses.length}</strong> transactions
           {isWindowFilterActive && (
-            <span className="ml-1 text-slate-500">
+            <span className="ml-1 text-[#9e8e7c]">
               ({windowCount} in 3-month window • {earlierCount} earlier • {futureCount} future)
             </span>
           )}
@@ -607,7 +607,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="rounded-xl border border-white/[0.08] bg-black/40 px-2.5 py-1 text-xs text-slate-300 focus:outline-none"
+            className="rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-2.5 py-1 text-xs text-[#d6c4af] focus:border-[#f0a93c] focus:outline-none"
           >
             <option value={25}>25 / page</option>
             <option value={50}>50 / page</option>
@@ -619,17 +619,17 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-black/40 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#514535]/40 bg-[#1e1b18] text-[#9e8e7c] hover:text-[#e9e1db] hover:border-[#f0a93c]/40 disabled:opacity-30 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="px-2 font-mono text-slate-300">
+            <span className="px-2 font-mono text-[#e9e1db]">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-black/40 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#514535]/40 bg-[#1e1b18] text-[#9e8e7c] hover:text-[#e9e1db] hover:border-[#f0a93c]/40 disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

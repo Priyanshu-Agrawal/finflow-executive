@@ -54,13 +54,13 @@ export async function POST(req: NextRequest) {
     res.cookies.set(
       AUTH_COOKIE_NAMES.ACCESS_TOKEN,
       newAccessToken,
-      getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC)
+      getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC, req)
     );
 
     res.cookies.set(
       AUTH_COOKIE_NAMES.REFRESH_TOKEN,
       newRefreshToken,
-      getCookieOptions(REFRESH_TOKEN_MAX_AGE_SEC)
+      getCookieOptions(REFRESH_TOKEN_MAX_AGE_SEC, req)
     );
 
     return res;

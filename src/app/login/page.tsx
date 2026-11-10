@@ -18,14 +18,18 @@ function LoginForm() {
 
   // Check if already authenticated
   useEffect(() => {
+    let mounted = true;
     fetch('/api/auth/me')
       .then((res) => {
-        if (res.ok) {
-          router.replace(from);
+        if (res.ok && mounted) {
+          window.location.replace(from);
         }
       })
       .catch(() => {});
-  }, [from, router]);
+    return () => {
+      mounted = false;
+    };
+  }, [from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +49,14 @@ function LoginForm() {
         throw new Error(data.error || 'Invalid credentials.');
       }
 
-      // Successful login -> Navigate to target page
-      router.push(from);
-      router.refresh();
+      // Successful login -> Full window document navigation
+      // Using window.location.href guarantees cookies are attached to the browser request
+      window.location.href = from;
+
+      // Fallback timeout to unfreeze button if network delays navigation
+      setTimeout(() => {
+        setLoading(false);
+      }, 6000);
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication failed');
       setLoading(false);

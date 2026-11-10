@@ -48,14 +48,14 @@ export async function POST(req: NextRequest) {
     response.cookies.set(
       AUTH_COOKIE_NAMES.ACCESS_TOKEN,
       accessToken,
-      getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC)
+      getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC, req)
     );
 
     // Set HTTP-Only Refresh Token Cookie (30 days)
     response.cookies.set(
       AUTH_COOKIE_NAMES.REFRESH_TOKEN,
       refreshToken,
-      getCookieOptions(REFRESH_TOKEN_MAX_AGE_SEC)
+      getCookieOptions(REFRESH_TOKEN_MAX_AGE_SEC, req)
     );
 
     return response;

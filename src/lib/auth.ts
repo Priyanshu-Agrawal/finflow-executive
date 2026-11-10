@@ -70,19 +70,79 @@ export async function verifyRefreshToken(token: string): Promise<{ username: str
 }
 
 /**
- * Get cookie options respecting custom subdomain or localhost
+ * Get cookie options respecting custom subdomain or localhost / LAN IP
  */
-export function getCookieOptions(maxAgeSec: number) {
-  const isProd = process.env.NODE_ENV === 'production';
+export function getCookieOptions(
+  maxAgeSec: number,
+  req?: { headers?: Headers; nextUrl?: { protocol?: string; hostname?: string } }
+) {
+  // If explicitly overridden via COOKIE_SECURE environment variable:
+  if (process.env.COOKIE_SECURE === 'true') {
+    return {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax' as const,
+      path: '/',
+      maxAge: maxAgeSec,
+    };
+  }
+  if (process.env.COOKIE_SECURE === 'false') {
+    return {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax' as const,
+      path: '/',
+      maxAge: maxAgeSec,
+    };
+  }
+
+  // Detect HTTPS protocol
+  let isHttps = false;
+  let hostname = '';
+
+  if (req) {
+    if (req.headers && typeof req.headers.get === 'function') {
+      const protoHeader = req.headers.get('x-forwarded-proto');
+      if (protoHeader === 'https') isHttps = true;
+      hostname = req.headers.get('host')?.split(':')[0] || '';
+    }
+    if (req.nextUrl) {
+      if (req.nextUrl.protocol === 'https:' || req.nextUrl.protocol === 'https') {
+        isHttps = true;
+      }
+      if (req.nextUrl.hostname) {
+        hostname = req.nextUrl.hostname;
+      }
+    }
+  }
+
+  // Check if connecting via local network IP or localhost
+  const isIpOrLocalhost =
+    !hostname ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    /^(?:10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(hostname) ||
+    /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+
+  // A cookie MUST NEVER have secure: true over plain http on local network IP,
+  // because mobile browsers (iOS Safari, Android Chrome) strictly reject it per RFC 6265bis.
+  // When hosted on HTTPS (e.g. expenses.scriptingbear.com), isHttps will be true and secure will be true.
+  const secure = isHttps && !isIpOrLocalhost;
+
+  // Domain handling: only set domain if hostname ends with the custom domain and is not an IP
   const customDomain = process.env.COOKIE_DOMAIN?.trim();
+  const shouldSetDomain =
+    customDomain &&
+    !isIpOrLocalhost &&
+    hostname.endsWith(customDomain.replace(/^\./, ''));
 
   return {
     httpOnly: true,
-    secure: isProd,
+    secure: Boolean(secure),
     sameSite: 'lax' as const,
     path: '/',
     maxAge: maxAgeSec,
-    ...(customDomain ? { domain: customDomain } : {}),
+    ...(shouldSetDomain ? { domain: customDomain } : {}),
   };
 }
 

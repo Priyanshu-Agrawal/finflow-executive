@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       res.cookies.set(
         AUTH_COOKIE_NAMES.ACCESS_TOKEN,
         newAccessToken,
-        getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC)
+        getCookieOptions(ACCESS_TOKEN_MAX_AGE_SEC, req)
       );
 
       return res;

@@ -1,0 +1,142 @@
+'use client';
+
+import React from 'react';
+import { AlertTriangle, CheckCircle, Clock, RefreshCw, ShieldAlert } from 'lucide-react';
+import { BcaCycle } from '@/lib/types';
+import { formatINR } from '@/lib/date-utils';
+import { useResetBCA } from '@/hooks/useFinancials';
+
+interface BcaCyclePanelProps {
+  bcaCycle: BcaCycle;
+}
+
+export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
+  const resetMutation = useResetBCA();
+
+  return (
+    <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 p-6 shadow-xl">
+      {/* Header with Title and Reset Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[11px] font-bold text-indigo-400 border border-indigo-500/30">
+              ACTIVE LIABILITY CYCLE
+            </span>
+            <span className="text-xs text-slate-400">October 2026 – March 2027</span>
+          </div>
+          <h2 className="text-lg font-bold text-white mt-1">
+            BCA Education Loan Amortization Tracker
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Fixed baseline total of <span className="font-mono text-emerald-400 font-semibold">₹18,000</span> across 6 monthly ₹3,000 installments. Reaches ₹0 on <span className="text-indigo-300 font-semibold">2027-03-05</span>.
+          </p>
+        </div>
+
+        {/* Status / Reset Indicator */}
+        <div className="flex items-center gap-2">
+          {bcaCycle.needsReset ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                <span>
+                  Loans!B2 is <strong className="font-mono">{formatINR(bcaCycle.b2Value)}</strong> (Accumulated)
+                </span>
+              </div>
+              <button
+                onClick={() => resetMutation.mutate()}
+                disabled={resetMutation.isPending}
+                className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 hover:bg-amber-400 transition-colors shadow-sm disabled:opacity-50"
+                title="Reset Loans!B2 cell to true baseline ₹18,000"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${resetMutation.isPending ? 'animate-spin' : ''}`} />
+                <span>Reset to ₹18,000</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-300">
+              <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>Loans!B2 True Baseline Intact (₹18,000)</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Metric Breakdown Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+        <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60">
+          <span className="text-xs text-slate-400 block">Total Cycle Due</span>
+          <span className="font-mono text-xl font-bold text-white block mt-1">
+            {formatINR(bcaCycle.totalCycleDue)}
+          </span>
+          <span className="text-[11px] text-slate-500">6 EMIs × ₹3,000</span>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-950/20">
+          <span className="text-xs text-emerald-400 block">Paid to Date</span>
+          <span className="font-mono text-xl font-bold text-emerald-300 block mt-1">
+            {formatINR(bcaCycle.paidToDate)}
+          </span>
+          <span className="text-[11px] text-emerald-400/80">{bcaCycle.emisPaid} of 6 EMIs Cleared</span>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-950/20">
+          <span className="text-xs text-indigo-400 block">Remaining Due</span>
+          <span className="font-mono text-xl font-bold text-indigo-300 block mt-1">
+            {formatINR(bcaCycle.remainingDue)}
+          </span>
+          <span className="text-[11px] text-indigo-400/80">{bcaCycle.emisRemaining} of 6 EMIs Remaining</span>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60">
+          <span className="text-xs text-slate-400 block">Debt Payoff Milestone</span>
+          <span className="font-mono text-xl font-bold text-white block mt-1">
+            5 Mar 2027
+          </span>
+          <span className="text-[11px] text-emerald-400 font-medium">+₹3,000/mo Unlocked</span>
+        </div>
+      </div>
+
+      {/* 6-Month Visual Installment Tracker */}
+      <div>
+        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+          <span className="font-medium text-slate-300">Installment Schedule (Oct 2026 – Mar 2027)</span>
+          <span className="font-mono text-indigo-400">
+            {Math.round((bcaCycle.paidToDate / bcaCycle.totalCycleDue) * 100)}% Complete
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+          {bcaCycle.schedule.map((item, idx) => (
+            <div
+              key={item.month}
+              className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
+                item.isPaid
+                  ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300'
+                  : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-bold">{item.month}</span>
+                {item.isPaid ? (
+                  <CheckCircle className="h-4 w-4 text-emerald-400" />
+                ) : (
+                  <Clock className="h-4 w-4 text-slate-500" />
+                )}
+              </div>
+              <div className="font-mono text-xs font-semibold">
+                {formatINR(item.amount)}
+              </div>
+              <div className="text-[10px] mt-1.5 font-medium">
+                {item.isPaid ? (
+                  <span className="text-emerald-400">PAID (EMI {idx + 1}/6)</span>
+                ) : (
+                  <span className="text-slate-500">DUE (EMI {idx + 1}/6)</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

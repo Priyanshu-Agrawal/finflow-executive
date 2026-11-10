@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Geist, JetBrains_Mono, Newsreader } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({
+const geist = Geist({
   subsets: ['latin'],
   variable: '--font-sans',
+});
+
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -14,8 +20,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FinFlow Executive | Priyanshu Agrawal',
-  description: 'Executive financial intelligence, Google Sheets ledger tracking, and debt amortization engine.',
+  title: 'FinFlow Executive | Wealth & Expense OS',
+  description: 'Private wealth intelligence, Google Sheets ledger tracking, and debt amortization engine.',
 };
 
 export default function RootLayout({
@@ -26,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen bg-slate-950 font-sans text-slate-100 antialiased selection:bg-indigo-500 selection:text-white`}
+        className={`${geist.variable} ${newsreader.variable} ${jetbrainsMono.variable} min-h-screen bg-[#100D0A] font-sans text-[#E9E1DB] antialiased selection:bg-[#F0A93C]/30 selection:text-[#FFC981]`}
       >
         <Providers>{children}</Providers>
       </body>

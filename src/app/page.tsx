@@ -127,7 +127,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-[#100D0A] text-[#E9E1DB] flex flex-col font-sans selection:bg-[#F0A93C]/30 selection:text-[#FFC981]">
       {/* Top Header */}
       <Navbar
         referenceDate={referenceDate}
@@ -180,7 +180,7 @@ export default function DashboardPage() {
             />
 
             {/* 2. Sleek Segmented Switcher Bar (Mobile Horizontal Swipeable) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-white/[0.06] bg-[#0c0e14]/80 backdrop-blur-md no-scrollbar">
+            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] backdrop-blur-md no-scrollbar">
               {tabItems.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -190,18 +190,18 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? tab.isGreen
-                          ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                          : 'bg-white/[0.1] text-white shadow-sm'
-                        : tab.isGreen
-                        ? 'text-emerald-400 hover:bg-emerald-950/30'
-                        : 'text-slate-400 hover:text-white hover:bg-white/[0.03]'
+                        ? 'bg-[#F0A93C] text-[#100D0A] font-bold shadow-md shadow-[#F0A93C]/20'
+                        : 'text-[#A89F91] hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span>{tab.label}</span>
                     {tab.badge && (
-                      <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[9px] font-mono font-bold text-amber-300">
+                      <span className={`rounded px-1.5 py-0.2 text-[9px] font-mono font-bold ${
+                        isActive
+                          ? 'bg-[#100D0A]/30 text-[#100D0A]'
+                          : 'bg-[#F0A93C]/15 text-[#F0A93C] border border-[#F0A93C]/20'
+                      }`}>
                         {tab.badge}
                       </span>
                     )}

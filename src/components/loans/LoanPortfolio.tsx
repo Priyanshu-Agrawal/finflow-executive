@@ -40,32 +40,32 @@ export function LoanPortfolio({
   return (
     <div className="space-y-6">
       {/* Portfolio Summary Header */}
-      <div className="rounded-3xl border border-white/[0.08] bg-[#0c0e14] p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-3xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-400 border border-indigo-500/30">
+            <span className="rounded-lg bg-[#F0A93C]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#F0A93C] border border-[#F0A93C]/30">
               UNIFIED DEBT HUB
             </span>
-            <span className="text-xs text-slate-400">All 7 Loans & Liabilities</span>
+            <span className="text-xs text-[#A89F91]">All 7 Loans & Liabilities</span>
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 mt-1">
-            <CreditCard className="h-5 w-5 text-indigo-400" />
+          <h3 className="text-base sm:text-lg font-serif font-bold text-white flex items-center gap-2 mt-1">
+            <CreditCard className="h-5 w-5 text-[#F0A93C]" />
             Complete Liabilities Portfolio
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#A89F91] mt-0.5">
             Click any loan card below to log payments, record third-party payments (Khushboo/Bhaiya), or settle.
           </p>
         </div>
 
-        <div className="flex items-center gap-5 text-xs bg-white/[0.02] border border-white/[0.05] p-3 rounded-2xl">
+        <div className="flex items-center gap-5 text-xs bg-[#100D0A] border border-[rgba(246,239,227,0.08)] p-3 rounded-2xl">
           <div>
-            <span className="text-slate-400 block text-[11px]">Total Active Liabilities</span>
+            <span className="text-[#A89F91] block text-[11px] font-mono">Total Active Liabilities</span>
             <span className="font-mono text-base font-bold text-rose-400">
               {formatINR(totalCurrentDue)}
             </span>
           </div>
-          <div className="border-l border-white/[0.08] pl-5">
-            <span className="text-slate-400 block text-[11px]">Total Retired Debt</span>
+          <div className="border-l border-[rgba(246,239,227,0.08)] pl-5">
+            <span className="text-[#A89F91] block text-[11px] font-mono">Total Retired Debt</span>
             <span className="font-mono text-base font-bold text-emerald-400">
               {formatINR(totalPaid)}
             </span>

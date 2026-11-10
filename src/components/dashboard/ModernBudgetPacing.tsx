@@ -86,42 +86,42 @@ export function ModernBudgetPacing({
   };
 
   return (
-    <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#131722]/90 via-[#0e111a]/95 to-[#0a0c12] p-4 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
+    <div className="rounded-3xl border border-[rgba(246,239,227,0.08)] bg-gradient-to-b from-[#181411] via-[#14100D] to-[#100D0A] p-4 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.06]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[rgba(246,239,227,0.08)]">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+            <span className="rounded-md bg-[#F0A93C]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#F0A93C] border border-[#F0A93C]/30 uppercase tracking-wider">
               Budget Burn & Runway Engine
             </span>
-            <span className="rounded-md bg-indigo-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-indigo-300 border border-indigo-500/30">
+            <span className="rounded-md bg-[#EDBF70]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#EDBF70] border border-[#EDBF70]/30">
               Cycle: {pacing.cycleLabel || `${pacing.budgetRecurringDay}th reset`}
             </span>
-            <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/30 flex items-center gap-1">
+            <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-rose-300 border border-rose-500/30 flex items-center gap-1">
               <Home className="h-3 w-3" />
               Rent on {pacing.rentRecurringDay}th ({pacing.daysUntilRent}d left)
             </span>
           </div>
-          <h2 className="text-lg font-bold text-white mt-1.5 flex items-center gap-2">
-            <Gauge className="h-5 w-5 text-amber-400" />
+          <h2 className="text-lg font-serif font-bold text-[#F6EFE3] mt-1.5 flex items-center gap-2">
+            <Gauge className="h-5 w-5 text-[#F0A93C]" />
             Configurable Budget & Cycle Pacing
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Budget recurring on <strong className="text-amber-300">{pacing.budgetRecurringDay}th</strong> • Rent recurring on <strong className="text-rose-300">{pacing.rentRecurringDay}th</strong> • Remaining electricity balance factor.
+          <p className="text-xs text-[#A89F91] mt-0.5">
+            Budget recurring on <strong className="text-[#F0A93C]">{pacing.budgetRecurringDay}th</strong> • Rent recurring on <strong className="text-rose-300">{pacing.rentRecurringDay}th</strong> • Remaining electricity balance factor.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="rounded-xl border border-white/[0.08] bg-black/40 px-3 py-1.5 text-xs font-mono text-slate-300 flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-amber-400" />
+          <div className="rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A] px-3 py-1.5 text-xs font-mono text-[#A89F91] flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-[#F0A93C]" />
             <span>
-              <strong className="text-white">{pacing.daysRemainingInCycle}</strong> days left in cycle
+              <strong className="text-[#F6EFE3]">{pacing.daysRemainingInCycle}</strong> days left in cycle
             </span>
           </div>
 
           <button
             onClick={() => setIsConfiguring(!isConfiguring)}
-            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] transition-colors shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl border border-[rgba(246,239,227,0.1)] bg-[#1F1914] px-3 py-1.5 text-xs font-semibold text-[#E9E1DB] hover:bg-[#2B221A] transition-colors shadow-sm"
           >
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
             <span>{isConfiguring ? 'Close Settings' : 'Configure Dates & Meter'}</span>
@@ -312,43 +312,43 @@ export function ModernBudgetPacing({
       {/* The 4 Financial Factor Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Factor 1: General Expenses Budget (₹15k Pool) */}
-        <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-4 sm:p-5 flex flex-col justify-between hover:border-[#F0A93C]/30 transition-colors">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-[#F0A93C] flex items-center gap-1.5 uppercase tracking-wider">
                 <ShoppingBag className="h-4 w-4" />
                 General Budget ({pacing.budgetRecurringDay}th)
               </span>
-              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/20 font-mono">
+              <span className="rounded-md bg-[#F0A93C]/10 px-2 py-0.5 text-[10px] font-bold text-[#F0A93C] border border-[#F0A93C]/20 font-mono">
                 {formatINR(pacing.generalBudget)}
               </span>
             </div>
 
             {/* Daily Burn Rate Card */}
-            <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-950/30 mb-3">
-              <span className="text-[11px] text-amber-300/90 font-medium block">
+            <div className="p-3.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/90 mb-3">
+              <span className="text-[11px] text-[#A89F91] font-medium block">
                 Safe Daily Spend:
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="font-mono text-3xl font-extrabold text-amber-400">
+                <span className="font-serif text-3xl font-bold text-[#F0A93C]">
                   {formatINR(pacing.generalPerDayLimit)}
                 </span>
-                <span className="text-xs font-bold text-amber-300">/ day</span>
+                <span className="text-xs font-bold text-[#F0A93C]/80">/ day</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
+              <span className="text-[10px] text-[#665E54] block mt-1">
                 For the remaining {pacing.daysRemainingInCycle} days of this cycle
               </span>
             </div>
 
             {/* Spent vs Remaining breakdown */}
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Spent Since {pacing.budgetRecurringDay}th:</span>
-                <span className="font-mono font-bold text-slate-200">
+                <span className="font-mono font-bold text-[#F6EFE3]">
                   {formatINR(pacing.generalSpentSoFar)} ({pacing.generalSpentPercent}%)
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Remaining Pool:</span>
                 <span className="font-mono font-bold text-emerald-400">
                   {formatINR(pacing.generalRemaining)}
@@ -356,13 +356,13 @@ export function ModernBudgetPacing({
               </div>
 
               {/* Progress Bar */}
-              <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden mt-2">
+              <div className="h-2 w-full rounded-full bg-[#1F1914] overflow-hidden mt-2">
                 <div
                   className={`h-full rounded-full transition-all ${
                     pacing.generalSpentPercent > 80
                       ? 'bg-rose-500'
                       : pacing.generalSpentPercent > 50
-                      ? 'bg-amber-500'
+                      ? 'bg-[#F0A93C]'
                       : 'bg-emerald-500'
                   }`}
                   style={{ width: `${Math.min(100, pacing.generalSpentPercent)}%` }}
@@ -385,10 +385,10 @@ export function ModernBudgetPacing({
         </div>
 
         {/* Factor 2: Electricity Balance Factor (Separately Tracked & Updateable) */}
-        <div className="rounded-2xl border border-blue-500/25 bg-gradient-to-b from-blue-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-4 sm:p-5 flex flex-col justify-between hover:border-blue-400/30 transition-colors">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <Lightbulb className="h-4 w-4" />
                 Electricity Balance
               </span>
@@ -404,8 +404,8 @@ export function ModernBudgetPacing({
 
             {/* Inline Quick Meter Edit Box */}
             {isEditingMeter ? (
-              <form onSubmit={handleSaveInlineMeter} className="p-3 rounded-xl border border-blue-500/40 bg-blue-950/40 mb-3 space-y-2">
-                <label className="text-[11px] text-blue-200 block font-semibold">
+              <form onSubmit={handleSaveInlineMeter} className="p-3 rounded-xl border border-blue-500/40 bg-[#100D0A] mb-3 space-y-2">
+                <label className="text-[11px] text-blue-200 block font-semibold font-mono">
                   Update Remaining Electricity (₹):
                 </label>
                 <div className="flex gap-1.5">
@@ -418,7 +418,7 @@ export function ModernBudgetPacing({
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1 rounded-lg bg-blue-500 hover:bg-blue-400 text-slate-950 text-xs font-bold transition-colors"
+                    className="px-3 py-1 rounded-lg bg-blue-500 hover:bg-blue-400 text-slate-950 text-xs font-bold transition-colors font-mono"
                   >
                     Save
                   </button>
@@ -426,24 +426,24 @@ export function ModernBudgetPacing({
               </form>
             ) : (
               /* Remaining Electricity Balance Card */
-              <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-950/30 mb-3">
+              <div className="p-3.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/90 mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-300/90 font-medium block">
+                  <span className="text-[11px] text-[#A89F91] font-medium block">
                     Remaining Power Balance:
                   </span>
                   {meterSavedMsg && (
-                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 font-mono">
                       <Check className="h-3 w-3" /> Updated!
                     </span>
                   )}
                 </div>
                 <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="font-mono text-3xl font-extrabold text-blue-400">
+                  <span className="font-serif text-3xl font-bold text-blue-400">
                     {formatINR(pacing.electricityRemaining)}
                   </span>
                   <span className="text-xs font-bold text-blue-300">pool</span>
                 </div>
-                <span className="text-[10px] text-slate-400 block mt-1">
+                <span className="text-[10px] text-[#665E54] block mt-1">
                   {formatINR(pacing.electricityPerDayUntilRent)}/day until {pacing.rentRecurringDay}th rent date
                 </span>
               </div>
@@ -451,7 +451,7 @@ export function ModernBudgetPacing({
 
             {/* Recharges vs Buffer breakdown */}
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Recharges Done:</span>
                 <span className="font-mono font-bold text-slate-200">
                   {formatINR(pacing.electricitySpentSoFar)} ({pacing.electricitySpentPercent}%)
@@ -491,10 +491,10 @@ export function ModernBudgetPacing({
         </div>
 
         {/* Factor 3: Rent Recurring Milestone (Configurable Date & Amount) */}
-        <div className="rounded-2xl border border-rose-500/25 bg-gradient-to-b from-rose-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-4 sm:p-5 flex flex-col justify-between hover:border-rose-500/30 transition-colors">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <Home className="h-4 w-4" />
                 Room Rent ({pacing.rentRecurringDay}th)
               </span>
@@ -508,36 +508,36 @@ export function ModernBudgetPacing({
             </div>
 
             {/* Rent Countdown Card */}
-            <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/30 mb-3">
-              <span className="text-[11px] text-rose-300/90 font-medium block">
+            <div className="p-3.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/90 mb-3">
+              <span className="text-[11px] text-[#A89F91] font-medium block">
                 Fixed Rent Commitment:
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="font-mono text-3xl font-extrabold text-rose-400">
+                <span className="font-serif text-3xl font-bold text-rose-400">
                   {formatINR(pacing.rentAmount)}
                 </span>
                 <span className="text-xs font-bold text-rose-300">/ mo</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
+              <span className="text-[10px] text-[#665E54] block mt-1">
                 Clears on the {pacing.rentRecurringDay}th ({pacing.daysUntilRent} days remaining)
               </span>
             </div>
 
             {/* Rent buffer breakdown */}
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Due Date:</span>
-                <span className="font-mono font-bold text-slate-200">
+                <span className="font-mono font-bold text-[#F6EFE3]">
                   {formatDisplayDate(pacing.nextRentDate)}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Post-Rent Net Buffer:</span>
                 <span className="font-mono font-bold text-blue-400">
                   {formatINR(pacing.postRentBuffer)}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Secured Status:</span>
                 <span className="font-mono font-semibold text-emerald-400">
                   Funded in Bank Reserve
@@ -546,56 +546,56 @@ export function ModernBudgetPacing({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-rose-300">
+          <div className="mt-4 pt-3 border-t border-[rgba(246,239,227,0.08)] flex items-center justify-between text-[11px] text-rose-300 font-mono">
             <span>Cycle: Every {pacing.rentRecurringDay}th</span>
-            <span className="font-mono font-bold">100% Guaranteed</span>
+            <span className="font-bold">100% Guaranteed</span>
           </div>
         </div>
 
         {/* Factor 4: Available Bank Balance & Total Liquid Runway */}
-        <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-colors">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <ShieldCheck className="h-4 w-4" />
                 Available Balance Factor
               </span>
-              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/20">
+              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/20 font-mono">
                 Liquid Bank
               </span>
             </div>
 
             {/* Total Safe Daily Spend Card */}
-            <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 mb-3">
-              <span className="text-[11px] text-emerald-300/90 font-medium block">
+            <div className="p-3.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/90 mb-3">
+              <span className="text-[11px] text-[#A89F91] font-medium block">
                 Total Safe Daily Runway:
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="font-mono text-3xl font-extrabold text-emerald-400">
+                <span className="font-serif text-3xl font-bold text-emerald-400">
                   {formatINR(pacing.safeTotalDailyBurn)}
                 </span>
                 <span className="text-xs font-bold text-emerald-300">/ day</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
+              <span className="text-[10px] text-[#665E54] block mt-1">
                 Spend without eroding savings cushion
               </span>
             </div>
 
             {/* Buffer stats */}
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Current Bank Balance:</span>
-                <span className="font-mono font-bold text-white">
+                <span className="font-mono font-bold text-[#F6EFE3]">
                   {formatINR(pacing.availableBalance)}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>Post-Rent Cushion:</span>
                 <span className="font-mono font-bold text-blue-400">
                   {formatINR(pacing.postFixedObligationsBuffer)}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-[#A89F91]">
                 <span>General Allowance Share:</span>
                 <span className="font-mono font-semibold text-slate-300">
                   {Math.round((pacing.generalPerDayLimit / Math.max(1, pacing.safeTotalDailyBurn)) * 100)}% of daily burn
@@ -604,7 +604,7 @@ export function ModernBudgetPacing({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-emerald-400 font-semibold">
+          <div className="mt-4 pt-3 border-t border-[rgba(246,239,227,0.08)] flex items-center justify-between text-[11px] text-emerald-400 font-semibold font-mono">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" />
               Capital Safety Secured

@@ -78,34 +78,34 @@ export function Navbar({
   return (
     <>
       {/* Top Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#090b10]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-[rgba(246,239,227,0.08)] bg-[#161310]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           {/* Left: Brand Monogram & Title */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-600 p-[1.5px] shadow-lg shadow-emerald-500/10 group-hover:scale-105 transition-transform">
-                <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#0c0e14]">
-                  <Wallet className="h-4 w-4 text-emerald-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#F0A93C] via-[#EDBF70] to-[#E5B869] p-[1.5px] shadow-lg shadow-[#F0A93C]/10 group-hover:scale-105 transition-transform">
+                <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#161310]">
+                  <Wallet className="h-4 w-4 text-[#F0A93C]" />
                 </div>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
-                  <span className="text-base sm:text-lg font-extrabold tracking-tight text-white">
+                  <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-white">
                     FinFlow
                   </span>
-                  <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 text-[9px] font-bold text-indigo-400 border border-indigo-500/30">
-                    EXEC
+                  <span className="rounded bg-[#F0A93C]/15 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#F0A93C] border border-[#F0A93C]/30 tracking-wider">
+                    PORTAL
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-medium hidden sm:block">
-                  Executive Intelligence
+                <span className="text-[10px] text-[#A89F91] font-mono font-medium hidden sm:block mt-0.5">
+                  scriptingBear • Executive OS
                 </span>
               </div>
             </Link>
           </div>
 
           {/* Center: Desktop Navigation Tabs */}
-          <nav className="hidden lg:flex items-center gap-1 rounded-2xl border border-white/[0.06] bg-black/40 p-1">
+          <nav className="hidden lg:flex items-center gap-1 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/80 p-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -117,10 +117,10 @@ export function Navbar({
                     isActive
                       ? link.isExcel
                         ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                        : 'bg-white/[0.1] text-white shadow-sm'
+                        : 'bg-[#F0A93C] text-[#100D0A] font-bold shadow-md shadow-[#F0A93C]/20'
                       : link.isExcel
                       ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      : 'text-[#A89F91] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -149,11 +149,11 @@ export function Navbar({
             <div className="relative">
               <button
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/[0.15] transition-colors"
+                className="flex items-center gap-1.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#181411] px-2.5 py-1.5 text-xs text-[#E9E1DB] hover:border-[#F0A93C]/40 transition-colors"
                 title="Change anchor baseline date"
               >
-                <Calendar className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span className="font-mono text-emerald-300 font-semibold text-xs">
+                <Calendar className="h-3.5 w-3.5 text-[#F0A93C] shrink-0" />
+                <span className="font-mono text-[#F0A93C] font-semibold text-xs">
                   {referenceDate === '2026-11-10' ? '10 Nov' : referenceDate}
                 </span>
               </button>

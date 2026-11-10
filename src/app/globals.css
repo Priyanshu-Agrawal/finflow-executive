@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-serif), Newsreader, Georgia, serif;
+  --font-mono: var(--font-mono), JetBrains Mono, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #100D0A;
+  --foreground: #E9E1DB;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #100D0A;
+  color: #E9E1DB;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Obsidian Glassmorphism */
+.obsidian-card {
+  background-color: #161310;
+  border: 1px solid rgba(246, 239, 227, 0.08);
+}
+
+.obsidian-glass {
+  background: rgba(22, 19, 16, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(246, 239, 227, 0.08);
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px -3px rgba(240, 169, 60, 0.25);
+}
+
+.gold-border-glow {
+  border-color: rgba(240, 169, 60, 0.35);
+  box-shadow: 0 0 16px -2px rgba(240, 169, 60, 0.15);
+}
+
+/* Hide scrollbar for clean horizontal swipeable cards */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

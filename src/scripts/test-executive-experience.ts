@@ -12,9 +12,10 @@ async function testFullExperience() {
   await page.waitForURL('**/login**');
   console.log('Redirected to:', page.url());
 
-  // Fill login
-  console.log('2. Logging into FinFlow Executive...');
-  await page.fill('input[type="password"]', 'FinFlow@2026!');
+  // Fill login with username & password
+  console.log('2. Logging into FinFlow Executive with username & password...');
+  await page.fill('input[name="username"]', 'scriptingBear');
+  await page.fill('input[name="password"]', 'FinFlow@2026!');
   await page.click('button[type="submit"]');
 
   await page.waitForURL('http://localhost:3000/');

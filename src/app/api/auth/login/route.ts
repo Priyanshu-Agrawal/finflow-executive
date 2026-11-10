@@ -12,39 +12,35 @@ import {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password } = body;
+    const username = (body.username || body.email || '').trim();
+    const password = (body.password || '').trim();
 
-    if (!email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { error: 'Email/username and password are required' },
+        { error: 'Username and password are required' },
         { status: 400 }
       );
     }
 
-    const isValid = validateCredentials(email, password);
+    const isValid = validateCredentials(username, password);
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials. Please verify your email and password.' },
+        { error: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    const userEmail = email.toLowerCase().trim();
-    const userName = 'Priyanshu Agrawal';
-
     const accessToken = await createAccessToken({
-      email: userEmail,
-      name: userName,
+      username,
       role: 'executive',
     });
 
-    const refreshToken = await createRefreshToken(userEmail);
+    const refreshToken = await createRefreshToken(username);
 
     const response = NextResponse.json({
       success: true,
       user: {
-        email: userEmail,
-        name: userName,
+        username,
       },
     });
 

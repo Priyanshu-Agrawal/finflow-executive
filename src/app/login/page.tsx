@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Lock, LogIn, Mail, ShieldCheck, Sparkles, Wallet } from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, ShieldCheck, User, Wallet } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') || '/';
 
-  const [email, setEmail] = useState('essence.priyanshu.agrawal@gmail.com');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -36,13 +36,13 @@ function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe }),
+        body: JSON.stringify({ username, password, rememberMe }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Login failed. Please check credentials.');
+        throw new Error(data.error || 'Invalid credentials.');
       }
 
       // Successful login -> Navigate to target page
@@ -72,16 +72,12 @@ function LoginForm() {
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
             FinFlow
             <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-              EXECUTIVE
+              PORTAL
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1.5">
-            Priyanshu Agrawal • Private Financial Intelligence
+            Private Financial Management & Intelligence
           </p>
-          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-            <span>Production Host:</span>
-            <code className="text-emerald-400/90 font-mono">expenses.scriptingbear.com</code>
-          </div>
         </div>
 
         {/* Card Form */}
@@ -94,38 +90,45 @@ function LoginForm() {
               </div>
             )}
 
-            {/* Email / Username */}
+            {/* Username Input */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Authorized Account
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
+                  name="username"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="essence.priyanshu.agrawal@gmail.com"
-                  className="w-full rounded-2xl border border-white/[0.1] bg-black/40 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username"
+                  className="w-full rounded-2xl border border-white/[0.1] bg-black/40 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Input */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Executive Password
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full rounded-2xl border border-white/[0.1] bg-black/40 pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none font-mono"
+                  placeholder="Password"
+                  className="w-full rounded-2xl border border-white/[0.1] bg-black/40 pl-10 pr-10 py-2.5 text-xs sm:text-sm text-white placeholder-slate-600 focus:border-emerald-500 focus:outline-none font-mono"
                 />
                 <button
                   type="button"
@@ -148,7 +151,7 @@ function LoginForm() {
                 />
                 <span>Stay signed in (30 days)</span>
               </label>
-              <span className="text-[11px] text-slate-500">HS256 Encrypted</span>
+              <span className="text-[11px] text-slate-500">Encrypted Session</span>
             </div>
 
             {/* Submit Button */}
@@ -165,7 +168,7 @@ function LoginForm() {
               ) : (
                 <>
                   <LogIn className="h-4 w-4" />
-                  <span>Enter Executive Portal</span>
+                  <span>Sign In</span>
                 </>
               )}
             </button>
@@ -175,7 +178,7 @@ function LoginForm() {
         {/* Security Footer */}
         <div className="mt-8 text-center text-xs text-slate-600 flex items-center justify-center gap-1.5">
           <ShieldCheck className="h-4 w-4 text-emerald-500/70" />
-          <span>HTTP-Only Cookie Rotation • Automatic Token Expiry</span>
+          <span>Encrypted Session • Automatic Token Rotation</span>
         </div>
       </div>
     </div>
@@ -187,7 +190,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#07090e] flex items-center justify-center text-slate-500 text-xs font-sans">
-          Loading Executive Portal...
+          Loading Portal...
         </div>
       }
     >

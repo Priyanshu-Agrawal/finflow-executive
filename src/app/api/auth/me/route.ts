@@ -17,8 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         authenticated: true,
         user: {
-          email: verified.email,
-          name: verified.name,
+          username: verified.username,
         },
       });
     }
@@ -29,19 +28,16 @@ export async function GET(req: NextRequest) {
   if (refreshToken) {
     const refreshVerified = await verifyRefreshToken(refreshToken);
     if (refreshVerified) {
-      const userEmail = refreshVerified.email;
-      const userName = 'Priyanshu Agrawal';
+      const username = refreshVerified.username;
       const newAccessToken = await createAccessToken({
-        email: userEmail,
-        name: userName,
+        username,
         role: 'executive',
       });
 
       const res = NextResponse.json({
         authenticated: true,
         user: {
-          email: userEmail,
-          name: userName,
+          username,
         },
       });
 

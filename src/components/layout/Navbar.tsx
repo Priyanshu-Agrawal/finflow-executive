@@ -98,7 +98,7 @@ export function Navbar({
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-500 font-medium hidden sm:block">
-                  Priyanshu Agrawal
+                  Executive Intelligence
                 </span>
               </div>
             </Link>

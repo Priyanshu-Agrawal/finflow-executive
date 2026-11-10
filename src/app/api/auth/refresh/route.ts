@@ -32,25 +32,22 @@ export async function POST(req: NextRequest) {
       return res;
     }
 
-    const userEmail = verified.email;
-    const userName = 'Priyanshu Agrawal';
+    const username = verified.username;
 
     // Issue fresh access token
     const newAccessToken = await createAccessToken({
-      email: userEmail,
-      name: userName,
+      username,
       role: 'executive',
     });
 
     // Rotate refresh token for maximum security
-    const newRefreshToken = await createRefreshToken(userEmail);
+    const newRefreshToken = await createRefreshToken(username);
 
     const res = NextResponse.json({
       success: true,
       refreshed: true,
       user: {
-        email: userEmail,
-        name: userName,
+        username,
       },
     });
 
@@ -73,8 +70,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-export async function GET(req: NextRequest) {
-  return POST(req);
 }

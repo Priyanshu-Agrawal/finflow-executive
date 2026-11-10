@@ -5,8 +5,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 export interface TokenPayload {
-  email: string;
-  name: string;
+  username: string;
   role: 'executive';
 }
 
@@ -37,8 +36,8 @@ export async function createAccessToken(payload: TokenPayload): Promise<string> 
 /**
  * Generate long-lived Persistent Refresh Token (30 days)
  */
-export async function createRefreshToken(email: string): Promise<string> {
-  return new SignJWT({ email, type: 'refresh' })
+export async function createRefreshToken(username: string): Promise<string> {
+  return new SignJWT({ username, type: 'refresh' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(REFRESH_TOKEN_EXPIRY)
@@ -60,11 +59,11 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload | n
 /**
  * Verify Refresh Token
  */
-export async function verifyRefreshToken(token: string): Promise<{ email: string } | null> {
+export async function verifyRefreshToken(token: string): Promise<{ username: string } | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    if (payload.type !== 'refresh' || !payload.email) return null;
-    return { email: payload.email as string };
+    if (payload.type !== 'refresh' || (!payload.username && !payload.email)) return null;
+    return { username: (payload.username || payload.email) as string };
   } catch {
     return null;
   }
@@ -88,16 +87,21 @@ export function getCookieOptions(maxAgeSec: number) {
 }
 
 /**
- * Validate credentials against environment configuration
+ * Validate credentials against environment configuration (Username + Password)
  */
-export function validateCredentials(emailInput: string, passwordInput: string): boolean {
-  const configuredUser = (process.env.AUTH_USER || 'essence.priyanshu.agrawal@gmail.com').toLowerCase().trim();
+export function validateCredentials(usernameInput: string, passwordInput: string): boolean {
+  const configuredUser = (
+    process.env.AUTH_USERNAME ||
+    process.env.AUTH_USER ||
+    'scriptingbear'
+  ).toLowerCase().trim();
   const configuredPass = (process.env.AUTH_PASSWORD || 'FinFlow@2026!').trim();
 
+  const u = usernameInput.toLowerCase().trim();
   const userMatch =
-    emailInput.toLowerCase().trim() === configuredUser ||
-    emailInput.toLowerCase().trim() === 'only.priyanshu.agrawal@gmail.com' ||
-    emailInput.toLowerCase().trim() === 'admin';
+    u === configuredUser ||
+    u === 'scriptingbear' ||
+    u === 'admin';
 
   const passMatch = passwordInput.trim() === configuredPass;
 

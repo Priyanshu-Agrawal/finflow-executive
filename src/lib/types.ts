@@ -97,26 +97,42 @@ export interface BudgetPacing {
   currentDay: number;         // 10
   remainingDays: number;      // 20
   
-  // General Expenses Budget
+  // Recurring Cycle Anchors
+  budgetRecurringDay: number; // 6 or 7 (default 6)
+  rentRecurringDay: number;   // 15
+  cycleStartDate: string;     // e.g. "2026-11-06"
+  cycleEndDate: string;       // e.g. "2026-12-06"
+  cycleLabel: string;         // e.g. "6 Nov – 6 Dec Cycle"
+  daysElapsedInCycle: number; // e.g. 4
+  daysRemainingInCycle: number; // e.g. 26
+  
+  // Rent Recurring Milestone (15th)
+  nextRentDate: string;       // e.g. "2026-11-15"
+  daysUntilRent: number;      // e.g. 5
+  rentAmount: number;         // e.g. 15000
+  postRentBuffer: number;     // e.g. 53392
+
+  // General Expenses Budget (15k)
   generalBudget: number;      // e.g. 15000
-  generalSpentSoFar: number;  // e.g. 4500
-  generalRemaining: number;   // e.g. 10500
-  generalPerDayLimit: number; // e.g. 525/day
-  generalSpentPercent: number;// 30%
+  generalSpentSoFar: number;  // e.g. 3500
+  generalRemaining: number;   // e.g. 11500
+  generalPerDayLimit: number; // e.g. 442/day (divided by daysRemainingInCycle)
+  generalSpentPercent: number;// e.g. 23%
   generalExpensesList: ExpenseEntry[];
 
-  // Electricity Budget
+  // Electricity Balance Factor (Separate)
   electricityBudget: number;      // e.g. 3200
-  electricitySpentSoFar: number;  // e.g. 500
-  electricityRemaining: number;   // e.g. 2700
-  electricityPerDayLimit: number; // e.g. 135/day
+  electricitySpentSoFar: number;  // e.g. 800 (recharges done)
+  electricityRemaining: number;   // e.g. 2400 (remaining balance)
+  electricityPerDayLimit: number; // e.g. 92/day (across cycle)
+  electricityPerDayUntilRent: number; // e.g. 480/day (until 15th rent date)
   electricitySpentPercent: number;
   electricityList: ExpenseEntry[];
 
-  // Third Factor: Available Balance & Safe Buffer Rate
+  // Liquid Reserves / Available Balance Factor
   availableBalance: number;       // ₹1,28,792
   postFixedObligationsBuffer: number; // ₹53,392
-  safeTotalDailyBurn: number;     // Post-Nov buffer / remaining days
+  safeTotalDailyBurn: number;     // Post-Rent buffer / daysRemainingInCycle
 }
 
 export interface PeerLedgerEntry {

@@ -6,14 +6,35 @@ import { FinancialsResponse, LogExpenseInput, ScheduleEmiInput, TransactionType 
 export function useFinancials(
   refDate: string = '2026-11-10',
   generalBudget: number = 15000,
-  electricityBudget: number = 3200
+  electricityBudget: number = 3200,
+  budgetRecurringDay: number = 6,
+  rentRecurringDay: number = 15,
+  rentAmount?: number,
+  electricityRemaining?: number
 ) {
+  const queryParams = new URLSearchParams({
+    refDate,
+    generalBudget: String(generalBudget),
+    electricityBudget: String(electricityBudget),
+    budgetRecurringDay: String(budgetRecurringDay),
+    rentRecurringDay: String(rentRecurringDay),
+  });
+  if (rentAmount !== undefined) queryParams.set('rentAmount', String(rentAmount));
+  if (electricityRemaining !== undefined) queryParams.set('electricityRemaining', String(electricityRemaining));
+
   return useQuery<FinancialsResponse>({
-    queryKey: ['financials', refDate, generalBudget, electricityBudget],
+    queryKey: [
+      'financials',
+      refDate,
+      generalBudget,
+      electricityBudget,
+      budgetRecurringDay,
+      rentRecurringDay,
+      rentAmount,
+      electricityRemaining,
+    ],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/financials?refDate=${encodeURIComponent(refDate)}&generalBudget=${generalBudget}&electricityBudget=${electricityBudget}`
-      );
+      const res = await fetch(`/api/financials?${queryParams.toString()}`);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || 'Failed to fetch financials');

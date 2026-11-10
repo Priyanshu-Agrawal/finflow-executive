@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
     const refDate = searchParams.get('refDate') || '2026-11-10';
     const generalBudgetParam = Number(searchParams.get('generalBudget')) || 15000;
     const electricityBudgetParam = Number(searchParams.get('electricityBudget')) || 3200;
+    const budgetRecurringDay = Number(searchParams.get('budgetRecurringDay')) || 6;
+    const rentRecurringDay = Number(searchParams.get('rentRecurringDay')) || 15;
+    const rentAmountParam = searchParams.get('rentAmount') ? Number(searchParams.get('rentAmount')) : undefined;
+    const electricityRemainingParam = searchParams.get('electricityRemaining') ? Number(searchParams.get('electricityRemaining')) : undefined;
 
     const [expenses, loansData, peerLedger, meteorData] = await Promise.all([
       getExpensesFromSheet(),
@@ -41,7 +45,11 @@ export async function GET(request: NextRequest) {
       generalBudgetParam,
       electricityBudgetParam,
       kpis.currentBalance,
-      kpis.postNovBalance
+      kpis.postNovBalance,
+      budgetRecurringDay,
+      rentRecurringDay,
+      rentAmountParam,
+      electricityRemainingParam
     );
 
     const responseData: FinancialsResponse = {

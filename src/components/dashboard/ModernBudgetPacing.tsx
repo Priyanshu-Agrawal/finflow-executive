@@ -6,12 +6,17 @@ import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import {
   AlertCircle,
   Calendar,
+  Check,
   CheckCircle2,
   Clock,
+  Edit2,
   Flame,
   Gauge,
+  Home,
   Lightbulb,
   Plus,
+  RefreshCw,
+  Save,
   ShieldCheck,
   ShoppingBag,
   Sliders,
@@ -26,6 +31,10 @@ interface ModernBudgetPacingProps {
   pacing: BudgetPacing;
   onUpdateGeneralBudget: (val: number) => void;
   onUpdateElectricityBudget: (val: number) => void;
+  onUpdateBudgetRecurringDay?: (val: number) => void;
+  onUpdateRentRecurringDay?: (val: number) => void;
+  onUpdateRentAmount?: (val: number) => void;
+  onUpdateElectricityRemaining?: (val: number) => void;
   onOpenQuickLog?: () => void;
 }
 
@@ -33,84 +42,222 @@ export function ModernBudgetPacing({
   pacing,
   onUpdateGeneralBudget,
   onUpdateElectricityBudget,
+  onUpdateBudgetRecurringDay,
+  onUpdateRentRecurringDay,
+  onUpdateRentAmount,
+  onUpdateElectricityRemaining,
   onOpenQuickLog,
 }: ModernBudgetPacingProps) {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempGeneral, setTempGeneral] = useState(pacing.generalBudget);
-  const [tempElec, setTempElec] = useState(pacing.electricityBudget);
+  const [tempElecBudget, setTempElecBudget] = useState(pacing.electricityBudget);
+  const [tempResetDay, setTempResetDay] = useState(pacing.budgetRecurringDay || 6);
+  const [tempRentDay, setTempRentDay] = useState(pacing.rentRecurringDay || 15);
+  const [tempRentAmt, setTempRentAmt] = useState(pacing.rentAmount || 15000);
+  const [tempElecRemaining, setTempElecRemaining] = useState(pacing.electricityRemaining || 2400);
+
+  // Quick inline edit state for electricity balance
+  const [isEditingMeter, setIsEditingMeter] = useState(false);
+  const [inlineMeterValue, setInlineMeterValue] = useState<number | string>(pacing.electricityRemaining);
+  const [meterSavedMsg, setMeterSavedMsg] = useState(false);
+
   const [showTxList, setShowTxList] = useState(false);
 
   const handleApply = () => {
     onUpdateGeneralBudget(tempGeneral);
-    onUpdateElectricityBudget(tempElec);
+    onUpdateElectricityBudget(tempElecBudget);
+    if (onUpdateBudgetRecurringDay) onUpdateBudgetRecurringDay(tempResetDay);
+    if (onUpdateRentRecurringDay) onUpdateRentRecurringDay(tempRentDay);
+    if (onUpdateRentAmount) onUpdateRentAmount(tempRentAmt);
+    if (onUpdateElectricityRemaining) onUpdateElectricityRemaining(tempElecRemaining);
     setIsConfiguring(false);
   };
 
+  const handleSaveInlineMeter = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(inlineMeterValue);
+    if (!isNaN(val) && onUpdateElectricityRemaining) {
+      onUpdateElectricityRemaining(val);
+      setTempElecRemaining(val);
+      setIsEditingMeter(false);
+      setMeterSavedMsg(true);
+      setTimeout(() => setMeterSavedMsg(false), 2000);
+    }
+  };
+
   return (
-    <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#131722]/90 via-[#0e111a]/95 to-[#0a0c12] p-5 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
+    <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-[#131722]/90 via-[#0e111a]/95 to-[#0a0c12] p-4 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.06]">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30 uppercase tracking-wider">
-              Monthly Budget Burn Engine
+              Budget Burn & Runway Engine
             </span>
-            <span className="text-xs text-slate-400 font-medium">
-              {pacing.monthName} • Day {pacing.currentDay} of {pacing.totalDaysInMonth}
+            <span className="rounded-md bg-indigo-500/15 px-2 py-0.5 text-[10px] font-mono font-bold text-indigo-300 border border-indigo-500/30">
+              Cycle: {pacing.cycleLabel || `${pacing.budgetRecurringDay}th reset`}
+            </span>
+            <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/30 flex items-center gap-1">
+              <Home className="h-3 w-3" />
+              Rent on {pacing.rentRecurringDay}th ({pacing.daysUntilRent}d left)
             </span>
           </div>
-          <h2 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-white mt-1.5 flex items-center gap-2">
             <Gauge className="h-5 w-5 text-amber-400" />
-            Daily Allowance & Budget Pacing
+            Configurable Budget & Cycle Pacing
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Deducts everyday general expenses and power recharges, calculating per-day safe spend alongside your liquid reserves.
+            Budget recurring on <strong className="text-amber-300">{pacing.budgetRecurringDay}th</strong> • Rent recurring on <strong className="text-rose-300">{pacing.rentRecurringDay}th</strong> • Remaining electricity balance factor.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="rounded-xl border border-white/[0.08] bg-black/40 px-3 py-1.5 text-xs font-mono text-slate-300 flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-amber-400" />
             <span>
-              <strong className="text-white">{pacing.remainingDays}</strong> days left in month
+              <strong className="text-white">{pacing.daysRemainingInCycle}</strong> days left in cycle
             </span>
           </div>
 
           <button
             onClick={() => setIsConfiguring(!isConfiguring)}
-            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] transition-colors shadow-sm"
           >
-            <Sliders className="h-3.5 w-3.5" />
-            <span>{isConfiguring ? 'Close' : 'Set Limits'}</span>
+            <Sliders className="h-3.5 w-3.5 text-amber-400" />
+            <span>{isConfiguring ? 'Close Settings' : 'Configure Dates & Meter'}</span>
           </button>
         </div>
       </div>
 
-      {/* Inline Configurator */}
+      {/* Comprehensive Configurator Drawer */}
       {isConfiguring && (
-        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 space-y-4 animate-in fade-in">
+        <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-950/20 space-y-4 animate-in fade-in">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-300">Adjust Monthly Targets</span>
-            <span className="text-[11px] text-slate-400">Recalculates per-day allowance instantly</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1">
-                General Expenses Target (₹)
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block">
+                Recurring Cycles & Balance Configuration
+              </span>
+              <span className="text-[11px] text-slate-400">
+                Custom dates and meter balances are saved automatically to your device.
+              </span>
+            </div>
+            <span className="rounded-lg bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300 border border-amber-500/30">
+              Live Recalculation
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            {/* 1. General Budget Recurring Day */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3">
+              <label className="text-slate-300 font-semibold block mb-1">
+                General Expenses Recurring Date
+              </label>
+              <div className="flex gap-1.5 mb-2">
+                {[6, 7].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setTempResetDay(d)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      tempResetDay === d
+                        ? 'bg-amber-500 text-slate-950 shadow-md'
+                        : 'bg-white/[0.05] text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {d}th of Month
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-400">Custom Day:</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="28"
+                  value={tempResetDay}
+                  onChange={(e) => setTempResetDay(Number(e.target.value))}
+                  className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-mono text-white text-center focus:outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            {/* 2. Room Rent Recurring Date & Amount */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3">
+              <label className="text-slate-300 font-semibold block mb-1">
+                Room Rent Recurring Date
+              </label>
+              <div className="flex gap-1.5 mb-2">
+                {[15, 1, 5, 10].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setTempRentDay(d)}
+                    className={`flex-1 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      tempRentDay === d
+                        ? 'bg-rose-500 text-white shadow-md'
+                        : 'bg-white/[0.05] text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {d}th
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-2">
+                <span className="text-[11px] text-slate-400">Rent Amount (₹):</span>
+                <input
+                  type="number"
+                  value={tempRentAmt}
+                  onChange={(e) => setTempRentAmt(Number(e.target.value))}
+                  className="w-28 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-mono text-white text-right focus:outline-none focus:border-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* 3. Remaining Electricity Balance (Live Meter) */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3">
+              <label className="text-slate-300 font-semibold block mb-1">
+                Remaining Electricity Balance (₹)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={tempElecRemaining}
+                onChange={(e) => setTempElecRemaining(Number(e.target.value))}
+                placeholder="2400"
+                className="w-full rounded-xl border border-blue-500/40 bg-slate-950 px-3 py-1.5 text-xs font-mono font-bold text-blue-300 focus:outline-none focus:border-blue-400"
+              />
+              <div className="flex gap-1.5 mt-2">
+                {[1500, 2000, 2400, 3000].map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => setTempElecRemaining(b)}
+                    className="flex-1 rounded-lg bg-white/[0.05] py-0.5 text-[10px] font-mono text-blue-300 hover:text-white"
+                  >
+                    ₹{b}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. General Expenses Monthly Target */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3">
+              <label className="text-slate-300 font-semibold block mb-1">
+                General Expenses Budget (₹)
               </label>
               <input
                 type="number"
                 value={tempGeneral}
                 onChange={(e) => setTempGeneral(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
               />
               <div className="flex gap-1.5 mt-2">
-                {[10000, 12000, 15000, 20000].map((b) => (
+                {[10000, 12000, 15000, 18000].map((b) => (
                   <button
                     key={b}
                     type="button"
                     onClick={() => setTempGeneral(b)}
-                    className="rounded-lg bg-slate-800 px-2.5 py-1 text-[10px] text-slate-300 hover:text-white"
+                    className="flex-1 rounded-lg bg-white/[0.05] py-0.5 text-[10px] text-slate-300 hover:text-white"
                   >
                     ₹{(b / 1000).toFixed(0)}k
                   </button>
@@ -118,23 +265,24 @@ export function ModernBudgetPacing({
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1">
-                Electricity Budget Target (₹)
+            {/* 5. Electricity Monthly Target */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3">
+              <label className="text-slate-300 font-semibold block mb-1">
+                Electricity Total Target (₹)
               </label>
               <input
                 type="number"
-                value={tempElec}
-                onChange={(e) => setTempElec(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+                value={tempElecBudget}
+                onChange={(e) => setTempElecBudget(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
               />
               <div className="flex gap-1.5 mt-2">
                 {[2000, 2400, 3000, 3200].map((b) => (
                   <button
                     key={b}
                     type="button"
-                    onClick={() => setTempElec(b)}
-                    className="rounded-lg bg-slate-800 px-2.5 py-1 text-[10px] text-slate-300 hover:text-white"
+                    onClick={() => setTempElecBudget(b)}
+                    className="flex-1 rounded-lg bg-white/[0.05] py-0.5 text-[10px] text-slate-300 hover:text-white"
                   >
                     ₹{b}
                   </button>
@@ -146,39 +294,40 @@ export function ModernBudgetPacing({
           <div className="flex justify-end gap-2 pt-2 border-t border-amber-500/20">
             <button
               onClick={() => setIsConfiguring(false)}
-              className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white"
+              className="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              className="px-4 py-1.5 rounded-lg bg-amber-500 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors shadow-sm"
+              className="px-4 py-1.5 rounded-xl bg-amber-500 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors shadow-md flex items-center gap-1.5"
             >
-              Apply Limits
+              <Save className="h-3.5 w-3.5" />
+              <span>Apply & Save Configuration</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* The 3 Core Pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Pillar 1: General Expenses Budget */}
+      {/* The 4 Financial Factor Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Factor 1: General Expenses Budget (₹15k Pool) */}
         <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <ShoppingBag className="h-4 w-4" />
-                General Budget
+                General Budget ({pacing.budgetRecurringDay}th)
               </span>
               <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/20 font-mono">
-                {formatINR(pacing.generalBudget)} / mo
+                {formatINR(pacing.generalBudget)}
               </span>
             </div>
 
             {/* Daily Burn Rate Card */}
             <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-950/30 mb-3">
               <span className="text-[11px] text-amber-300/90 font-medium block">
-                Remaining Safe Daily Burn:
+                Safe Daily Spend:
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="font-mono text-3xl font-extrabold text-amber-400">
@@ -187,14 +336,14 @@ export function ModernBudgetPacing({
                 <span className="text-xs font-bold text-amber-300">/ day</span>
               </div>
               <span className="text-[10px] text-slate-400 block mt-1">
-                For the next {pacing.remainingDays} days until month-end
+                For the remaining {pacing.daysRemainingInCycle} days of this cycle
               </span>
             </div>
 
             {/* Spent vs Remaining breakdown */}
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-400">
-                <span>Deducted So Far:</span>
+                <span>Spent Since {pacing.budgetRecurringDay}th:</span>
                 <span className="font-mono font-bold text-slate-200">
                   {formatINR(pacing.generalSpentSoFar)} ({pacing.generalSpentPercent}%)
                 </span>
@@ -224,7 +373,7 @@ export function ModernBudgetPacing({
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px]">
             <span className="text-slate-400">
-              {pacing.generalExpensesList.length} recorded ad-hocs
+              {pacing.generalExpensesList.length} cycle ad-hocs
             </span>
             <button
               onClick={() => setShowTxList(!showTxList)}
@@ -235,34 +384,70 @@ export function ModernBudgetPacing({
           </div>
         </div>
 
-        {/* Pillar 2: Electricity & Power Recharge */}
+        {/* Factor 2: Electricity Balance Factor (Separately Tracked & Updateable) */}
         <div className="rounded-2xl border border-blue-500/25 bg-gradient-to-b from-blue-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <Lightbulb className="h-4 w-4" />
-                Electricity Budget
+                Electricity Balance
               </span>
-              <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue-500/20 font-mono">
-                {formatINR(pacing.electricityBudget)} / mo
-              </span>
+              <button
+                onClick={() => setIsEditingMeter(!isEditingMeter)}
+                className="rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue-500/20 flex items-center gap-1 hover:bg-blue-500/20 transition-colors"
+                title="Click to directly update remaining electricity balance"
+              >
+                <Edit2 className="h-3 w-3" />
+                <span>Update Balance</span>
+              </button>
             </div>
 
-            {/* Daily Power Allowance Card */}
-            <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-950/30 mb-3">
-              <span className="text-[11px] text-blue-300/90 font-medium block">
-                Daily Power Allowance:
-              </span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="font-mono text-3xl font-extrabold text-blue-400">
-                  {formatINR(pacing.electricityPerDayLimit)}
+            {/* Inline Quick Meter Edit Box */}
+            {isEditingMeter ? (
+              <form onSubmit={handleSaveInlineMeter} className="p-3 rounded-xl border border-blue-500/40 bg-blue-950/40 mb-3 space-y-2">
+                <label className="text-[11px] text-blue-200 block font-semibold">
+                  Update Remaining Electricity (₹):
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="number"
+                    required
+                    value={inlineMeterValue}
+                    onChange={(e) => setInlineMeterValue(e.target.value)}
+                    className="flex-1 rounded-lg border border-blue-500/50 bg-black/60 px-2.5 py-1 text-xs font-mono font-bold text-white focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1 rounded-lg bg-blue-500 hover:bg-blue-400 text-slate-950 text-xs font-bold transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* Remaining Electricity Balance Card */
+              <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-950/30 mb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-blue-300/90 font-medium block">
+                    Remaining Power Balance:
+                  </span>
+                  {meterSavedMsg && (
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Updated!
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="font-mono text-3xl font-extrabold text-blue-400">
+                    {formatINR(pacing.electricityRemaining)}
+                  </span>
+                  <span className="text-xs font-bold text-blue-300">pool</span>
+                </div>
+                <span className="text-[10px] text-slate-400 block mt-1">
+                  {formatINR(pacing.electricityPerDayUntilRent)}/day until {pacing.rentRecurringDay}th rent date
                 </span>
-                <span className="text-xs font-bold text-blue-300">/ day</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
-                Meter recharge pacing model
-              </span>
-            </div>
+            )}
 
             {/* Recharges vs Buffer breakdown */}
             <div className="space-y-1.5 text-xs">
@@ -273,9 +458,9 @@ export function ModernBudgetPacing({
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Remaining Buffer:</span>
+                <span>Safe Power Burn:</span>
                 <span className="font-mono font-bold text-emerald-400">
-                  {formatINR(pacing.electricityRemaining)}
+                  {formatINR(pacing.electricityPerDayLimit)} / day
                 </span>
               </div>
 
@@ -292,12 +477,82 @@ export function ModernBudgetPacing({
           </div>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
-            <span>{pacing.electricityList.length} recharge events</span>
-            <span className="text-blue-400 font-semibold">Meter Monitored</span>
+            <span>{pacing.electricityList.length} meter events</span>
+            {onOpenQuickLog && (
+              <button
+                onClick={onOpenQuickLog}
+                className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+              >
+                <Plus className="h-3 w-3" />
+                <span>+ Recharge</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Pillar 3: Available Balance 3rd Factor */}
+        {/* Factor 3: Rent Recurring Milestone (Configurable Date & Amount) */}
+        <div className="rounded-2xl border border-rose-500/25 bg-gradient-to-b from-rose-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <Home className="h-4 w-4" />
+                Room Rent ({pacing.rentRecurringDay}th)
+              </span>
+              <button
+                onClick={() => setIsConfiguring(true)}
+                className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/20 font-mono hover:bg-rose-500/20 transition-colors"
+                title="Configure rent recurring date & amount"
+              >
+                Set Date
+              </button>
+            </div>
+
+            {/* Rent Countdown Card */}
+            <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/30 mb-3">
+              <span className="text-[11px] text-rose-300/90 font-medium block">
+                Fixed Rent Commitment:
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="font-mono text-3xl font-extrabold text-rose-400">
+                  {formatINR(pacing.rentAmount)}
+                </span>
+                <span className="text-xs font-bold text-rose-300">/ mo</span>
+              </div>
+              <span className="text-[10px] text-slate-400 block mt-1">
+                Clears on the {pacing.rentRecurringDay}th ({pacing.daysUntilRent} days remaining)
+              </span>
+            </div>
+
+            {/* Rent buffer breakdown */}
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between text-slate-400">
+                <span>Due Date:</span>
+                <span className="font-mono font-bold text-slate-200">
+                  {formatDisplayDate(pacing.nextRentDate)}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Post-Rent Net Buffer:</span>
+                <span className="font-mono font-bold text-blue-400">
+                  {formatINR(pacing.postRentBuffer)}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Secured Status:</span>
+                <span className="font-mono font-semibold text-emerald-400">
+                  Funded in Bank Reserve
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-rose-300">
+            <span>Cycle: Every {pacing.rentRecurringDay}th</span>
+            <span className="font-mono font-bold">100% Guaranteed</span>
+          </div>
+        </div>
+
+        {/* Factor 4: Available Bank Balance & Total Liquid Runway */}
         <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/20 via-black/40 to-black/60 p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -306,14 +561,14 @@ export function ModernBudgetPacing({
                 Available Balance Factor
               </span>
               <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/20">
-                Liquid Reserves
+                Liquid Bank
               </span>
             </div>
 
             {/* Total Safe Daily Spend Card */}
             <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 mb-3">
               <span className="text-[11px] text-emerald-300/90 font-medium block">
-                Safe Total Daily Burn:
+                Total Safe Daily Runway:
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="font-mono text-3xl font-extrabold text-emerald-400">
@@ -329,13 +584,13 @@ export function ModernBudgetPacing({
             {/* Buffer stats */}
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-400">
-                <span>Primary Bank Available:</span>
+                <span>Current Bank Balance:</span>
                 <span className="font-mono font-bold text-white">
                   {formatINR(pacing.availableBalance)}
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Post-Nov 15 Net Cushion:</span>
+                <span>Post-Rent Cushion:</span>
                 <span className="font-mono font-bold text-blue-400">
                   {formatINR(pacing.postFixedObligationsBuffer)}
                 </span>
@@ -343,7 +598,7 @@ export function ModernBudgetPacing({
               <div className="flex justify-between text-slate-400">
                 <span>General Allowance Share:</span>
                 <span className="font-mono font-semibold text-slate-300">
-                  {Math.round((pacing.generalPerDayLimit / pacing.safeTotalDailyBurn) * 100)}% of daily burn
+                  {Math.round((pacing.generalPerDayLimit / Math.max(1, pacing.safeTotalDailyBurn)) * 100)}% of daily burn
                 </span>
               </div>
             </div>
@@ -354,39 +609,45 @@ export function ModernBudgetPacing({
               <CheckCircle2 className="h-3 w-3" />
               Capital Safety Secured
             </span>
-            <span className="text-slate-500 font-mono">Row 239</span>
+            <span className="text-slate-500 font-mono">Row 239 Intact</span>
           </div>
         </div>
       </div>
 
-      {/* Expandable November General Expenses Entries */}
+      {/* Expandable Active Cycle General Expenses Entries */}
       {showTxList && (
         <div className="p-4 rounded-2xl border border-white/[0.08] bg-black/40 space-y-3 animate-in fade-in">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white uppercase tracking-wider">
-              November General Expenses (Deducted from ₹15k Target)
+              Cycle Expenses ({pacing.cycleLabel || `${pacing.budgetRecurringDay}th reset`}) Deducted from Target
             </span>
             <span className="text-xs font-mono font-bold text-amber-400">
-              Total: {formatINR(pacing.generalSpentSoFar)}
+              Total Spent: {formatINR(pacing.generalSpentSoFar)}
             </span>
           </div>
           <div className="divide-y divide-white/[0.06]">
-            {pacing.generalExpensesList.map((tx) => (
-              <div
-                key={tx.rowIndex}
-                className="py-2.5 flex items-center justify-between text-xs font-mono"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-slate-500">#{tx.rowIndex}</span>
-                  <span className="text-slate-400">{formatDisplayDate(tx.date)}</span>
-                  <span className="font-sans font-medium text-white">{tx.description}</span>
+            {pacing.generalExpensesList.length === 0 ? (
+              <p className="py-4 text-center text-xs text-slate-500">
+                No general ad-hoc expenses logged yet in this {pacing.budgetRecurringDay}th cycle!
+              </p>
+            ) : (
+              pacing.generalExpensesList.map((tx) => (
+                <div
+                  key={tx.rowIndex}
+                  className="py-2.5 flex items-center justify-between text-xs font-mono"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500">#{tx.rowIndex}</span>
+                    <span className="text-slate-400">{formatDisplayDate(tx.date)}</span>
+                    <span className="font-sans font-medium text-white">{tx.description}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="font-bold text-rose-400">-{formatINR(tx.amount)}</span>
+                    <span className="text-slate-500 text-[11px]">Bal: {formatINR(tx.balance)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-rose-400">-{formatINR(tx.amount)}</span>
-                  <span className="text-slate-500 text-[11px]">Bal: {formatINR(tx.balance)}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

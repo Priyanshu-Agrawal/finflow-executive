@@ -328,7 +328,11 @@ export function computeBudgetPacing(
   customGeneralBudget: number = 15000,
   customElectricityBudget: number = 3200,
   availableBalance: number = 128792,
-  postNovBuffer: number = 53392
+  postNovBuffer: number = 53392,
+  budgetRecurringDay: number = 6, // 6 or 7
+  rentRecurringDay: number = 15,   // 15
+  customRentAmount?: number,      // configurable rent amount (e.g. 15000)
+  customElectricityRemaining?: number // configurable live meter balance
 ): BudgetPacing {
   const parts = referenceDate.split('-').map(Number);
   const year = parts[0] || 2026;
@@ -343,40 +347,127 @@ export function computeBudgetPacing(
   ];
   const monthName = `${monthNames[month - 1]} ${year}`;
 
-  // Days in month
   const totalDaysInMonth = new Date(year, month, 0).getDate();
   const remainingDays = Math.max(1, totalDaysInMonth - day);
 
-  // 1. General Expenses Tracking for this month
+  // 1. Budget Cycle Start & End Calculation (Recurring on 6th or 7th)
+  let cycleStartYear = year;
+  let cycleStartMonth = month;
+  let cycleEndYear = year;
+  let cycleEndMonth = month;
+
+  if (day >= budgetRecurringDay) {
+    // Current cycle started on budgetRecurringDay of this month
+    cycleStartYear = year;
+    cycleStartMonth = month;
+    if (month === 12) {
+      cycleEndYear = year + 1;
+      cycleEndMonth = 1;
+    } else {
+      cycleEndYear = year;
+      cycleEndMonth = month + 1;
+    }
+  } else {
+    // Current cycle started on budgetRecurringDay of previous month
+    if (month === 1) {
+      cycleStartYear = year - 1;
+      cycleStartMonth = 12;
+    } else {
+      cycleStartYear = year;
+      cycleStartMonth = month - 1;
+    }
+    cycleEndYear = year;
+    cycleEndMonth = month;
+  }
+
+  const cycleStartDate = `${cycleStartYear}-${String(cycleStartMonth).padStart(2, '0')}-${String(budgetRecurringDay).padStart(2, '0')}`;
+  const cycleEndDate = `${cycleEndYear}-${String(cycleEndMonth).padStart(2, '0')}-${String(budgetRecurringDay).padStart(2, '0')}`;
+
+  const startMs = new Date(cycleStartYear, cycleStartMonth - 1, budgetRecurringDay).getTime();
+  const endMs = new Date(cycleEndYear, cycleEndMonth - 1, budgetRecurringDay).getTime();
+  const refMs = new Date(year, month - 1, day).getTime();
+
+  const totalDaysInCycle = Math.max(1, Math.round((endMs - startMs) / (86400 * 1000)));
+  const daysElapsedInCycle = Math.max(0, Math.round((refMs - startMs) / (86400 * 1000)));
+  const daysRemainingInCycle = Math.max(1, Math.round((endMs - refMs) / (86400 * 1000)));
+
+  const startMonthShort = monthNames[cycleStartMonth - 1]?.slice(0, 3);
+  const endMonthShort = monthNames[cycleEndMonth - 1]?.slice(0, 3);
+  const cycleLabel = `${budgetRecurringDay} ${startMonthShort} – ${budgetRecurringDay} ${endMonthShort}`;
+
+  // 2. Rent Recurring Milestone (15th of Every Month)
+  let rentYear = year;
+  let rentMonth = month;
+  if (day > rentRecurringDay) {
+    if (month === 12) {
+      rentYear = year + 1;
+      rentMonth = 1;
+    } else {
+      rentYear = year;
+      rentMonth = month + 1;
+    }
+  }
+
+  const nextRentDate = `${rentYear}-${String(rentMonth).padStart(2, '0')}-15`;
+  const rentMs = new Date(rentYear, rentMonth - 1, rentRecurringDay).getTime();
+  const daysUntilRent = Math.max(0, Math.round((rentMs - refMs) / (86400 * 1000)));
+
+  const rentRow = expenses.find(
+    (e) => e.date === nextRentDate && e.description.toLowerCase().includes('rent')
+  );
+  const rentAmount = customRentAmount !== undefined && customRentAmount > 0
+    ? customRentAmount
+    : rentRow ? rentRow.amount : 15000;
+  const postRentBuffer = postNovBuffer; // Net cushion after 15th rent payment clears (₹53,392)
+
+  // 3. General Expenses Tracking for this Recurring Cycle
   const generalExpensesList = expenses.filter((e) => {
-    if (!e.date.startsWith(monthKey)) return false;
+    // Only transactions in the active budget cycle up to reference date
+    if (e.date < cycleStartDate || e.date > referenceDate) return false;
     if (e.type !== 'DEBIT') return false;
     const desc = e.description.toLowerCase();
-    return desc.includes('general') || desc.includes('food') || desc.includes('petrol') || desc.includes('tea') || desc.includes('adhoc');
+    return (
+      desc.includes('general') ||
+      desc.includes('food') ||
+      desc.includes('petrol') ||
+      desc.includes('tea') ||
+      desc.includes('chai') ||
+      desc.includes('adhoc') ||
+      desc.includes('grocery')
+    );
   });
 
   const generalSpentSoFar = generalExpensesList.reduce((sum, e) => sum + e.amount, 0);
   const generalRemaining = Math.max(0, customGeneralBudget - generalSpentSoFar);
-  const generalPerDayLimit = Math.round(generalRemaining / remainingDays);
-  const generalSpentPercent = customGeneralBudget > 0 ? Math.round((generalSpentSoFar / customGeneralBudget) * 100) : 0;
+  // Safe per-day spend across the remaining days of this active cycle
+  const generalPerDayLimit = Math.round(generalRemaining / daysRemainingInCycle);
+  const generalSpentPercent =
+    customGeneralBudget > 0 ? Math.round((generalSpentSoFar / customGeneralBudget) * 100) : 0;
 
-  // 2. Electricity Budget Tracking for this month
+  // 4. Electricity Balance Factor (Separate Tracking)
+  // Scans electricity recharges in the active window
   const electricityList = expenses.filter((e) => {
-    if (!e.date.startsWith(monthKey)) return false;
+    if (e.date < cycleStartDate || e.date > referenceDate) return false;
     const desc = e.description.toLowerCase();
-    return desc.includes('electricity') || desc.includes('recharge');
+    return desc.includes('electricity') || desc.includes('recharge') || desc.includes('meter') || desc.includes('bijli');
   });
 
   const electricitySpentSoFar = electricityList
-    .filter(e => e.type === 'DEBIT')
+    .filter((e) => e.type === 'DEBIT')
     .reduce((sum, e) => sum + e.amount, 0);
 
-  const electricityRemaining = Math.max(0, customElectricityBudget - electricitySpentSoFar);
-  const electricityPerDayLimit = Math.round(electricityRemaining / remainingDays);
-  const electricitySpentPercent = customElectricityBudget > 0 ? Math.round((electricitySpentSoFar / customElectricityBudget) * 100) : 0;
+  const electricityRemaining = customElectricityRemaining !== undefined && !isNaN(customElectricityRemaining)
+    ? customElectricityRemaining
+    : Math.max(0, customElectricityBudget - electricitySpentSoFar);
+  // Power burn per day across remaining cycle days
+  const electricityPerDayLimit = Math.round(electricityRemaining / daysRemainingInCycle);
+  // Power runway per day until next rent/electricity reconciliation date (15th)
+  const electricityPerDayUntilRent = Math.round(electricityRemaining / Math.max(1, daysUntilRent));
+  const electricitySpentPercent =
+    customElectricityBudget > 0 ? Math.round(((customElectricityBudget - electricityRemaining) / customElectricityBudget) * 100) : 0;
 
-  // 3. Safe Total Daily Burn from Available Liquid Buffer
-  const safeTotalDailyBurn = Math.round(postNovBuffer / remainingDays);
+  // 5. Safe Total Daily Burn from Available Liquid Buffer
+  const safeTotalDailyBurn = Math.round(postRentBuffer / daysRemainingInCycle);
 
   return {
     monthKey,
@@ -384,6 +475,19 @@ export function computeBudgetPacing(
     totalDaysInMonth,
     currentDay: day,
     remainingDays,
+
+    budgetRecurringDay,
+    rentRecurringDay,
+    cycleStartDate,
+    cycleEndDate,
+    cycleLabel,
+    daysElapsedInCycle,
+    daysRemainingInCycle,
+
+    nextRentDate,
+    daysUntilRent,
+    rentAmount,
+    postRentBuffer,
 
     generalBudget: customGeneralBudget,
     generalSpentSoFar: Math.round(generalSpentSoFar),
@@ -396,11 +500,12 @@ export function computeBudgetPacing(
     electricitySpentSoFar: Math.round(electricitySpentSoFar),
     electricityRemaining: Math.round(electricityRemaining),
     electricityPerDayLimit,
+    electricityPerDayUntilRent,
     electricitySpentPercent,
     electricityList,
 
     availableBalance,
-    postFixedObligationsBuffer: postNovBuffer,
+    postFixedObligationsBuffer: postRentBuffer,
     safeTotalDailyBurn,
   };
 }

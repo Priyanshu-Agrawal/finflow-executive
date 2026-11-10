@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { Navbar } from '@/components/layout/Navbar';
 import { ExecutiveHero } from '@/components/dashboard/ExecutiveHero';
@@ -33,20 +33,93 @@ export default function DashboardPage() {
   const [referenceDate, setReferenceDate] = useState('2026-11-10');
   const [generalBudget, setGeneralBudget] = useState(15000);
   const [electricityBudget, setElectricityBudget] = useState(3200);
+  const [budgetRecurringDay, setBudgetRecurringDay] = useState(6);
+  const [rentRecurringDay, setRentRecurringDay] = useState(15);
+  const [rentAmount, setRentAmount] = useState(15000);
+  const [electricityRemaining, setElectricityRemaining] = useState<number | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'expenses' | 'excel' | 'loans' | 'ledger'>('overview');
 
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   const [isEmiSchedulerOpen, setIsEmiSchedulerOpen] = useState(false);
 
+  // Load custom cycle and factor configurations from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('finflow_cycle_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.generalBudget === 'number') setGeneralBudget(parsed.generalBudget);
+        if (typeof parsed.electricityBudget === 'number') setElectricityBudget(parsed.electricityBudget);
+        if (typeof parsed.budgetRecurringDay === 'number') setBudgetRecurringDay(parsed.budgetRecurringDay);
+        if (typeof parsed.rentRecurringDay === 'number') setRentRecurringDay(parsed.rentRecurringDay);
+        if (typeof parsed.rentAmount === 'number') setRentAmount(parsed.rentAmount);
+        if (typeof parsed.electricityRemaining === 'number') setElectricityRemaining(parsed.electricityRemaining);
+      }
+    } catch (e) {
+      console.error('Failed to load cycle config from localStorage', e);
+    }
+  }, []);
+
+  const persistConfig = (updates: Partial<{
+    generalBudget: number;
+    electricityBudget: number;
+    budgetRecurringDay: number;
+    rentRecurringDay: number;
+    rentAmount: number;
+    electricityRemaining: number;
+  }>) => {
+    try {
+      const existing = localStorage.getItem('finflow_cycle_config');
+      const current = existing ? JSON.parse(existing) : {};
+      localStorage.setItem('finflow_cycle_config', JSON.stringify({ ...current, ...updates }));
+    } catch (e) {
+      console.error('Failed to save cycle config to localStorage', e);
+    }
+  };
+
+  const handleUpdateGeneralBudget = (val: number) => {
+    setGeneralBudget(val);
+    persistConfig({ generalBudget: val });
+  };
+  const handleUpdateElectricityBudget = (val: number) => {
+    setElectricityBudget(val);
+    persistConfig({ electricityBudget: val });
+  };
+  const handleUpdateBudgetRecurringDay = (val: number) => {
+    setBudgetRecurringDay(val);
+    persistConfig({ budgetRecurringDay: val });
+  };
+  const handleUpdateRentRecurringDay = (val: number) => {
+    setRentRecurringDay(val);
+    persistConfig({ rentRecurringDay: val });
+  };
+  const handleUpdateRentAmount = (val: number) => {
+    setRentAmount(val);
+    persistConfig({ rentAmount: val });
+  };
+  const handleUpdateElectricityRemaining = (val: number) => {
+    setElectricityRemaining(val);
+    persistConfig({ electricityRemaining: val });
+  };
+
   const { data, isLoading, isError, error, refetch, isFetching } = useFinancials(
     referenceDate,
     generalBudget,
-    electricityBudget
+    electricityBudget,
+    budgetRecurringDay,
+    rentRecurringDay,
+    rentAmount,
+    electricityRemaining
   );
 
   const tabItems = [
     { id: 'overview', label: 'Overview & Cash Flow', icon: LineChart },
-    { id: 'budget', label: 'Budget Burn (₹15k)', icon: Gauge, badge: '525/d' },
+    {
+      id: 'budget',
+      label: `Budget Burn (₹${(generalBudget / 1000).toFixed(0)}k)`,
+      icon: Gauge,
+      badge: data?.budgetPacing ? `₹${data.budgetPacing.generalPerDayLimit}/d` : 'Burn',
+    },
     { id: 'expenses', label: 'Ledger (314+)', icon: FileSpreadsheet },
     { id: 'excel', label: 'Excel Mode', icon: TableProperties, isGreen: true },
     { id: 'loans', label: 'Loans & Payoff', icon: CreditCard },
@@ -149,8 +222,12 @@ export default function DashboardPage() {
                 {data.budgetPacing && (
                   <ModernBudgetPacing
                     pacing={data.budgetPacing}
-                    onUpdateGeneralBudget={setGeneralBudget}
-                    onUpdateElectricityBudget={setElectricityBudget}
+                    onUpdateGeneralBudget={handleUpdateGeneralBudget}
+                    onUpdateElectricityBudget={handleUpdateElectricityBudget}
+                    onUpdateBudgetRecurringDay={handleUpdateBudgetRecurringDay}
+                    onUpdateRentRecurringDay={handleUpdateRentRecurringDay}
+                    onUpdateRentAmount={handleUpdateRentAmount}
+                    onUpdateElectricityRemaining={handleUpdateElectricityRemaining}
                     onOpenQuickLog={() => setIsQuickLogOpen(true)}
                   />
                 )}
@@ -176,8 +253,12 @@ export default function DashboardPage() {
               <div className="space-y-5 animate-in fade-in duration-200">
                 <ModernBudgetPacing
                   pacing={data.budgetPacing}
-                  onUpdateGeneralBudget={setGeneralBudget}
-                  onUpdateElectricityBudget={setElectricityBudget}
+                  onUpdateGeneralBudget={handleUpdateGeneralBudget}
+                  onUpdateElectricityBudget={handleUpdateElectricityBudget}
+                  onUpdateBudgetRecurringDay={handleUpdateBudgetRecurringDay}
+                  onUpdateRentRecurringDay={handleUpdateRentRecurringDay}
+                  onUpdateRentAmount={handleUpdateRentAmount}
+                  onUpdateElectricityRemaining={handleUpdateElectricityRemaining}
                   onOpenQuickLog={() => setIsQuickLogOpen(true)}
                 />
 

@@ -281,12 +281,12 @@ export function detectDuplicates(expenses: ExpenseEntry[]): DuplicateGroup[] {
 
 export function computeSpendingCategories(expenses: ExpenseEntry[]): SpendingCategorySummary[] {
   const totals: Record<string, { amount: number; count: number; color: string }> = {
-    'Housing & Utilities': { amount: 0, count: 0, color: '#3b82f6' }, // blue
-    'Loan EMIs': { amount: 0, count: 0, color: '#6366f1' },           // indigo
-    'General & Ad-Hoc': { amount: 0, count: 0, color: '#f59e0b' },    // amber
-    'Family & Gifts': { amount: 0, count: 0, color: '#ec4899' },      // pink
-    'Tech & Subscriptions': { amount: 0, count: 0, color: '#8b5cf6' },// violet
-    'Other Expenses': { amount: 0, count: 0, color: '#64748b' },      // slate
+    'Housing & Utilities': { amount: 0, count: 0, color: '#F59E0B' }, // Warm Amber Gold
+    'Loan EMIs': { amount: 0, count: 0, color: '#D97706' },           // Deep Amber
+    'General & Ad-Hoc': { amount: 0, count: 0, color: '#FCD34D' },    // Light Gold
+    'Family & Gifts': { amount: 0, count: 0, color: '#E4E4E7' },      // Crisp Zinc-200
+    'Tech & Subscriptions': { amount: 0, count: 0, color: '#A1A1AA' },// Medium Zinc-400
+    'Other Expenses': { amount: 0, count: 0, color: '#71717A' },      // Muted Zinc-500
   };
 
   let grandTotal = 0;

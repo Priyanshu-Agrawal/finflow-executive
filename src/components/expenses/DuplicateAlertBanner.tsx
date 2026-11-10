@@ -22,20 +22,20 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
   const totalFlaggedCount = duplicates.reduce((acc, g) => acc + g.rows.length, 0);
 
   return (
-    <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4 shadow-lg mb-6">
+    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 shadow-lg mb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
             <AlertCircle className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
               Duplicate Detection Engine
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-400 border border-amber-500/30">
                 {duplicates.length} clusters flagged ({totalFlaggedCount} entries)
               </span>
             </h3>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <p className="text-xs text-zinc-300 mt-0.5">
               Found transactions with identical description and amount within a 3-day window
             </p>
           </div>
@@ -43,7 +43,7 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
 
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
+          className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-colors"
         >
           <span>{isExpanded ? 'Hide Clusters' : 'Inspect & Resolve'}</span>
           {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -56,20 +56,20 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
           {duplicates.map((group) => (
             <div
               key={group.id}
-              className="p-3.5 rounded-xl border border-slate-800 bg-slate-900/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              className="p-3.5 rounded-xl border border-white/[0.07] bg-[#18181B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-white text-sm">{group.description}</span>
-                  <span className="font-mono font-semibold text-amber-400">
+                  <span className="font-semibold text-white text-sm">{group.description}</span>
+                  <span className="font-mono font-medium text-amber-400">
                     {formatINR(group.amount)}
                   </span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-2 text-slate-400">
+                <div className="mt-1 flex flex-wrap gap-2 text-zinc-400">
                   {group.rows.map((r) => (
                     <span
                       key={r.rowIndex}
-                      className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[11px] text-slate-300"
+                      className="rounded bg-[#121214] border border-white/[0.05] px-2 py-0.5 font-mono text-[11px] text-zinc-300"
                     >
                       Row {r.rowIndex} ({r.date}) — {r.type}
                     </span>
@@ -88,7 +88,7 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
                       }
                     }}
                     disabled={deleteMutation.isPending}
-                    className="flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/20 transition-colors"
+                    className="flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-400 hover:bg-rose-500/20 transition-colors"
                     title={`Delete Row ${dupRow.rowIndex} and preserve Row ${group.rows[0].rowIndex}`}
                   >
                     <Trash2 className="h-3 w-3" />

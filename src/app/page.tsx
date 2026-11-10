@@ -20,13 +20,11 @@ import {
   CreditCard,
   FileSpreadsheet,
   Gauge,
-  Layers,
   LineChart,
   Loader2,
   TableProperties,
   Users,
   X,
-  Zap,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -121,13 +119,13 @@ export default function DashboardPage() {
       badge: data?.budgetPacing ? `₹${data.budgetPacing.generalPerDayLimit}/d` : 'Burn',
     },
     { id: 'expenses', label: 'Ledger (314+)', icon: FileSpreadsheet },
-    { id: 'excel', label: 'Excel Mode', icon: TableProperties, isGreen: true },
+    { id: 'excel', label: 'Excel Mode', icon: TableProperties },
     { id: 'loans', label: 'Loans & Payoff', icon: CreditCard },
     { id: 'ledger', label: 'Peer Split', icon: Users },
   ];
 
   return (
-    <div className="min-h-screen bg-[#100D0A] text-[#E9E1DB] flex flex-col font-sans selection:bg-[#F0A93C]/30 selection:text-[#FFC981]">
+    <div className="min-h-screen bg-[#0B0B0C] text-[#F4F4F5] flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
       {/* Top Header */}
       <Navbar
         referenceDate={referenceDate}
@@ -143,8 +141,8 @@ export default function DashboardPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-28 space-y-4">
-            <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
-            <p className="text-sm font-medium text-slate-400">
+            <Loader2 className="h-9 w-9 animate-spin text-amber-400" />
+            <p className="text-sm font-medium text-zinc-400">
               Synchronizing with Google Sheets ledger...
             </p>
           </div>
@@ -152,8 +150,8 @@ export default function DashboardPage() {
 
         {/* Error State */}
         {isError && (
-          <div className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-6 text-center space-y-3">
-            <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-6 text-center space-y-3">
+            <AlertCircle className="h-9 w-9 text-rose-400 mx-auto" />
             <h3 className="text-base font-bold text-white">Connection Error</h3>
             <p className="text-xs text-rose-300 max-w-md mx-auto">
               {(error as Error)?.message || 'Failed to communicate with Google Sheets.'}
@@ -179,8 +177,8 @@ export default function DashboardPage() {
               onSelectTab={(t) => setActiveTab(t as any)}
             />
 
-            {/* 2. Sleek Segmented Switcher Bar (Mobile Horizontal Swipeable) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] backdrop-blur-md no-scrollbar">
+            {/* 2. Sleek Segmented Switcher Bar (Unified Monochromatic/Amber) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl border border-white/[0.07] bg-[#121214] no-scrollbar">
               {tabItems.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -190,17 +188,17 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-[#F0A93C] text-[#100D0A] font-bold shadow-md shadow-[#F0A93C]/20'
-                        : 'text-[#A89F91] hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span>{tab.label}</span>
                     {tab.badge && (
-                      <span className={`rounded px-1.5 py-0.2 text-[9px] font-mono font-bold ${
+                      <span className={`rounded px-1.5 py-0.5 text-[9px] font-mono font-bold ${
                         isActive
-                          ? 'bg-[#100D0A]/30 text-[#100D0A]'
-                          : 'bg-[#F0A93C]/15 text-[#F0A93C] border border-[#F0A93C]/20'
+                          ? 'bg-black/25 text-zinc-950'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                       }`}>
                         {tab.badge}
                       </span>
@@ -235,7 +233,7 @@ export default function DashboardPage() {
                 {/* Spending Outflows & Discretionary Leaks */}
                 <SpendingBreakdown categories={data.spendingCategories} />
 
-                {/* Unified Liabilities Portfolio (All Loans Clickable) */}
+                {/* Unified Liabilities Portfolio */}
                 <LoanPortfolio
                   loans={data.loans}
                   referenceDate={referenceDate}
@@ -316,7 +314,7 @@ export default function DashboardPage() {
           <div className="w-full max-w-2xl relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setIsQuickLogOpen(false)}
-              className="absolute right-4 top-4 z-10 rounded-xl p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08]"
+              className="absolute right-4 top-4 z-10 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -334,7 +332,7 @@ export default function DashboardPage() {
           <div className="w-full max-w-2xl relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setIsEmiSchedulerOpen(false)}
-              className="absolute right-4 top-4 z-10 rounded-xl p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.08]"
+              className="absolute right-4 top-4 z-10 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -346,10 +344,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Minimal Footer */}
-      <footer className="border-t border-white/[0.06] bg-[#07090e] py-6 text-center text-xs text-slate-500">
+      {/* Minimal Unified Footer */}
+      <footer className="border-t border-white/[0.06] bg-[#0B0B0C] py-6 text-center text-xs text-zinc-500">
         <p>FinFlow Executive • Google Sheets Engine (19MdOX_A-Nqw8a6rk77l4sNRQMAFcxudCp0ZmrHuqA_A)</p>
-        <p className="mt-1 text-[11px] text-slate-600">Formula Lineage Defense Active • Column E Calculation Intact</p>
+        <p className="mt-1 text-[11px] text-zinc-600">Formula Lineage Defense Active • Column E Calculation Intact</p>
       </footer>
     </div>
   );

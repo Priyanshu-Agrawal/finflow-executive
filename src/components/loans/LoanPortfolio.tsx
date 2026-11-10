@@ -8,10 +8,6 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
-  HandCoins,
-  Settings,
-  ShieldCheck,
-  UserCheck,
 } from 'lucide-react';
 import { LoanActionModal } from './LoanActionModal';
 
@@ -34,38 +30,37 @@ export function LoanPortfolio({
   const settledLoans = loans.filter((l) => l.isPaidOff);
 
   const totalCurrentDue = activeLoans.reduce((sum, l) => sum + l.currentDue, 0);
-  const totalPrincipal = loans.reduce((sum, l) => sum + l.initialPrincipal, 0);
   const totalPaid = loans.reduce((sum, l) => sum + l.paidToDate, 0);
 
   return (
     <div className="space-y-6">
-      {/* Portfolio Summary Header */}
-      <div className="rounded-3xl border border-[rgba(246,239,227,0.08)] bg-[#181411] p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Portfolio Summary Header (Unified Styling) */}
+      <div className="rounded-3xl border border-white/[0.07] bg-[#121214] p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-[#F0A93C]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#F0A93C] border border-[#F0A93C]/30">
+            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400 border border-amber-500/20 uppercase tracking-wider">
               UNIFIED DEBT HUB
             </span>
-            <span className="text-xs text-[#A89F91]">All 7 Loans & Liabilities</span>
+            <span className="text-xs text-zinc-400">All 7 Loans & Liabilities</span>
           </div>
           <h3 className="text-base sm:text-lg font-serif font-bold text-white flex items-center gap-2 mt-1">
-            <CreditCard className="h-5 w-5 text-[#F0A93C]" />
-            Complete Liabilities Portfolio
+            <CreditCard className="h-5 w-5 text-amber-400" />
+            <span>Complete Liabilities Portfolio</span>
           </h3>
-          <p className="text-xs text-[#A89F91] mt-0.5">
-            Click any loan card below to log payments, record third-party payments (Khushboo/Bhaiya), or settle.
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Click any loan card below to log payments, record external payments (Khushboo/Bhaiya), or settle.
           </p>
         </div>
 
-        <div className="flex items-center gap-5 text-xs bg-[#100D0A] border border-[rgba(246,239,227,0.08)] p-3 rounded-2xl">
+        <div className="flex items-center gap-5 text-xs bg-black/40 border border-white/[0.07] p-3 rounded-2xl">
           <div>
-            <span className="text-[#A89F91] block text-[11px] font-mono">Total Active Liabilities</span>
-            <span className="font-mono text-base font-bold text-rose-400">
+            <span className="text-zinc-400 block text-[11px] font-mono">Total Active Liabilities</span>
+            <span className="font-mono text-base font-bold text-zinc-100">
               {formatINR(totalCurrentDue)}
             </span>
           </div>
-          <div className="border-l border-[rgba(246,239,227,0.08)] pl-5">
-            <span className="text-[#A89F91] block text-[11px] font-mono">Total Retired Debt</span>
+          <div className="border-l border-white/[0.08] pl-5">
+            <span className="text-zinc-400 block text-[11px] font-mono">Total Retired Debt</span>
             <span className="font-mono text-base font-bold text-emerald-400">
               {formatINR(totalPaid)}
             </span>
@@ -76,10 +71,10 @@ export function LoanPortfolio({
       {/* Active Loans Grid */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-mono font-bold text-[#9e8e7c] uppercase tracking-wider">
+          <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
             Active Amortizing Liabilities ({activeLoans.length})
           </h4>
-          <span className="text-[11px] font-mono text-[#9e8e7c]">Tap card to open action drawer</span>
+          <span className="text-[11px] font-mono text-zinc-500">Tap card to open action drawer</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -89,45 +84,45 @@ export function LoanPortfolio({
               onClick={() => setSelectedLoan(loan)}
               role="button"
               tabIndex={0}
-              className="group obsidian-card rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] hover:border-[#f0a93c]/50 hover:bg-[#1e1b18] p-5 shadow-lg relative overflow-hidden transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#f0a93c]"
+              className="group rounded-2xl border border-white/[0.07] bg-[#18181B] hover:border-white/[0.18] p-5 shadow-lg relative overflow-hidden transition-all duration-200 cursor-pointer text-left focus:outline-none focus:ring-1 focus:ring-amber-500"
             >
               {/* Top Row: Name, Col, and Quick Pill */}
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div>
-                  <span className="text-base font-serif font-bold text-[#e9e1db] group-hover:text-[#ffc981] transition-colors">
+                  <span className="text-base font-serif font-bold text-zinc-100 group-hover:text-amber-300 transition-colors">
                     {loan.name}
                   </span>
-                  <span className="text-[11px] font-mono text-[#9e8e7c] block capitalize mt-0.5">
+                  <span className="text-[11px] font-mono text-zinc-400 block capitalize mt-0.5">
                     {loan.category.replace('_', ' ')}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="rounded-lg bg-[#f0a93c]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#ffc981] border border-[#f0a93c]/30">
+                  <span className="rounded-lg bg-white/[0.04] px-2 py-0.5 text-[10px] font-mono font-bold text-zinc-300 border border-white/[0.07]">
                     Col {loan.columnLetter}
                   </span>
-                  <span className="rounded-lg bg-[#1e1b18] p-1 text-[#9e8e7c] group-hover:text-[#161310] group-hover:bg-[#f0a93c] transition-colors">
+                  <span className="rounded-lg bg-white/[0.04] p-1 text-zinc-400 group-hover:text-zinc-950 group-hover:bg-amber-500 transition-colors">
                     <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </div>
 
               {/* 3 Metric Columns */}
-              <div className="grid grid-cols-3 gap-2 my-3 p-3 rounded-xl bg-[#110e0b] border border-[#514535]/30 text-xs">
+              <div className="grid grid-cols-3 gap-2 my-3 p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs">
                 <div>
-                  <span className="text-[10px] font-mono text-[#9e8e7c] block">Initial</span>
-                  <span className="font-serif font-bold text-[#d6c4af]">
+                  <span className="text-[10px] font-mono text-zinc-400 block">Initial</span>
+                  <span className="font-serif font-bold text-zinc-200">
                     {formatINR(loan.initialPrincipal)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono text-[#9e8e7c] block">Paid</span>
-                  <span className="font-serif font-bold text-[#edbf70]">
+                  <span className="text-[10px] font-mono text-zinc-400 block">Paid</span>
+                  <span className="font-serif font-bold text-emerald-400">
                     {formatINR(loan.paidToDate)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono text-[#9e8e7c] block">Remaining</span>
-                  <span className="font-serif font-bold text-[#ffb4ab]">
+                  <span className="text-[10px] font-mono text-zinc-400 block">Remaining</span>
+                  <span className="font-serif font-bold text-white">
                     {formatINR(loan.currentDue)}
                   </span>
                 </div>
@@ -136,35 +131,35 @@ export function LoanPortfolio({
               {/* Progress Bar */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#9e8e7c] font-mono">Payoff Progress</span>
-                  <span className="font-mono font-bold text-[#ffc981]">
+                  <span className="text-zinc-400 font-mono">Payoff Progress</span>
+                  <span className="font-mono font-bold text-amber-400">
                     {loan.progressPercent}%
                   </span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-[#110e0b] border border-[#514535]/20 overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#f0a93c] via-[#edbf70] to-[#f0a93c] rounded-full transition-all duration-300"
+                    className="h-full bg-amber-500 rounded-full transition-all duration-300"
                     style={{ width: `${loan.progressPercent}%` }}
                   />
                 </div>
               </div>
 
               {/* Footer info & 1-Tap Trigger */}
-              <div className="mt-3.5 pt-3 border-t border-[#514535]/20 flex items-center justify-between text-xs text-[#9e8e7c]">
+              <div className="mt-3.5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
                 {loan.monthlyEmi ? (
                   <span>
-                    Monthly EMI: <strong className="text-[#e9e1db] font-serif font-bold">{formatINR(loan.monthlyEmi)}</strong>
+                    Monthly EMI: <strong className="text-zinc-200 font-serif font-bold">{formatINR(loan.monthlyEmi)}</strong>
                   </span>
                 ) : (
-                  <span className="text-[#9e8e7c] font-mono">Flexible Repayment</span>
+                  <span className="text-zinc-500 font-mono">Flexible Repayment</span>
                 )}
                 {loan.targetPayoffDate ? (
-                  <span className="text-[#edbf70] font-medium flex items-center gap-1">
+                  <span className="text-amber-400 font-medium flex items-center gap-1 font-mono text-[11px]">
                     <Clock className="h-3 w-3" />
                     Clears {loan.targetPayoffDate}
                   </span>
                 ) : (
-                  <span className="text-[#ffc981] text-[11px] font-semibold group-hover:underline flex items-center gap-1">
+                  <span className="text-amber-400 text-[11px] font-semibold group-hover:underline flex items-center gap-1">
                     Manage Loan <ArrowRight className="h-3 w-3" />
                   </span>
                 )}
@@ -177,10 +172,10 @@ export function LoanPortfolio({
       {/* Settled Loans Grid */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-mono font-bold text-[#9e8e7c] uppercase tracking-wider">
+          <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
             Fully Settled & Cleared Liabilities ({settledLoans.length})
           </h4>
-          <span className="text-[11px] font-mono text-[#9e8e7c]">Click to view settlement details or edit</span>
+          <span className="text-[11px] font-mono text-zinc-500">Click to view settlement details or edit</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -190,22 +185,22 @@ export function LoanPortfolio({
               onClick={() => setSelectedLoan(loan)}
               role="button"
               tabIndex={0}
-              className="group obsidian-card rounded-xl border border-[rgba(246,239,227,0.06)] bg-[#161310] hover:bg-[#1e1b18] hover:border-[#edbf70]/40 p-4 flex items-center justify-between transition-all cursor-pointer text-left focus:outline-none"
+              className="group rounded-xl border border-white/[0.07] bg-[#18181B] hover:border-white/[0.18] p-4 flex items-center justify-between transition-all cursor-pointer text-left focus:outline-none"
             >
               <div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-[#edbf70] shrink-0" />
-                  <span className="text-xs font-serif font-bold text-[#e9e1db] group-hover:text-[#ffc981] transition-colors">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs font-serif font-bold text-zinc-200 group-hover:text-amber-300 transition-colors">
                     {loan.name}
                   </span>
                 </div>
-                <div className="mt-1 text-[11px] text-[#9e8e7c]">
+                <div className="mt-1 text-[11px] text-zinc-400">
                   Principal: <span className="font-serif font-semibold">{formatINR(loan.initialPrincipal)}</span> ➔{' '}
-                  <strong className="text-[#edbf70] font-serif font-bold">₹0</strong>
+                  <strong className="text-zinc-200 font-serif font-bold">₹0</strong>
                 </div>
-                <div className="mt-0.5 text-[10px] font-mono text-[#9e8e7c]">Col {loan.columnLetter} • {loan.notes || '100% Cleared'}</div>
+                <div className="mt-0.5 text-[10px] font-mono text-zinc-500">Col {loan.columnLetter} • {loan.notes || '100% Cleared'}</div>
               </div>
-              <span className="rounded-full bg-[#edbf70]/15 px-2 py-0.5 text-[10px] font-mono font-bold text-[#edbf70] border border-[#edbf70]/30 shrink-0">
+              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-400 border border-emerald-500/20 shrink-0">
                 100% PAID
               </span>
             </div>

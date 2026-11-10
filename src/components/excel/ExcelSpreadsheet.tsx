@@ -128,12 +128,81 @@ export function ExcelSpreadsheet({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedCell, editingCell, activeTab, expenses.length]);
 
-  // Active cell item lookup
+  // Scroll to selected cell
+  useEffect(() => {
+    if (activeTab === 'expenses') {
+      const rowElem = document.getElementById(`excel-row-${selectedCell.row}`);
+      if (rowElem) {
+        rowElem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedCell.row, activeTab]);
+
   const currentExpenseRow = useMemo(() => {
     return expenses.find((e) => e.rowIndex === selectedCell.row);
   }, [expenses, selectedCell.row]);
 
-  // Filtered expenses for Grid
+  // Start cell editing
+  const startCellEdit = (row: number, col: string) => {
+    if (col === 'E') {
+      // Column E is protected dynamic formula
+      return;
+    }
+    const entry = expenses.find((e) => e.rowIndex === row);
+    if (!entry) return;
+
+    let initialVal = '';
+    if (col === 'A') initialVal = entry.date;
+    if (col === 'B') initialVal = entry.description;
+    if (col === 'C') initialVal = String(entry.amount);
+    if (col === 'D') initialVal = entry.type;
+
+    setEditingCell({ row, col });
+    setEditValue(initialVal);
+  };
+
+  // Commit inline edit
+  const commitCellEdit = async () => {
+    if (!editingCell) return;
+    const { row, col } = editingCell;
+    const entry = expenses.find((e) => e.rowIndex === row);
+    if (!entry) {
+      setEditingCell(null);
+      return;
+    }
+
+    const updated = {
+      date: entry.date,
+      description: entry.description,
+      amount: entry.amount,
+      type: entry.type,
+    };
+
+    if (col === 'A') updated.date = editValue.trim();
+    if (col === 'B') updated.description = editValue.trim();
+    if (col === 'C') updated.amount = Number(editValue) || 0;
+    if (col === 'D') {
+      const upper = editValue.toUpperCase();
+      if (['DEBIT', 'CREDIT', 'SETTLEMENT', 'ADJUSTMENT', 'OTHER', 'DIRECT'].includes(upper)) {
+        updated.type = upper as TransactionType;
+      }
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        rowIndex: row,
+        data: updated,
+      });
+      setSaveSuccessMsg(`Cell ${col}${row} saved`);
+      setTimeout(() => setSaveSuccessMsg(''), 3000);
+    } catch (err) {
+      console.error('Failed to commit cell edit', err);
+    }
+
+    setEditingCell(null);
+  };
+
+  // Filtered expenses for matrix view
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
       const matchesSearch =
@@ -145,87 +214,19 @@ export function ExcelSpreadsheet({
     });
   }, [expenses, searchQuery, filterType]);
 
-  // Start cell edit
-  const startCellEdit = (row: number, col: string) => {
-    if (col === 'E') {
-      // Column E is protected formula
-      return;
-    }
-    const item = expenses.find((e) => e.rowIndex === row);
-    if (!item) return;
-
-    let initialVal = '';
-    if (col === 'A') initialVal = item.date;
-    else if (col === 'B') initialVal = item.description;
-    else if (col === 'C') initialVal = String(item.amount);
-    else if (col === 'D') initialVal = item.type;
-
-    setEditingCell({ row, col });
-    setEditValue(initialVal);
-  };
-
-  // Commit cell edit
-  const commitCellEdit = async () => {
-    if (!editingCell) return;
-    const { row, col } = editingCell;
-    const item = expenses.find((e) => e.rowIndex === row);
-    if (!item) {
-      setEditingCell(null);
-      return;
-    }
-
-    let updatedDate = item.date;
-    let updatedDesc = item.description;
-    let updatedAmt = item.amount;
-    let updatedType = item.type;
-
-    if (col === 'A') updatedDate = editValue.trim() || item.date;
-    else if (col === 'B') updatedDesc = editValue.trim() || item.description;
-    else if (col === 'C') updatedAmt = Number(editValue) || item.amount;
-    else if (col === 'D') {
-      const upper = editValue.trim().toUpperCase();
-      if (['DEBIT', 'CREDIT', 'SETTLEMENT'].includes(upper)) {
-        updatedType = upper as TransactionType;
-      }
-    }
-
-    try {
-      await updateMutation.mutateAsync({
-        rowIndex: row,
-        data: {
-          date: updatedDate,
-          description: updatedDesc,
-          amount: updatedAmt,
-          type: updatedType,
-        },
-      });
-      setSaveSuccessMsg(`Saved ${col}${row}`);
-      setTimeout(() => setSaveSuccessMsg(''), 2500);
-    } catch (err) {
-      console.error('Failed to commit cell edit', err);
-    }
-
-    setEditingCell(null);
-  };
-
-  // Jump to row
   const handleJumpRow = (e: React.FormEvent) => {
     e.preventDefault();
-    const rowNum = parseInt(jumpRowInput);
-    if (!isNaN(rowNum) && rowNum >= 2) {
-      setSelectedCell({ row: rowNum, col: 'B' });
-      // Scroll row into view
-      const el = document.getElementById(`excel-row-${rowNum}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    const r = Number(jumpRowInput);
+    if (r >= 2 && r <= expenses.length + 1) {
+      setSelectedCell((prev) => ({ ...prev, row: r }));
+      setJumpRowInput('');
     }
   };
 
-  // Export current active tab to CSV
+  // Export CSV
   const handleExportCSV = () => {
-    let rows: (string | number)[][] = [];
-    let filename = `FinFlow_${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`;
+    let filename = `finflow-${activeTab}-${new Date().toISOString().slice(0, 10)}.csv`;
+    const rows: (string | number)[][] = [];
 
     if (activeTab === 'expenses') {
       rows.push(['Row', 'Date', 'Description', 'Amount', 'Type', 'Balance']);
@@ -233,9 +234,9 @@ export function ExcelSpreadsheet({
         rows.push([e.rowIndex, e.date, e.description, e.amount, e.type, e.balance]);
       });
     } else if (activeTab === 'loans') {
-      rows.push(['Loan ID', 'Loan Name', 'Initial Principal', 'Paid to Date', 'Current Due', 'Progress %']);
+      rows.push(['ID', 'Name', 'Principal', 'Paid', 'Due', 'Progress %']);
       loans.forEach((l) => {
-        rows.push([l.id, l.name, l.initialPrincipal, l.paidToDate, l.currentDue, `${l.progressPercent}%`]);
+        rows.push([l.id, l.name, l.initialPrincipal, l.paidToDate, l.currentDue, l.progressPercent]);
       });
     } else if (activeTab === 'ledger') {
       rows.push(['Row', 'Date', 'Description', 'Split With', 'Total Amount', 'My Share']);
@@ -277,44 +278,44 @@ export function ExcelSpreadsheet({
   }, [currentExpenseRow, selectedCell]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8.5rem)] rounded-2xl border border-[#514535]/40 bg-[#100D0A] overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[calc(100vh-8.5rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
       {/* Top Excel Ribbon Toolbar */}
-      <div className="border-b border-[#514535]/30 bg-[#161310] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <div className="border-b border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2.5">
         {/* Left: Mode Title & Sheet Tabs */}
         <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f0a93c]/15 border border-[#f0a93c]/30 text-[#ffc981] font-mono font-bold text-xs">
-            <TableProperties className="h-4 w-4 text-[#f0a93c]" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono font-medium text-xs">
+            <TableProperties className="h-4 w-4 text-amber-500" />
             <span className="hidden sm:inline">FinFlow</span> Matrix View
           </div>
 
           {/* Sheet Tab Switcher */}
-          <div className="flex items-center gap-1 rounded-xl bg-[#1e1b18] p-1 border border-[#514535]/30">
+          <div className="flex items-center gap-1 rounded-xl bg-[#18181B] p-1 border border-white/[0.07]">
             <button
               onClick={() => setActiveTab('expenses')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'expenses'
-                  ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                  : 'text-[#9e8e7c] hover:text-[#e9e1db]'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Expenses (A1:E314)
             </button>
             <button
               onClick={() => setActiveTab('loans')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'loans'
-                  ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                  : 'text-[#9e8e7c] hover:text-[#e9e1db]'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Loans
             </button>
             <button
               onClick={() => setActiveTab('ledger')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'ledger'
-                  ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                  : 'text-[#9e8e7c] hover:text-[#e9e1db]'
+                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Ledger
@@ -328,29 +329,29 @@ export function ExcelSpreadsheet({
             <>
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-[#9e8e7c]" />
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-500" />
                 <input
                   type="text"
                   placeholder="Filter rows..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="rounded-xl border border-[#514535]/40 bg-[#1e1b18] pl-8 pr-2.5 py-1 text-xs text-[#e9e1db] placeholder-[#9e8e7c] w-28 sm:w-40 focus:border-[#f0a93c] focus:outline-none transition-colors"
+                  className="rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-2.5 py-1 text-xs text-white placeholder-zinc-500 w-28 sm:w-40 focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
               {/* Jump to Row */}
               <form onSubmit={handleJumpRow} className="hidden md:flex items-center gap-1">
-                <span className="text-[11px] font-mono text-[#9e8e7c]">Go:</span>
+                <span className="text-[11px] font-mono text-zinc-400">Go:</span>
                 <input
                   type="number"
                   placeholder="Row #"
                   value={jumpRowInput}
                   onChange={(e) => setJumpRowInput(e.target.value)}
-                  className="w-16 rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-2 py-1 text-xs font-mono text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+                  className="w-16 rounded-xl border border-white/[0.07] bg-[#18181B] px-2 py-1 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
                 />
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#1e1b18] border border-[#514535]/40 px-2 py-1 text-xs font-semibold text-[#d6c4af] hover:text-[#e9e1db] hover:border-[#f0a93c]/40"
+                  className="rounded-lg bg-[#18181B] border border-white/[0.07] px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40"
                 >
                   Go
                 </button>
@@ -361,10 +362,10 @@ export function ExcelSpreadsheet({
           {/* Export CSV */}
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-2.5 py-1 text-xs font-semibold text-[#d6c4af] hover:text-[#e9e1db] hover:border-[#f0a93c]/40 transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-colors"
             title="Download CSV file of current active sheet"
           >
-            <Download className="h-3.5 w-3.5 text-[#ffc981]" />
+            <Download className="h-3.5 w-3.5 text-amber-500" />
             <span className="hidden sm:inline">Export CSV</span>
           </button>
 
@@ -372,7 +373,7 @@ export function ExcelSpreadsheet({
           {onOpenQuickLog && (
             <button
               onClick={onOpenQuickLog}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] px-3 py-1 text-xs font-bold text-[#161310] hover:brightness-110 transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Insert Row</span>
@@ -383,33 +384,33 @@ export function ExcelSpreadsheet({
 
       {/* Classic Excel Formula Bar (fx) */}
       {activeTab === 'expenses' && (
-        <div className="border-b border-[#514535]/30 bg-[#161310] px-3 py-1.5 flex items-center gap-2 text-xs font-mono">
+        <div className="border-b border-white/[0.07] bg-[#121214] px-3 py-1.5 flex items-center gap-2 text-xs font-mono">
           {/* Active Cell Reference Pill */}
-          <div className="w-16 sm:w-20 rounded-lg bg-[#1e1b18] border border-[#f0a93c]/40 px-2 py-0.5 text-center font-bold text-[#ffc981]">
+          <div className="w-16 sm:w-20 rounded-lg bg-[#18181B] border border-amber-500/30 px-2 py-0.5 text-center font-bold text-amber-400">
             {selectedCell.col}
             {selectedCell.row}
           </div>
 
           {/* fx Function Symbol */}
-          <div className="text-[#f0a93c] font-serif italic font-bold select-none">
+          <div className="text-amber-500 font-serif italic font-bold select-none">
             fx
           </div>
 
           {/* Formula Display / Value Input */}
           <div className="flex-1 flex items-center gap-2 overflow-x-auto">
-            <div className="flex-1 rounded-lg bg-[#110e0b] border border-[#514535]/40 px-2.5 py-0.5 text-[#e9e1db] select-all truncate font-mono">
-              {formulaBarContent || <span className="text-[#9e8e7c] italic">Empty cell</span>}
+            <div className="flex-1 rounded-lg bg-black/60 border border-white/[0.07] px-2.5 py-0.5 text-white select-all truncate font-mono">
+              {formulaBarContent || <span className="text-zinc-500 italic">Empty cell</span>}
             </div>
 
             {selectedCell.col === 'E' && (
-              <span className="hidden sm:flex items-center gap-1 text-[10px] font-sans font-semibold text-[#ffc981] bg-[#f0a93c]/15 px-2 py-0.5 rounded border border-[#f0a93c]/30 whitespace-nowrap">
+              <span className="hidden sm:flex items-center gap-1 text-[10px] font-sans font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 whitespace-nowrap">
                 <Lock className="h-3 w-3" />
                 Formula Protected
               </span>
             )}
 
             {saveSuccessMsg && (
-              <span className="flex items-center gap-1 text-[10px] font-sans font-bold text-[#edbf70] animate-in fade-in">
+              <span className="flex items-center gap-1 text-[10px] font-sans font-medium text-amber-400 animate-in fade-in">
                 <Check className="h-3 w-3" />
                 {saveSuccessMsg}
               </span>
@@ -421,48 +422,48 @@ export function ExcelSpreadsheet({
       {/* Sheet Grid Body */}
       <div
         ref={tableContainerRef}
-        className="flex-1 overflow-auto bg-[#100D0A] text-xs font-mono select-none"
+        className="flex-1 overflow-auto bg-[#0B0B0C] text-xs font-mono select-none"
       >
         {activeTab === 'expenses' && (
-          <table className="w-full border-collapse border border-[#514535]/30 min-w-[700px]">
+          <table className="w-full border-collapse border border-white/[0.07] min-w-[700px]">
             {/* Column Header Row */}
-            <thead className="sticky top-0 z-20 bg-[#1e1b18] text-[#9e8e7c] border-b border-[#514535]/40 shadow-sm">
+            <thead className="sticky top-0 z-20 bg-[#18181B] text-zinc-400 border-b border-white/[0.07] shadow-sm">
               <tr>
                 {/* Top-Left Corner Box */}
-                <th className="w-14 border-r border-b border-[#514535]/30 p-1.5 text-center font-mono text-[11px] text-[#9e8e7c] bg-[#1e1b18] sticky left-0 z-30">
+                <th className="w-14 border-r border-b border-white/[0.07] p-1.5 text-center font-mono text-[11px] text-zinc-500 bg-[#18181B] sticky left-0 z-30">
                   ◢
                 </th>
                 <th
-                  className={`border-r border-b border-[#514535]/30 p-1.5 text-center transition-colors ${
-                    selectedCell.col === 'A' ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold' : ''
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-center transition-colors ${
+                    selectedCell.col === 'A' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
                   A <span className="font-sans text-[10px] opacity-75">(Date)</span>
                 </th>
                 <th
-                  className={`border-r border-b border-[#514535]/30 p-1.5 text-left transition-colors ${
-                    selectedCell.col === 'B' ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold' : ''
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-left transition-colors ${
+                    selectedCell.col === 'B' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
                   B <span className="font-sans text-[10px] opacity-75">(Description)</span>
                 </th>
                 <th
-                  className={`border-r border-b border-[#514535]/30 p-1.5 text-right transition-colors ${
-                    selectedCell.col === 'C' ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold' : ''
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-right transition-colors ${
+                    selectedCell.col === 'C' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
                   C <span className="font-sans text-[10px] opacity-75">(Amount ₹)</span>
                 </th>
                 <th
-                  className={`border-r border-b border-[#514535]/30 p-1.5 text-center transition-colors ${
-                    selectedCell.col === 'D' ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold' : ''
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-center transition-colors ${
+                    selectedCell.col === 'D' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
                   D <span className="font-sans text-[10px] opacity-75">(Credit/Debit)</span>
                 </th>
                 <th
-                  className={`border-b border-[#514535]/30 p-1.5 text-right transition-colors ${
-                    selectedCell.col === 'E' ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold' : ''
+                  className={`border-b border-white/[0.07] p-1.5 text-right transition-colors ${
+                    selectedCell.col === 'E' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
                   E <span className="font-sans text-[10px] opacity-75">(Remaining Balance fx)</span>
@@ -480,16 +481,16 @@ export function ExcelSpreadsheet({
                   <tr
                     key={rowNum}
                     id={`excel-row-${rowNum}`}
-                    className={`hover:bg-slate-900/40 transition-colors ${
-                      rowNum === 239 ? 'bg-emerald-950/20' : ''
+                    className={`hover:bg-[#18181B]/50 transition-colors ${
+                      rowNum === 239 ? 'bg-amber-500/10' : ''
                     }`}
                   >
                     {/* Row Header Number */}
                     <td
-                      className={`border-r border-b border-[#514535]/30 p-1 text-center font-mono text-[11px] sticky left-0 z-10 transition-colors ${
+                      className={`border-r border-b border-white/[0.05] p-1 text-center font-mono text-[11px] sticky left-0 z-10 transition-colors ${
                         isSelectedRow
-                          ? 'bg-[#f0a93c]/20 text-[#ffc981] font-bold border-r-2 border-r-[#f0a93c]'
-                          : 'bg-[#1e1b18] text-[#9e8e7c]'
+                          ? 'bg-amber-500/15 text-amber-400 font-bold border-r-2 border-r-amber-500'
+                          : 'bg-[#18181B] text-zinc-500'
                       }`}
                     >
                       {rowNum}
@@ -499,9 +500,9 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'A' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'A')}
-                      className={`border-r border-b border-[#514535]/20 p-1.5 text-[#d6c4af] cursor-cell transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 text-zinc-300 cursor-cell transition-all ${
                         isSelectedRow && selectedCell.col === 'A'
-                          ? 'ring-2 ring-[#f0a93c] bg-[#f0a93c]/15 font-bold text-white relative z-10'
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : ''
                       }`}
                     >
@@ -512,7 +513,7 @@ export function ExcelSpreadsheet({
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
-                          className="w-full bg-[#110e0b] text-white font-mono text-xs px-1 py-0.5 outline-none ring-2 ring-[#f0a93c] rounded"
+                          className="w-full bg-black text-white font-mono text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
                         e.date
@@ -523,9 +524,9 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'B' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'B')}
-                      className={`border-r border-b border-[#514535]/20 p-1.5 font-medium text-[#e9e1db] cursor-cell transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 font-medium text-white cursor-cell transition-all ${
                         isSelectedRow && selectedCell.col === 'B'
-                          ? 'ring-2 ring-[#f0a93c] bg-[#f0a93c]/15 font-bold text-white relative z-10'
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : ''
                       }`}
                     >
@@ -536,13 +537,13 @@ export function ExcelSpreadsheet({
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
-                          className="w-full bg-[#110e0b] text-white text-xs px-1 py-0.5 outline-none ring-2 ring-[#f0a93c] rounded"
+                          className="w-full bg-black text-white text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
                         <div className="flex items-center justify-between">
                           <span>{e.description}</span>
                           {rowNum === 239 && (
-                            <span className="rounded bg-[#f0a93c]/20 px-1 py-0.2 text-[9px] font-mono font-bold text-[#ffc981]">
+                            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-400">
                               ANCHOR
                             </span>
                           )}
@@ -554,12 +555,12 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'C' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'C')}
-                      className={`border-r border-b border-[#514535]/20 p-1.5 text-right font-serif font-bold cursor-cell transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 text-right font-serif font-bold cursor-cell transition-all ${
                         isSelectedRow && selectedCell.col === 'C'
-                          ? 'ring-2 ring-[#f0a93c] bg-[#f0a93c]/15 font-bold text-white relative z-10'
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : e.type === 'CREDIT'
-                          ? 'text-[#edbf70]'
-                          : 'text-[#ffb4ab]'
+                          ? 'text-emerald-400'
+                          : 'text-zinc-100'
                       }`}
                     >
                       {editingCell?.row === rowNum && editingCell?.col === 'C' ? (
@@ -569,7 +570,7 @@ export function ExcelSpreadsheet({
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
-                          className="w-full bg-[#110e0b] text-white text-right font-serif text-xs px-1 py-0.5 outline-none ring-2 ring-[#f0a93c] rounded"
+                          className="w-full bg-black text-white text-right font-serif text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
                         formatINR(e.amount)
@@ -584,19 +585,19 @@ export function ExcelSpreadsheet({
                           e.type === 'DEBIT' ? 'CREDIT' : e.type === 'CREDIT' ? 'SETTLEMENT' : 'DEBIT';
                         toggleMutation.mutate({ rowIndex: rowNum, newType: nextType });
                       }}
-                      className={`border-r border-b border-[#514535]/20 p-1.5 text-center cursor-pointer transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 text-center cursor-pointer transition-all ${
                         isSelectedRow && selectedCell.col === 'D'
-                          ? 'ring-2 ring-[#f0a93c] bg-[#f0a93c]/15 relative z-10'
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 relative z-10'
                           : ''
                       }`}
                     >
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-bold ${
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${
                           e.type === 'CREDIT'
-                            ? 'bg-[#edbf70]/15 text-[#edbf70] border border-[#edbf70]/30'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : e.type === 'DEBIT'
-                            ? 'bg-[#ffb4ab]/15 text-[#ffb4ab] border border-[#ffb4ab]/30'
-                            : 'bg-[#f0a93c]/15 text-[#ffc981] border border-[#f0a93c]/30'
+                            ? 'bg-white/[0.05] text-zinc-300 border border-white/10'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}
                         title="Double-click to cycle type"
                       >
@@ -607,15 +608,15 @@ export function ExcelSpreadsheet({
                     {/* Cell E: Remaining Balance (Formula Backed) */}
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'E' })}
-                      className={`border-b border-[#514535]/20 p-1.5 text-right font-mono font-semibold text-[#ffc981] cursor-cell transition-all ${
+                      className={`border-b border-white/[0.05] p-1.5 text-right font-mono font-medium text-zinc-100 cursor-cell transition-all ${
                         isSelectedRow && selectedCell.col === 'E'
-                          ? 'ring-2 ring-[#f0a93c] bg-[#f0a93c]/15 font-bold text-white relative z-10'
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : ''
                       }`}
                       title="Formula Backed Cell (=IF(OR(D...)))"
                     >
                       <div className="flex items-center justify-end gap-1.5">
-                        <Lock className="h-2.5 w-2.5 text-[#f0a93c]" />
+                        <Lock className="h-2.5 w-2.5 text-amber-500" />
                         <span>{formatINR(e.balance)}</span>
                       </div>
                     </td>
@@ -629,13 +630,13 @@ export function ExcelSpreadsheet({
         {/* Tab 2: Loans */}
         {activeTab === 'loans' && (
           <div className="p-4 space-y-4 font-sans">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2 font-mono">
-              <Table className="h-4 w-4 text-emerald-400" />
+            <h3 className="text-sm font-medium text-white flex items-center gap-2 font-mono">
+              <Table className="h-4 w-4 text-amber-500" />
               Sheet 'Loans' (gid=612682294) • Multi-Column Amortization Matrix
             </h3>
-            <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#121214]">
               <table className="w-full text-xs font-mono">
-                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400">
+                <thead className="bg-[#18181B] border-b border-white/[0.07] text-zinc-400">
                   <tr>
                     <th className="p-2 text-left">COL</th>
                     <th className="p-2 text-left">LIABILITY NAME</th>
@@ -645,20 +646,20 @@ export function ExcelSpreadsheet({
                     <th className="p-2 text-center">STATUS</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-white/[0.04]">
                   {loans.map((l) => (
-                    <tr key={l.id} className="hover:bg-slate-900/50">
-                      <td className="p-2 text-slate-500 font-bold">{l.columnLetter}</td>
-                      <td className="p-2 text-white font-sans font-semibold">{l.name}</td>
-                      <td className="p-2 text-right text-slate-300">{formatINR(l.initialPrincipal)}</td>
-                      <td className="p-2 text-right text-emerald-400 font-bold">{formatINR(l.paidToDate)}</td>
-                      <td className="p-2 text-right text-rose-400 font-bold">{formatINR(l.currentDue)}</td>
+                    <tr key={l.id} className="hover:bg-[#18181B]/50 transition-colors">
+                      <td className="p-2 text-zinc-500 font-bold">{l.columnLetter}</td>
+                      <td className="p-2 text-white font-sans font-medium">{l.name}</td>
+                      <td className="p-2 text-right text-zinc-300">{formatINR(l.initialPrincipal)}</td>
+                      <td className="p-2 text-right text-emerald-400 font-medium">{formatINR(l.paidToDate)}</td>
+                      <td className="p-2 text-right text-zinc-100 font-medium">{formatINR(l.currentDue)}</td>
                       <td className="p-2 text-center">
                         <span
-                          className={`rounded px-2 py-0.5 text-[10px] font-bold ${
+                          className={`rounded px-2 py-0.5 text-[10px] font-medium border ${
                             l.currentDue === 0
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-amber-500/20 text-amber-300'
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                           }`}
                         >
                           {l.currentDue === 0 ? 'SETTLED' : `${l.progressPercent}% CLEARED`}
@@ -675,13 +676,13 @@ export function ExcelSpreadsheet({
         {/* Tab 3: Ledger */}
         {activeTab === 'ledger' && (
           <div className="p-4 space-y-4 font-sans">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2 font-mono">
-              <Table className="h-4 w-4 text-emerald-400" />
+            <h3 className="text-sm font-medium text-white flex items-center gap-2 font-mono">
+              <Table className="h-4 w-4 text-amber-500" />
               Sheet 'Ledger' (gid=78436858) • Peer-to-Peer Split Log
             </h3>
-            <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#121214]">
               <table className="w-full text-xs font-mono">
-                <thead className="bg-slate-900 border-b border-slate-800 text-slate-400">
+                <thead className="bg-[#18181B] border-b border-white/[0.07] text-zinc-400">
                   <tr>
                     <th className="p-2 text-center">ROW</th>
                     <th className="p-2 text-left">DATE</th>
@@ -691,15 +692,15 @@ export function ExcelSpreadsheet({
                     <th className="p-2 text-right">MY SHARE (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-white/[0.04]">
                   {peerLedger.map((p) => (
-                    <tr key={p.rowIndex} className="hover:bg-slate-900/50">
-                      <td className="p-2 text-center text-slate-500">{p.rowIndex}</td>
-                      <td className="p-2 text-slate-300">{p.date}</td>
+                    <tr key={p.rowIndex} className="hover:bg-[#18181B]/50 transition-colors">
+                      <td className="p-2 text-center text-zinc-500">{p.rowIndex}</td>
+                      <td className="p-2 text-zinc-300">{p.date}</td>
                       <td className="p-2 text-white font-sans font-medium">{p.description}</td>
-                      <td className="p-2 text-indigo-300">{p.splitWith}</td>
-                      <td className="p-2 text-right text-slate-300">{formatINR(p.amount)}</td>
-                      <td className="p-2 text-right text-emerald-400 font-bold">{formatINR(p.perPersonShare)}</td>
+                      <td className="p-2 text-amber-400">{p.splitWith}</td>
+                      <td className="p-2 text-right text-zinc-300">{formatINR(p.amount)}</td>
+                      <td className="p-2 text-right text-white font-medium">{formatINR(p.perPersonShare)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -710,9 +711,9 @@ export function ExcelSpreadsheet({
       </div>
 
       {/* Classic Excel Status Bar */}
-      <div className="border-t border-slate-800 bg-slate-900/90 px-3 sm:px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+      <div className="border-t border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-1.5 flex items-center justify-between text-[11px] text-zinc-400 font-mono">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-emerald-400 font-bold">
+          <span className="flex items-center gap-1 text-amber-400 font-medium">
             <Check className="h-3 w-3" />
             READY
           </span>
@@ -726,9 +727,9 @@ export function ExcelSpreadsheet({
 
         <div className="flex items-center gap-3">
           <span className="hidden md:inline">
-            Audit Baseline: <strong className="text-emerald-400">Row 239 (₹1,28,792)</strong>
+            Audit Baseline: <strong className="text-amber-400 font-mono">Row 239 (₹1,28,792)</strong>
           </span>
-          <span className="text-[10px] text-slate-500 hidden sm:inline">
+          <span className="text-[10px] text-zinc-500 hidden sm:inline">
             DoubleClick to Edit • Enter to Save • Arrows to Navigate
           </span>
         </div>

@@ -64,21 +64,21 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
   };
 
   return (
-    <div className="obsidian-card p-6 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] shadow-xl space-y-5">
-      <div className="flex items-center justify-between pb-4 border-b border-[#514535]/30">
+    <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-6 shadow-xl space-y-5">
+      <div className="flex items-center justify-between pb-4 border-b border-white/[0.07]">
         <div>
-          <h3 className="text-base font-serif font-bold text-[#e9e1db] flex items-center gap-2">
-            <Sliders className="h-4 w-4 text-[#f0a93c]" />
+          <h3 className="text-base font-medium text-white flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-amber-500" />
             Multi-Month EMI & Obligation Generator
           </h3>
-          <p className="text-xs font-mono text-[#9e8e7c] mt-0.5">
+          <p className="text-xs font-mono text-zinc-400 mt-0.5">
             Generates sequential chronological installments with formula lineage defense in Column E
           </p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded-xl p-1 text-[#9e8e7c] hover:text-[#e9e1db] hover:bg-[#1e1b18]"
+            className="rounded-xl p-1 text-zinc-400 hover:text-white hover:bg-white/[0.05]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -88,7 +88,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
+            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
               Obligation Title / Equipment
             </label>
             <input
@@ -96,13 +96,13 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. MacBook Pro M3"
-              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
+            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
               Monthly Installment Amount (₹)
             </label>
             <input
@@ -110,13 +110,13 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
               value={monthlyAmount}
               onChange={(e) => setMonthlyAmount(Number(e.target.value))}
               placeholder="e.g. 15000"
-              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs font-serif font-bold text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-serif font-bold text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
+            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
               Number of Months (Tenure N)
             </label>
             <input
@@ -125,60 +125,60 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
               max={60}
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs font-mono text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-[#d6c4af] block mb-1">
+            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
               First Installment Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs font-mono text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
         </div>
 
         {/* Total Cost Summary */}
-        <div className="p-4 rounded-xl border border-[#514535]/30 bg-[#1e1b18] flex items-center justify-between text-xs">
+        <div className="p-4 rounded-xl border border-white/[0.07] bg-[#18181B] flex items-center justify-between text-xs">
           <div>
-            <span className="text-[#9e8e7c] block font-mono">Total Commitment (Principal Outflow)</span>
-            <span className="font-serif text-base font-bold text-[#e9e1db]">
+            <span className="text-zinc-400 block font-mono">Total Commitment (Principal Outflow)</span>
+            <span className="font-serif text-base font-bold text-white">
               {formatINR(monthlyAmount * months)}
             </span>
           </div>
           <div className="text-right">
-            <span className="text-[#9e8e7c] block font-mono">Installments Generated</span>
-            <span className="font-mono font-bold text-[#ffc981]">{months} records</span>
+            <span className="text-zinc-400 block font-mono">Installments Generated</span>
+            <span className="font-mono font-bold text-amber-400">{months} records</span>
           </div>
         </div>
 
         {/* Live Preview List */}
         <div>
-          <label className="text-xs font-mono font-semibold text-[#9e8e7c] uppercase tracking-wider block mb-2">
+          <label className="text-xs font-mono font-medium text-zinc-400 uppercase tracking-wider block mb-2">
             Chronological Sequence Preview ({previewList.length} of {months} rows shown)
           </label>
-          <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-[#514535]/30 bg-[#110e0b] p-3">
+          <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-white/[0.07] bg-[#0B0B0C] p-3">
             {previewList.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#161310] border border-[#514535]/20 font-mono"
+                className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#18181B] border border-white/[0.05] font-mono"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[#9e8e7c] w-6">#{idx + 1}</span>
-                  <span className="text-[#d6c4af]">{item.date}</span>
-                  <span className="text-[#e9e1db] font-sans font-medium">{item.label}</span>
+                  <span className="text-zinc-500 w-6">#{idx + 1}</span>
+                  <span className="text-zinc-400">{item.date}</span>
+                  <span className="text-white font-sans font-medium">{item.label}</span>
                 </div>
-                <span className="text-[#ffb4ab] font-serif font-bold">-{formatINR(item.amount)}</span>
+                <span className="text-zinc-100 font-serif font-bold">-{formatINR(item.amount)}</span>
               </div>
             ))}
             {months > 12 && (
-              <div className="text-center text-[11px] font-mono text-[#9e8e7c] py-1">
+              <div className="text-center text-[11px] font-mono text-zinc-500 py-1">
                 + {months - 12} additional sequential installments will be appended...
               </div>
             )}
@@ -186,12 +186,12 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
         </div>
 
         {/* Submit Button */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#514535]/30">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.07]">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2.5 text-xs font-medium text-[#9e8e7c] hover:text-[#e9e1db] hover:bg-[#1e1b18] transition-colors"
+              className="rounded-xl px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors"
             >
               Cancel
             </button>
@@ -200,11 +200,11 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
           <button
             type="submit"
             disabled={scheduleMutation.isPending || !title || !monthlyAmount || months <= 0}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] px-6 py-2.5 text-xs font-bold text-[#161310] shadow-md hover:brightness-110 transition-all disabled:opacity-50 active:scale-95"
+            className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
           >
             {isSuccess ? (
               <>
-                <CheckCircle className="h-4 w-4 text-[#161310]" />
+                <CheckCircle className="h-4 w-4 text-black" />
                 <span>Appended {months} EMIs!</span>
               </>
             ) : (

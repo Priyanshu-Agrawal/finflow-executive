@@ -6,26 +6,16 @@ import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import { useLoanAction } from '@/hooks/useFinancials';
 import {
   AlertTriangle,
-  ArrowRight,
-  Check,
   CheckCircle2,
   Clock,
   CreditCard,
-  ExternalLink,
-  HandCoins,
-  History,
-  Layers,
   Link2,
   Loader2,
-  Lock,
   RefreshCw,
   Send,
   ShieldCheck,
   UserCheck,
-  Users,
-  Wallet,
   X,
-  Zap,
 } from 'lucide-react';
 
 interface LoanActionModalProps {
@@ -102,20 +92,13 @@ export function LoanActionModal({
   };
 
   const handleSettleFull = async () => {
-    if (
-      !confirm(
-        `Are you sure you want to mark ${loan.name} as fully settled? This sets Loans!${loan.columnLetter}2 to ₹0.`
-      )
-    ) {
-      return;
-    }
+    if (!confirm(`Confirm complete settlement of ${loan.name}? This will set Loans!${loan.columnLetter}2 to 0.`)) return;
     try {
       const res = await loanActionMutation.mutateAsync({
         action: 'settle_loan',
         loanId: loan.id,
         loanName: loan.name,
         columnLetter: loan.columnLetter,
-        amount: loan.currentDue,
         date,
       });
       setSuccessMessage(res.message);
@@ -145,7 +128,6 @@ export function LoanActionModal({
 
   const handleUpdateBaseline = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (customBaseline === '' || isNaN(Number(customBaseline))) return;
     try {
       const res = await loanActionMutation.mutateAsync({
         action: 'update_due',
@@ -173,63 +155,59 @@ export function LoanActionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md">
-      <div className="w-full max-w-xl rounded-2xl border border-[rgba(246,239,227,0.1)] bg-[#161310] p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto space-y-4">
+      <div className="w-full max-w-xl rounded-2xl border border-white/[0.1] bg-[#121214] p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto space-y-4">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-xl p-2 text-[#9e8e7c] hover:text-[#e9e1db] hover:bg-[#1e1b18] transition-colors"
+          className="absolute right-4 top-4 z-10 rounded-xl p-2 text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Loan Header Card */}
-        <div className="pb-4 border-b border-[#514535]/30">
+        <div className="pb-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-[#f0a93c]/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#ffc981] border border-[#f0a93c]/30 uppercase tracking-wider">
+            <span className="rounded-md bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-mono font-bold text-zinc-300 border border-white/[0.07] uppercase tracking-wider">
               Loans Col {loan.columnLetter}
             </span>
-            <span className="rounded-lg bg-[#1e1b18] px-2 py-0.5 text-[10px] font-semibold text-[#d6c4af] capitalize border border-[#514535]/30">
+            <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-zinc-400 capitalize border border-white/[0.07]">
               {loan.category.replace('_', ' ')}
             </span>
             {loan.isPaidOff ? (
-              <span className="rounded-lg bg-[#edbf70]/15 px-2 py-0.5 text-[10px] font-bold text-[#edbf70] border border-[#edbf70]/30 flex items-center gap-1">
+              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-mono">
                 <CheckCircle2 className="h-3 w-3" />
                 Settled & Clear
               </span>
             ) : (
-              <span className="rounded-lg bg-[#f0a93c]/15 px-2 py-0.5 text-[10px] font-bold text-[#ffc981] border border-[#f0a93c]/30 flex items-center gap-1">
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 font-mono">
                 <Clock className="h-3 w-3" />
                 Active Liability
               </span>
             )}
           </div>
 
-          <h2 className="text-xl font-serif font-bold text-[#e9e1db] mt-1.5 flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-[#f0a93c]" />
-            {loan.name}
+          <h2 className="text-xl font-serif font-bold text-white mt-2 flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-amber-400" />
+            <span>{loan.name}</span>
           </h2>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[#514535]/20 text-xs">
-            <div className="rounded-xl bg-[#1e1b18] p-2.5 border border-[#514535]/30">
-              <span className="text-[11px] text-[#9e8e7c] block font-mono">Current Balance</span>
-              <span
-                className={`font-serif text-base font-bold ${
-                  loan.currentDue > 0 ? 'text-[#ffb4ab]' : 'text-[#edbf70]'
-                }`}
-              >
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/[0.06] text-xs">
+            <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
+              <span className="text-[11px] text-zinc-400 block font-mono">Current Balance</span>
+              <span className="font-serif text-base font-bold text-white">
                 {formatINR(loan.currentDue)}
               </span>
             </div>
-            <div className="rounded-xl bg-[#1e1b18] p-2.5 border border-[#514535]/30">
-              <span className="text-[11px] text-[#9e8e7c] block font-mono">Paid to Date</span>
-              <span className="font-serif text-base font-bold text-[#edbf70]">
+            <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
+              <span className="text-[11px] text-zinc-400 block font-mono">Paid to Date</span>
+              <span className="font-serif text-base font-bold text-emerald-400">
                 {formatINR(loan.paidToDate)}
               </span>
             </div>
-            <div className="rounded-xl bg-[#1e1b18] p-2.5 border border-[#514535]/30">
-              <span className="text-[11px] text-[#9e8e7c] block font-mono">Initial Principal</span>
-              <span className="font-serif text-base font-bold text-[#d6c4af]">
+            <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
+              <span className="text-[11px] text-zinc-400 block font-mono">Initial Principal</span>
+              <span className="font-serif text-base font-bold text-zinc-200">
                 {formatINR(loan.initialPrincipal)}
               </span>
             </div>
@@ -237,15 +215,15 @@ export function LoanActionModal({
 
           {/* BCA Baseline Alert if needed */}
           {bcaNeedsReset && (
-            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#f0a93c]/30 bg-[#f0a93c]/10 p-3 text-xs text-[#ffc981]">
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[#f0a93c] shrink-0" />
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                 <span>Loans!B2 is accumulated ({formatINR(b2RawValue!)}). Expected ₹18,000.</span>
               </div>
               <button
                 onClick={handleResetBca}
                 disabled={loanActionMutation.isPending}
-                className="px-2.5 py-1 rounded-lg bg-[#f0a93c] hover:brightness-110 text-[#161310] font-bold text-[11px] transition-all"
+                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[11px] transition-all"
               >
                 Reset B2
               </button>
@@ -253,73 +231,32 @@ export function LoanActionModal({
           )}
         </div>
 
-        {/* Action Switcher Tabs */}
-        <div className="grid grid-cols-5 gap-1 my-4 p-1 rounded-xl bg-[#1e1b18] border border-[#514535]/30 text-[11px] font-semibold">
-          <button
-            onClick={() => {
-              setActiveTab('pay');
-              setSuccessMessage(null);
-            }}
-            className={`py-2 px-1 rounded-lg text-center transition-all ${
-              activeTab === 'pay'
-                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
-            }`}
-          >
-            Pay EMI
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('external');
-              setSuccessMessage(null);
-            }}
-            className={`py-2 px-1 rounded-lg text-center transition-all ${
-              activeTab === 'external'
-                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
-            }`}
-          >
-            External
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('settle');
-              setSuccessMessage(null);
-            }}
-            className={`py-2 px-1 rounded-lg text-center transition-all ${
-              activeTab === 'settle'
-                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
-            }`}
-          >
-            Settle
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('link');
-              setSuccessMessage(null);
-            }}
-            className={`py-2 px-1 rounded-lg text-center transition-all ${
-              activeTab === 'link'
-                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
-            }`}
-          >
-            Link Exp
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('edit');
-              setSuccessMessage(null);
-            }}
-            className={`py-2 px-1 rounded-lg text-center transition-all ${
-              activeTab === 'edit'
-                ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                : 'text-[#9e8e7c] hover:text-[#e9e1db]'
-            }`}
-          >
-            Edit Due
-          </button>
+        {/* Action Switcher Tabs (Unified Segmented Control) */}
+        <div className="grid grid-cols-5 gap-1 my-4 p-1 rounded-xl bg-[#18181B] border border-white/[0.08] text-[11px] font-semibold">
+          {(
+            [
+              { id: 'pay', label: 'Pay EMI' },
+              { id: 'external', label: 'External' },
+              { id: 'settle', label: 'Settle' },
+              { id: 'link', label: 'Link Exp' },
+              { id: 'edit', label: 'Edit Due' },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setSuccessMessage(null);
+              }}
+              className={`py-2 px-1 rounded-lg text-center transition-all ${
+                activeTab === tab.id
+                  ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Success Alert Banner */}
@@ -338,17 +275,17 @@ export function LoanActionModal({
           </div>
         )}
 
-        {/* Mode 1: Log Payment (Direct from Bank Account) */}
+        {/* Mode 1: Log Payment */}
         {activeTab === 'pay' && (
           <form onSubmit={handlePay} className="space-y-4">
-            <div className="rounded-xl bg-[#f0a93c]/10 border border-[#f0a93c]/30 p-3 text-xs text-[#ffc981]">
-              <span className="font-semibold block text-[#e9e1db]">Personal Outlay (DEBIT)</span>
+            <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
+              <span className="font-semibold block text-white">Personal Outlay (DEBIT)</span>
               This deducts directly from your bank balance in Column E and logs a payment row into Expenses.
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Amount (₹)</label>
+                <label className="text-xs font-mono text-zinc-400 block mb-1">Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -356,37 +293,37 @@ export function LoanActionModal({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="3000"
-                  className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-serif font-bold focus:border-[#f0a93c] focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Payment Date</label>
+                <label className="text-xs font-mono text-zinc-400 block mb-1">Payment Date</label>
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-mono focus:border-[#f0a93c] focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Notes / Description</label>
+              <label className="text-xs font-mono text-zinc-400 block mb-1">Notes / Description</label>
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={`Monthly EMI / Installment for ${loan.name}`}
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loanActionMutation.isPending}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] text-[#161310] font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50"
             >
               {loanActionMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -398,21 +335,20 @@ export function LoanActionModal({
           </form>
         )}
 
-        {/* Mode 2: External Person Pays (Crucial Feature!) */}
+        {/* Mode 2: External Person Pays */}
         {activeTab === 'external' && (
           <form onSubmit={handleExternalPayment} className="space-y-4">
-            <div className="rounded-xl bg-[#f0a93c]/10 border border-[#f0a93c]/30 p-3 text-xs text-[#ffc981]">
-              <span className="font-semibold block text-[#e9e1db]">
+            <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
+              <span className="font-semibold block text-white">
                 Third-Party Settlement (No Bank Debit!)
               </span>
               Use this when someone else (e.g. Khushboo or Bhaiya) pays this bill directly (like your SBI Credit Card).
-              It is recorded as <strong className="font-mono text-[#ffc981]">SETTLEMENT</strong> in Expenses,
-              so your bank balance in Column E is <strong className="text-[#edbf70]">preserved intact</strong>!
+              It is recorded as <strong className="font-mono text-amber-400">SETTLEMENT</strong> in Expenses,
+              so your bank balance in Column E is <strong className="text-white">preserved intact</strong>!
             </div>
 
-            {/* Quick Payer Select */}
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1.5">Who Paid this Bill?</label>
+              <label className="text-xs font-mono text-zinc-400 block mb-1.5">Who Paid this Bill?</label>
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 {['Khushboo', 'Bhaiya', 'Papa', 'Friend', 'Company'].map((p) => (
                   <button
@@ -421,8 +357,8 @@ export function LoanActionModal({
                     onClick={() => setPayer(p)}
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                       payer === p
-                        ? 'bg-[#f0a93c] text-[#161310] font-bold shadow-sm'
-                        : 'bg-[#1e1b18] text-[#9e8e7c] border border-[#514535]/30 hover:text-[#e9e1db]'
+                        ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                        : 'bg-white/[0.04] text-zinc-300 border border-white/[0.07] hover:bg-white/[0.08]'
                     }`}
                   >
                     {p}
@@ -435,13 +371,13 @@ export function LoanActionModal({
                 value={payer}
                 onChange={(e) => setPayer(e.target.value)}
                 placeholder="Payer Name"
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Amount Paid (₹)</label>
+                <label className="text-xs font-mono text-zinc-400 block mb-1">Amount Paid (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -449,37 +385,37 @@ export function LoanActionModal({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="5000"
-                  className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-serif font-bold focus:border-[#f0a93c] focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Date Paid</label>
+                <label className="text-xs font-mono text-zinc-400 block mb-1">Date Paid</label>
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-mono focus:border-[#f0a93c] focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Notes / Transaction Reference</label>
+              <label className="text-xs font-mono text-zinc-400 block mb-1">Notes / Transaction Reference</label>
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Paid via UPI / Credit Card payment app"
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loanActionMutation.isPending}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] text-[#161310] font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50"
             >
               {loanActionMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -494,30 +430,30 @@ export function LoanActionModal({
         {/* Mode 3: Settle Loan in Full */}
         {activeTab === 'settle' && (
           <div className="space-y-4">
-            <div className="rounded-xl bg-[#edbf70]/10 border border-[#edbf70]/30 p-3 text-xs text-[#edbf70]">
-              <span className="font-semibold block text-[#e9e1db]">Complete Settlement</span>
+            <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
+              <span className="font-semibold block text-white">Complete Settlement</span>
               Mark {loan.name} as fully paid off (₹0 remaining). This writes directly to cell{' '}
-              <strong className="font-mono text-[#ffc981]">Loans!{loan.columnLetter}2</strong>.
+              <strong className="font-mono text-amber-400">Loans!{loan.columnLetter}2</strong>.
             </div>
 
-            <div className="p-4 rounded-xl bg-[#1e1b18] border border-[#514535]/30 space-y-2 text-xs">
-              <div className="flex justify-between text-[#9e8e7c]">
+            <div className="p-4 rounded-xl bg-[#18181B] border border-white/[0.06] space-y-2 text-xs">
+              <div className="flex justify-between text-zinc-400">
                 <span>Current Remaining Due:</span>
-                <strong className="font-serif text-[#ffb4ab] font-bold">{formatINR(loan.currentDue)}</strong>
+                <strong className="font-serif text-white font-bold">{formatINR(loan.currentDue)}</strong>
               </div>
-              <div className="flex justify-between text-[#9e8e7c]">
+              <div className="flex justify-between text-zinc-400">
                 <span>New Balance after Settlement:</span>
-                <strong className="font-serif text-[#edbf70] font-bold">₹0 (100% Cleared)</strong>
+                <strong className="font-serif text-emerald-400 font-bold">₹0 (100% Cleared)</strong>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Settlement Date</label>
+              <label className="text-xs font-mono text-zinc-400 block mb-1">Settlement Date</label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-mono focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
@@ -525,7 +461,7 @@ export function LoanActionModal({
               type="button"
               onClick={handleSettleFull}
               disabled={loanActionMutation.isPending}
-              className="w-full py-2.5 rounded-xl bg-[#edbf70] hover:brightness-110 text-[#161310] font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md active:scale-95 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50"
             >
               {loanActionMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -540,16 +476,16 @@ export function LoanActionModal({
         {/* Mode 4: Settle from Existing Expense */}
         {activeTab === 'link' && (
           <form onSubmit={handleSettleFromExpense} className="space-y-4">
-            <div className="rounded-xl bg-[#f0a93c]/10 border border-[#f0a93c]/30 p-3 text-xs text-[#ffc981]">
-              <span className="font-semibold block text-[#e9e1db]">Link Existing Transaction</span>
+            <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
+              <span className="font-semibold block text-white">Link Existing Transaction</span>
               Link an already-logged transaction from the Expenses ledger to this liability so there is zero duplicate debit.
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1.5">Select Recent Transaction</label>
-              <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-[#514535]/40 bg-[#1e1b18] p-2">
+              <label className="text-xs font-mono text-zinc-400 block mb-1.5">Select Recent Transaction</label>
+              <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-white/[0.07] bg-black/60 p-2">
                 {recentExpenses.length === 0 ? (
-                  <p className="text-xs text-[#9e8e7c] p-2 text-center">No recent expenses found.</p>
+                  <p className="text-xs text-zinc-500 p-2 text-center">No recent expenses found.</p>
                 ) : (
                   recentExpenses.slice(0, 15).map((e) => (
                     <button
@@ -558,16 +494,16 @@ export function LoanActionModal({
                       onClick={() => setSelectedExpenseRow(e.rowIndex)}
                       className={`w-full text-left p-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
                         selectedExpenseRow === e.rowIndex
-                          ? 'bg-[#f0a93c]/20 border border-[#f0a93c]/40 text-[#ffc981]'
-                          : 'hover:bg-[#231f1c] text-[#d6c4af]'
+                          ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                          : 'hover:bg-white/[0.04] text-zinc-300'
                       }`}
                     >
                       <div className="truncate pr-2">
-                        <span className="font-mono text-[10px] text-[#9e8e7c] mr-2">#{e.rowIndex}</span>
+                        <span className="font-mono text-[10px] text-zinc-500 mr-2">#{e.rowIndex}</span>
                         <span>{e.description}</span>
-                        <span className="text-[10px] font-mono text-[#9e8e7c] block">{formatDisplayDate(e.date)}</span>
+                        <span className="text-[10px] font-mono text-zinc-500 block">{formatDisplayDate(e.date)}</span>
                       </div>
-                      <span className="font-serif font-bold text-[#e9e1db] whitespace-nowrap">
+                      <span className="font-serif font-bold text-white whitespace-nowrap">
                         {formatINR(e.amount)}
                       </span>
                     </button>
@@ -577,20 +513,20 @@ export function LoanActionModal({
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1">Or Enter Exact Row Number</label>
+              <label className="text-xs font-mono text-zinc-400 block mb-1">Or Enter Exact Row Number</label>
               <input
                 type="number"
                 value={selectedExpenseRow}
                 onChange={(e) => setSelectedExpenseRow(e.target.value ? Number(e.target.value) : '')}
                 placeholder="Row # (e.g. 238)"
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] font-mono focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loanActionMutation.isPending || !selectedExpenseRow}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#f0a93c] to-[#edbf70] text-[#161310] font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50"
             >
               {loanActionMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -605,14 +541,14 @@ export function LoanActionModal({
         {/* Mode 5: Edit Due Amount in Sheet Directly */}
         {activeTab === 'edit' && (
           <form onSubmit={handleUpdateBaseline} className="space-y-4">
-            <div className="rounded-xl bg-[#1e1b18] border border-[#514535]/30 p-3 text-xs text-[#d6c4af]">
-              <span className="font-semibold block text-[#e9e1db]">Direct Sheet Cell Sync</span>
+            <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
+              <span className="font-semibold block text-white">Direct Sheet Cell Sync</span>
               Modify the exact baseline / due balance stored in{' '}
-              <strong className="font-mono text-[#ffc981]">Loans!{loan.columnLetter}2</strong> in Google Sheets.
+              <strong className="font-mono text-amber-400">Loans!{loan.columnLetter}2</strong> in Google Sheets.
             </div>
 
             <div>
-              <label className="text-xs font-mono text-[#9e8e7c] block mb-1">
+              <label className="text-xs font-mono text-zinc-400 block mb-1">
                 New Due Value for Column {loan.columnLetter} (₹)
               </label>
               <input
@@ -622,7 +558,7 @@ export function LoanActionModal({
                 value={customBaseline}
                 onChange={(e) => setCustomBaseline(e.target.value)}
                 placeholder="18000"
-                className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-sm text-[#e9e1db] font-serif font-bold focus:border-[#f0a93c] focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
@@ -631,7 +567,7 @@ export function LoanActionModal({
                 <button
                   type="button"
                   onClick={() => setCustomBaseline(18000)}
-                  className="px-3 py-2 rounded-xl bg-[#1e1b18] border border-[#514535]/30 hover:border-[#f0a93c]/40 text-xs font-semibold text-[#d6c4af] transition-colors"
+                  className="px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-500/40 text-xs font-semibold text-zinc-300 transition-colors"
                 >
                   Set BCA True Baseline (₹18,000)
                 </button>
@@ -639,7 +575,7 @@ export function LoanActionModal({
               <button
                 type="button"
                 onClick={() => setCustomBaseline(0)}
-                className="px-3 py-2 rounded-xl bg-[#edbf70]/15 hover:bg-[#edbf70]/25 border border-[#edbf70]/30 text-xs font-semibold text-[#edbf70] transition-colors"
+                className="px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-500/40 text-xs font-semibold text-zinc-300 transition-colors"
               >
                 Set to ₹0
               </button>
@@ -648,7 +584,7 @@ export function LoanActionModal({
             <button
               type="submit"
               disabled={loanActionMutation.isPending}
-              className="w-full py-2.5 rounded-xl bg-[#f0a93c] text-[#161310] font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50"
             >
               {loanActionMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

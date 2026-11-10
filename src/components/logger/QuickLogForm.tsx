@@ -4,20 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { TransactionType } from '@/lib/types';
 import { useLogExpense } from '@/hooks/useFinancials';
 import {
+  Bookmark,
   Check,
-  Coffee,
-  Fuel,
-  Lightbulb,
   Plus,
   PlusCircle,
-  ShoppingBag,
   Sparkles,
   Trash2,
-  Utensils,
-  Wallet,
   Zap,
-  Bookmark,
-  Calendar,
 } from 'lucide-react';
 import { formatINR } from '@/lib/date-utils';
 
@@ -57,7 +50,6 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
   const [newPresetLabel, setNewPresetLabel] = useState('');
   const [newPresetAmount, setNewPresetAmount] = useState<number | ''>('');
   const [newPresetType, setNewPresetType] = useState<TransactionType>('DEBIT');
-  const [newPresetCategory, setNewPresetCategory] = useState<CustomPreset['category']>('General');
 
   const logMutation = useLogExpense();
 
@@ -101,16 +93,14 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
     setIsAddingCustomPreset(false);
   };
 
-  const handleCreateNewPreset = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateNewPreset = () => {
     if (!newPresetLabel.trim() || !newPresetAmount || Number(newPresetAmount) <= 0) return;
-
     const newPreset: CustomPreset = {
       id: Date.now().toString(),
       label: newPresetLabel.trim(),
       amount: Number(newPresetAmount),
       type: newPresetType,
-      category: newPresetCategory,
+      category: 'General',
     };
     savePresets([newPreset, ...presets]);
     setNewPresetLabel('');
@@ -123,30 +113,24 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
     savePresets(presets.filter((p) => p.id !== id));
   };
 
-  // Quick Amount incremental adders
-  const handleAddAmount = (delta: number) => {
-    setAmount((prev) => (Number(prev) || 0) + delta);
+  const handleAddAmount = (increment: number) => {
+    const current = Number(amount) || 0;
+    setAmount(current + increment);
   };
 
-  const setDatePreset = (p: 'today' | 'nov10' | 'yesterday') => {
-    if (p === 'nov10') {
+  const setDatePreset = (preset: 'today' | 'yesterday' | 'nov10') => {
+    if (preset === 'nov10') {
       setDate('2026-11-10');
-    } else if (p === 'today') {
-      const today = new Date();
-      setDate(
-        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
-          today.getDate()
-        ).padStart(2, '0')}`
-      );
-    } else if (p === 'yesterday') {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      setDate(
-        `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(
-          yesterday.getDate()
-        ).padStart(2, '0')}`
-      );
+      return;
     }
+    const d = new Date();
+    if (preset === 'yesterday') {
+      d.setDate(d.getDate() - 1);
+    }
+    const yStr = d.getFullYear();
+    const mStr = String(d.getMonth() + 1).padStart(2, '0');
+    const dStr = String(d.getDate()).padStart(2, '0');
+    setDate(`${yStr}-${mStr}-${dStr}`);
   };
 
   const handleSubmit = async (e: React.FormEvent, keepOpen = false) => {
@@ -181,20 +165,20 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
   };
 
   return (
-    <div className="obsidian-card p-4 sm:p-6 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#161310] shadow-2xl space-y-4">
+    <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-4 sm:p-6 shadow-2xl space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#514535]/30 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/[0.07] gap-2">
         <div>
-          <h3 className="text-base font-serif font-bold text-[#e9e1db] flex items-center gap-2">
-            <Zap className="h-5 w-5 text-[#f0a93c]" />
+          <h3 className="text-base font-medium text-white flex items-center gap-2">
+            <Zap className="h-5 w-5 text-amber-500" />
             Quick Daily Log & Custom Expense Creator
           </h3>
-          <p className="text-xs font-mono text-[#9e8e7c] mt-0.5">
+          <p className="text-xs font-mono text-zinc-400 mt-0.5">
             Appends directly to Expenses sheet • Formula Lineage Defense ensures Column E is 100% dynamic
           </p>
         </div>
         {justLogged && (
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-[#edbf70] bg-[#edbf70]/15 px-3 py-1.5 rounded-full border border-[#edbf70]/30 animate-in fade-in">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20 animate-in fade-in">
             <Check className="h-4 w-4" />
             {logSuccessMessage || 'Saved to Google Sheets!'}
           </span>
@@ -204,14 +188,14 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
       {/* Preset Custom Items Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-mono font-semibold text-[#d6c4af] uppercase tracking-wider flex items-center gap-1.5">
-            <Bookmark className="h-3.5 w-3.5 text-[#f0a93c]" />
+          <label className="text-xs font-mono font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Bookmark className="h-3.5 w-3.5 text-amber-500" />
             Fast-Log Chips (1-Tap Fill)
           </label>
           <button
             type="button"
             onClick={() => setIsAddingCustomPreset(!isAddingCustomPreset)}
-            className="flex items-center gap-1 text-[11px] font-medium text-[#f0a93c] hover:underline transition-colors"
+            className="flex items-center gap-1 text-[11px] font-medium text-amber-400 hover:underline transition-colors"
           >
             <Plus className="h-3 w-3" />
             {isAddingCustomPreset ? 'Cancel' : 'Add Custom Item'}
@@ -220,10 +204,10 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
 
         {/* Custom Preset Creation Form */}
         {isAddingCustomPreset && (
-          <div className="p-3.5 rounded-xl border border-[#f0a93c]/30 bg-[#f0a93c]/10 mb-3 space-y-3 animate-in fade-in">
+          <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/10 mb-3 space-y-3 animate-in fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#ffc981]">Create New Custom Fast-Log Chip</span>
-              <span className="text-[10px] text-[#9e8e7c]">Stored in your browser for 1-tap logging</span>
+              <span className="text-xs font-semibold text-amber-400">Create New Custom Fast-Log Chip</span>
+              <span className="text-[10px] text-zinc-400">Stored in your browser for 1-tap logging</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <input
@@ -231,20 +215,20 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                 placeholder="Item Name (e.g. Swiggy, Gym, Chai)"
                 value={newPresetLabel}
                 onChange={(e) => setNewPresetLabel(e.target.value)}
-                className="rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs text-[#e9e1db] placeholder-[#9e8e7c] focus:border-[#f0a93c] focus:outline-none"
+                className="rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
               />
               <input
                 type="number"
                 placeholder="Default Amount (₹)"
                 value={newPresetAmount}
                 onChange={(e) => setNewPresetAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                className="rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3 py-2 text-xs font-mono text-[#e9e1db] placeholder-[#9e8e7c] focus:border-[#f0a93c] focus:outline-none"
+                className="rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-mono text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
               />
               <div className="flex gap-2">
                 <select
                   value={newPresetType}
                   onChange={(e) => setNewPresetType(e.target.value as TransactionType)}
-                  className="flex-1 rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-2.5 py-2 text-xs text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none"
+                  className="flex-1 rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
                 >
                   <option value="DEBIT">DEBIT</option>
                   <option value="CREDIT">CREDIT</option>
@@ -254,7 +238,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                   type="button"
                   onClick={handleCreateNewPreset}
                   disabled={!newPresetLabel.trim() || !newPresetAmount}
-                  className="rounded-xl bg-[#f0a93c] px-3 py-2 text-xs font-bold text-[#161310] hover:brightness-110 disabled:opacity-50"
+                  className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-semibold text-black hover:bg-amber-400 disabled:opacity-50"
                 >
                   Save
                 </button>
@@ -271,10 +255,10 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
               <div
                 key={preset.id}
                 onClick={() => handleSelectPreset(preset)}
-                className={`shrink-0 group flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border cursor-pointer transition-all ${
+                className={`shrink-0 group flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium border cursor-pointer transition-all ${
                   isSelected
-                    ? 'bg-[#f0a93c] text-[#161310] border-[#f0a93c] font-bold shadow-sm'
-                    : 'bg-[#1e1b18] text-[#d6c4af] border-[#514535]/30 hover:border-[#f0a93c]/40 hover:text-[#e9e1db]'
+                    ? 'bg-amber-500 text-black border-amber-500 font-semibold shadow-sm'
+                    : 'bg-[#18181B] text-zinc-300 border-white/[0.07] hover:border-amber-500/30 hover:text-white'
                 }`}
               >
                 <span>{preset.label}</span>
@@ -284,7 +268,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                 <button
                   type="button"
                   onClick={(e) => handleDeletePreset(preset.id, e)}
-                  className="opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] p-0.5 rounded transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-0.5 rounded transition-opacity"
                   title="Delete chip"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -300,15 +284,15 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
         {/* Date Selector Row */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-mono font-semibold text-[#d6c4af]">Transaction Date</label>
+            <label className="text-xs font-mono font-medium text-zinc-300">Transaction Date</label>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setDatePreset('nov10')}
-                className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold border transition-all ${
+                className={`rounded-lg px-2 py-0.5 text-[10px] font-medium border transition-all ${
                   date === '2026-11-10'
-                    ? 'bg-[#f0a93c] text-[#161310] border-[#f0a93c] font-bold'
-                    : 'bg-[#1e1b18] text-[#9e8e7c] border-[#514535]/40 hover:text-[#e9e1db]'
+                    ? 'bg-amber-500 text-black border-amber-500 font-semibold'
+                    : 'bg-[#18181B] text-zinc-400 border-white/[0.07] hover:text-white'
                 }`}
               >
                 10 Nov (Anchor)
@@ -316,14 +300,14 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
               <button
                 type="button"
                 onClick={() => setDatePreset('today')}
-                className="rounded-lg px-2 py-0.5 text-[10px] font-semibold bg-[#1e1b18] text-[#9e8e7c] border border-[#514535]/40 hover:text-[#e9e1db]"
+                className="rounded-lg px-2 py-0.5 text-[10px] font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
               >
                 Today
               </button>
               <button
                 type="button"
                 onClick={() => setDatePreset('yesterday')}
-                className="rounded-lg px-2 py-0.5 text-[10px] font-semibold bg-[#1e1b18] text-[#9e8e7c] border border-[#514535]/40 hover:text-[#e9e1db]"
+                className="rounded-lg px-2 py-0.5 text-[10px] font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
               >
                 Yesterday
               </button>
@@ -333,7 +317,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3.5 py-2.5 text-sm sm:text-xs font-mono text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 text-sm sm:text-xs font-mono text-white focus:border-amber-500 focus:outline-none transition-colors"
             required
           />
         </div>
@@ -341,12 +325,12 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
         {/* Description & Custom Name */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-mono font-semibold text-[#d6c4af]">Description / Item Name</label>
+            <label className="text-xs font-mono font-medium text-zinc-300">Description / Item Name</label>
             {description && (
               <button
                 type="button"
                 onClick={handleSaveCurrentAsPreset}
-                className="flex items-center gap-1 text-[11px] text-[#ffc981] hover:underline"
+                className="flex items-center gap-1 text-[11px] text-amber-400 hover:underline"
                 title="Save current item and amount as a custom preset chip"
               >
                 <Sparkles className="h-3 w-3" />
@@ -359,38 +343,38 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Type any custom item e.g. Swiggy Lunch, Gym Fee, Chai, Petrol..."
-            className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] px-3.5 py-2.5 text-sm sm:text-xs text-[#e9e1db] placeholder-[#9e8e7c] focus:border-[#f0a93c] focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 text-sm sm:text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
             required
           />
         </div>
 
         {/* Amount & Quick Increments */}
         <div>
-          <label className="text-xs font-mono font-semibold text-[#d6c4af] block mb-1.5">
+          <label className="text-xs font-mono font-medium text-zinc-300 block mb-1.5">
             Transaction Amount (₹)
           </label>
           <div className="relative">
-            <span className="absolute left-3.5 top-2.5 text-[#9e8e7c] font-mono text-sm sm:text-xs">₹</span>
+            <span className="absolute left-3.5 top-2.5 text-zinc-500 font-mono text-sm sm:text-xs">₹</span>
             <input
               type="number"
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="0.00"
-              className="w-full rounded-xl border border-[#514535]/40 bg-[#1e1b18] pl-8 pr-3.5 py-2.5 text-sm sm:text-xs font-serif font-bold text-[#e9e1db] focus:border-[#f0a93c] focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-3.5 py-2.5 text-sm sm:text-xs font-serif font-bold text-white focus:border-amber-500 focus:outline-none transition-colors"
               required
             />
           </div>
 
           {/* Quick Amount Pills */}
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <span className="text-[10px] text-[#9e8e7c] mr-1 font-mono">Quick Add:</span>
+            <span className="text-[10px] text-zinc-500 mr-1 font-mono">Quick Add:</span>
             {[50, 100, 200, 500, 1000, 2500].map((delta) => (
               <button
                 key={delta}
                 type="button"
                 onClick={() => handleAddAmount(delta)}
-                className="rounded-lg bg-[#1e1b18] hover:border-[#f0a93c]/40 border border-[#514535]/30 px-2 py-1 text-[11px] font-mono text-[#d6c4af] hover:text-[#e9e1db] transition-colors"
+                className="rounded-lg bg-[#18181B] hover:border-amber-500/40 border border-white/[0.07] px-2 py-1 text-[11px] font-mono text-zinc-300 hover:text-white transition-colors"
               >
                 +{delta}
               </button>
@@ -399,7 +383,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
               <button
                 type="button"
                 onClick={() => setAmount('')}
-                className="rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 px-2 py-1 text-[10px] text-rose-300 transition-colors ml-auto"
+                className="rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2 py-1 text-[10px] text-rose-400 transition-colors ml-auto"
               >
                 Clear
               </button>
@@ -409,7 +393,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
 
         {/* Transaction Type Selector */}
         <div>
-          <label className="text-xs font-mono font-semibold text-[#d6c4af] block mb-1.5">
+          <label className="text-xs font-mono font-medium text-zinc-300 block mb-1.5">
             Transaction Type
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -420,14 +404,14 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`rounded-xl py-2.5 text-xs font-bold border transition-all ${
+                  className={`rounded-xl py-2.5 text-xs font-medium border transition-all ${
                     isSelected
                       ? t === 'DEBIT'
-                        ? 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/50 shadow-sm'
+                        ? 'bg-white/10 text-white border-white/30 shadow-sm'
                         : t === 'CREDIT'
-                        ? 'bg-[#edbf70]/20 text-[#edbf70] border-[#edbf70]/50 shadow-sm'
-                        : 'bg-[#f0a93c]/20 text-[#ffc981] border-[#f0a93c]/50 shadow-sm'
-                      : 'bg-[#1e1b18] text-[#9e8e7c] border-[#514535]/30 hover:border-[#514535] hover:text-[#e9e1db]'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-sm'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-sm'
+                      : 'bg-[#18181B] text-zinc-400 border-white/[0.07] hover:border-white/20 hover:text-white'
                   }`}
                 >
                   {t}
@@ -438,12 +422,12 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-3 border-t border-[#514535]/30 grid grid-cols-2 gap-2">
+        <div className="pt-3 border-t border-white/[0.07] grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={(e) => handleSubmit(e, true)}
             disabled={logMutation.isPending || !description.trim() || !amount}
-            className="rounded-xl border border-[#514535]/40 bg-[#1e1b18] py-2.5 text-xs font-semibold text-[#d6c4af] hover:text-[#e9e1db] hover:border-[#f0a93c]/40 transition-all disabled:opacity-50"
+            className="rounded-xl border border-white/[0.07] bg-[#18181B] py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-all disabled:opacity-50"
           >
             Add Another
           </button>
@@ -451,7 +435,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           <button
             type="submit"
             disabled={logMutation.isPending || !description.trim() || !amount}
-            className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#f0a93c] via-[#edbf70] to-[#f0a93c] py-2.5 text-xs font-bold text-[#161310] shadow-md hover:brightness-110 transition-all disabled:opacity-50 active:scale-95"
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
           >
             <PlusCircle className="h-4 w-4" />
             <span>

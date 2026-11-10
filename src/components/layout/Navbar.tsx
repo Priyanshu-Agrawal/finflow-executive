@@ -7,22 +7,17 @@ import {
   Calendar,
   CreditCard,
   FileSpreadsheet,
-  Grid,
   Home,
   LogOut,
-  Menu,
   MoreHorizontal,
   Plus,
   RefreshCw,
-  Sliders,
   TableProperties,
   Users,
   Wallet,
   X,
-  Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { formatDisplayDate } from '@/lib/date-utils';
 
 interface NavbarProps {
   referenceDate: string;
@@ -57,7 +52,7 @@ export function Navbar({
   const navLinks = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Expenses', href: '/expenses', icon: FileSpreadsheet },
-    { name: 'Excel Mode', href: '/excel', icon: TableProperties, isExcel: true },
+    { name: 'Excel Mode', href: '/excel', icon: TableProperties },
     { name: 'Loans & Payoff', href: '/loans', icon: CreditCard },
     { name: 'Peer Split', href: '/ledger', icon: Users },
   ];
@@ -78,34 +73,32 @@ export function Navbar({
   return (
     <>
       {/* Top Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-[rgba(246,239,227,0.08)] bg-[#161310]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-white/[0.07] bg-[#0B0B0C]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           {/* Left: Brand Monogram & Title */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#F0A93C] via-[#EDBF70] to-[#E5B869] p-[1.5px] shadow-lg shadow-[#F0A93C]/10 group-hover:scale-105 transition-transform">
-                <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#161310]">
-                  <Wallet className="h-4 w-4 text-[#F0A93C]" />
-                </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:border-amber-500/40 transition-colors">
+                <Wallet className="h-4 w-4" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
-                  <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-white">
+                  <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-zinc-100">
                     FinFlow
                   </span>
-                  <span className="rounded bg-[#F0A93C]/15 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#F0A93C] border border-[#F0A93C]/30 tracking-wider">
+                  <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-400 border border-amber-500/20 tracking-wider">
                     PORTAL
                   </span>
                 </div>
-                <span className="text-[10px] text-[#A89F91] font-mono font-medium hidden sm:block mt-0.5">
+                <span className="text-[10px] text-zinc-400 font-mono font-medium hidden sm:block mt-0.5">
                   scriptingBear • Executive OS
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation Tabs */}
-          <nav className="hidden lg:flex items-center gap-1 rounded-2xl border border-[rgba(246,239,227,0.08)] bg-[#100D0A]/80 p-1">
+          {/* Center: Desktop Navigation Tabs (Unified Monochromatic/Amber) */}
+          <nav className="hidden lg:flex items-center gap-1 rounded-2xl border border-white/[0.07] bg-[#121214] p-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -115,12 +108,8 @@ export function Navbar({
                   href={link.href}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? link.isExcel
-                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                        : 'bg-[#F0A93C] text-[#100D0A] font-bold shadow-md shadow-[#F0A93C]/20'
-                      : link.isExcel
-                      ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30'
-                      : 'text-[#A89F91] hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -132,61 +121,48 @@ export function Navbar({
 
           {/* Right Action Cluster */}
           <div className="flex items-center gap-2">
-            {/* Quick Excel Mode Button (Desktop) */}
-            <Link
-              href={pathname === '/excel' ? '/' : '/excel'}
-              className={`hidden md:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold border transition-all ${
-                pathname === '/excel'
-                  ? 'bg-indigo-600 text-white border-indigo-500'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-              }`}
-            >
-              <TableProperties className="h-3.5 w-3.5 text-emerald-400" />
-              <span>{pathname === '/excel' ? 'Exit Excel' : 'Excel Grid'}</span>
-            </Link>
-
             {/* Date Anchor Pill */}
             <div className="relative">
               <button
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-1.5 rounded-xl border border-[rgba(246,239,227,0.08)] bg-[#181411] px-2.5 py-1.5 text-xs text-[#E9E1DB] hover:border-[#F0A93C]/40 transition-colors"
+                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#121214] px-2.5 py-1.5 text-xs text-zinc-200 hover:border-amber-500/30 transition-colors"
                 title="Change anchor baseline date"
               >
-                <Calendar className="h-3.5 w-3.5 text-[#F0A93C] shrink-0" />
-                <span className="font-mono text-[#F0A93C] font-semibold text-xs">
+                <Calendar className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <span className="font-mono text-zinc-200 font-semibold text-xs">
                   {referenceDate === '2026-11-10' ? '10 Nov' : referenceDate}
                 </span>
               </button>
 
               {showDatePicker && (
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-white/[0.1] bg-[#11131a] p-3.5 shadow-2xl z-50 animate-in fade-in">
-                  <p className="text-xs font-bold text-white mb-2">Timeline Baseline Anchor</p>
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-white/[0.1] bg-[#121214] p-3.5 shadow-2xl z-50 animate-in fade-in">
+                  <p className="text-xs font-bold text-zinc-100 mb-2">Timeline Baseline Anchor</p>
                   <div className="flex flex-col gap-1.5 mb-3">
                     <button
                       onClick={() => handleDatePreset('nov10')}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                         referenceDate === '2026-11-10'
-                          ? 'bg-emerald-500 text-slate-950 font-bold'
-                          : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
+                          ? 'bg-amber-500 text-zinc-950 font-bold'
+                          : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
                       }`}
                     >
                       <span>10 Nov 2026 (Audit Anchor)</span>
-                      <span className="text-[10px] opacity-80">₹1.28L</span>
+                      <span className="text-[10px] font-mono opacity-80">₹1.28L</span>
                     </button>
                     <button
                       onClick={() => handleDatePreset('today')}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                         referenceDate !== '2026-11-10'
-                          ? 'bg-emerald-500 text-slate-950 font-bold'
-                          : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]'
+                          ? 'bg-amber-500 text-zinc-950 font-bold'
+                          : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
                       }`}
                     >
                       <span>System Today</span>
-                      <span className="text-[10px] opacity-80">Live</span>
+                      <span className="text-[10px] font-mono opacity-80">Live</span>
                     </button>
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">Custom YYYY-MM-DD:</label>
+                    <label className="text-[10px] text-zinc-400 block mb-1">Custom YYYY-MM-DD:</label>
                     <input
                       type="date"
                       value={referenceDate}
@@ -196,7 +172,7 @@ export function Navbar({
                           setShowDatePicker(false);
                         }
                       }}
-                      className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-xl border border-white/[0.08] bg-black/60 px-3 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -208,18 +184,18 @@ export function Navbar({
               <button
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
                 title="Synchronize Google Sheets"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-amber-400' : ''}`} />
               </button>
             )}
 
-            {/* Primary Action Button */}
+            {/* Primary Action Button (Unified Warm Amber) */}
             {onOpenQuickLog && (
               <button
                 onClick={onOpenQuickLog}
-                className="hidden sm:flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20 hover:opacity-95 transition-all active:scale-95"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-zinc-950 shadow-sm transition-all active:scale-95"
               >
                 <Plus className="h-4 w-4 stroke-[2.5]" />
                 <span>Log Tx</span>
@@ -229,7 +205,7 @@ export function Navbar({
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="hidden sm:flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+              className="hidden sm:flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-rose-400 hover:border-rose-500/30 transition-colors"
               title="Sign Out of Executive Cockpit"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -238,7 +214,7 @@ export function Navbar({
             {/* Mobile More Drawer Button */}
             <button
               onClick={() => setShowMobileMore(!showMobileMore)}
-              className="flex lg:hidden h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] text-slate-400 hover:text-white"
+              className="flex lg:hidden h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-white"
             >
               {showMobileMore ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}
             </button>
@@ -247,10 +223,7 @@ export function Navbar({
 
         {/* Mobile Slide-down Drawer */}
         {showMobileMore && (
-          <div className="lg:hidden border-b border-white/[0.08] bg-[#0c0e14]/98 px-4 py-3.5 backdrop-blur-2xl animate-in fade-in">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
-              All Sections
-            </span>
+          <div className="lg:hidden border-b border-white/[0.08] bg-[#121214]/98 px-4 py-3.5 backdrop-blur-2xl animate-in fade-in space-y-3">
             <div className="grid grid-cols-2 gap-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -260,36 +233,37 @@ export function Navbar({
                     key={link.name}
                     href={link.href}
                     onClick={() => setShowMobileMore(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold ${
+                    className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-colors ${
                       isActive
-                        ? 'bg-emerald-500 text-slate-950 font-bold'
-                        : 'bg-white/[0.03] text-slate-300 hover:text-white'
+                        ? 'bg-amber-500 text-zinc-950 font-bold'
+                        : 'bg-white/[0.03] text-zinc-300 hover:bg-white/[0.06]'
                     }`}
                   >
-                    <Icon className="h-4 w-4 text-emerald-400" />
+                    <Icon className="h-4 w-4" />
                     <span>{link.name}</span>
                   </Link>
                 );
               })}
             </div>
-            <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-col gap-2">
+
+            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
               {onOpenEmiScheduler && (
                 <button
                   onClick={() => {
                     setShowMobileMore(false);
                     onOpenEmiScheduler();
                   }}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] py-2.5 text-xs font-bold text-slate-200"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08]"
                 >
-                  <Sliders className="h-4 w-4 text-indigo-400" />
-                  <span>Open EMI Scheduler</span>
+                  <CreditCard className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Schedule Loan EMI</span>
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-500/20 bg-rose-950/20 py-2.5 text-xs font-bold text-rose-300 hover:bg-rose-900/30 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5" />
                 <span>Sign Out</span>
               </button>
             </div>
@@ -297,72 +271,60 @@ export function Navbar({
         )}
       </header>
 
-      {/* Modern Floating Bottom Dock for Mobile (Ultra-Sleek Glass Dock) */}
-      <div className="fixed bottom-3 inset-x-3 z-40 lg:hidden flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)]">
-        <nav className="pointer-events-auto flex items-center gap-1 sm:gap-2 rounded-2xl border border-white/[0.12] bg-[#0c0e14]/90 px-3 py-2 shadow-2xl backdrop-blur-2xl">
-          {/* Home */}
+      {/* Floating Bottom App Bar (Mobile Only - Unified Amber & Obsidian) */}
+      <div className="fixed bottom-3 inset-x-3 z-40 lg:hidden">
+        <div className="mx-auto max-w-md rounded-2xl border border-white/[0.08] bg-[#121214]/95 p-1.5 shadow-2xl backdrop-blur-xl flex items-center justify-around">
           <Link
             href="/"
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              pathname === '/'
-                ? 'text-emerald-400 font-bold bg-white/[0.06]'
-                : 'text-slate-400 hover:text-white'
+              pathname === '/' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Home className="h-4 w-4" />
-            <span className="text-[9px]">Home</span>
+            <span className="text-[10px] font-medium">Home</span>
           </Link>
 
-          {/* Ledger */}
           <Link
             href="/expenses"
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              pathname === '/expenses'
-                ? 'text-emerald-400 font-bold bg-white/[0.06]'
-                : 'text-slate-400 hover:text-white'
+              pathname === '/expenses' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <FileSpreadsheet className="h-4 w-4" />
-            <span className="text-[9px]">Ledger</span>
+            <span className="text-[10px] font-medium">Ledger</span>
           </Link>
 
-          {/* Elevated Central (+) Add Button */}
+          {/* Center Floating Quick Log Action */}
           {onOpenQuickLog && (
             <button
               onClick={onOpenQuickLog}
-              className="mx-1 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform"
+              className="flex h-11 w-11 -mt-4 items-center justify-center rounded-2xl bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25 active:scale-95 transition-transform"
               title="Quick Log Expense"
             >
-              <Plus className="h-6 w-6 stroke-[2.5]" />
+              <Plus className="h-5 w-5 stroke-[2.5]" />
             </button>
           )}
 
-          {/* Excel Mode */}
           <Link
             href="/excel"
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              pathname === '/excel'
-                ? 'text-emerald-400 font-bold bg-white/[0.06]'
-                : 'text-slate-400 hover:text-white'
+              pathname === '/excel' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <TableProperties className="h-4 w-4" />
-            <span className="text-[9px]">Excel</span>
+            <span className="text-[10px] font-medium">Excel</span>
           </Link>
 
-          {/* Loans */}
           <Link
             href="/loans"
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              pathname === '/loans'
-                ? 'text-emerald-400 font-bold bg-white/[0.06]'
-                : 'text-slate-400 hover:text-white'
+              pathname === '/loans' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <CreditCard className="h-4 w-4" />
-            <span className="text-[9px]">Loans</span>
+            <span className="text-[10px] font-medium">Loans</span>
           </Link>
-        </nav>
+        </div>
       </div>
     </>
   );

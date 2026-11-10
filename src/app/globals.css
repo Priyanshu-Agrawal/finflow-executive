@@ -1,46 +1,62 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
-  --font-serif: var(--font-serif), Newsreader, Georgia, serif;
-  --font-mono: var(--font-mono), JetBrains Mono, monospace;
+  --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-serif), Newsreader, Georgia, Cambria, serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", "SF Mono", Menlo, monospace;
 }
 
 :root {
-  --background: #100D0A;
-  --foreground: #E9E1DB;
+  --background: #0B0B0C;
+  --foreground: #F4F4F5;
+  --card: #121214;
+  --card-elevated: #18181B;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.14);
+  --accent: #F59E0B;
+  --accent-muted: rgba(245, 158, 11, 0.12);
+  --accent-border: rgba(245, 158, 11, 0.25);
 }
 
 body {
-  background-color: #100D0A;
-  color: #E9E1DB;
+  background-color: #0B0B0C;
+  color: #F4F4F5;
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Obsidian Glassmorphism */
-.obsidian-card {
-  background-color: #161310;
-  border: 1px solid rgba(246, 239, 227, 0.08);
+/* Unified Surface Classes */
+.fin-card {
+  background-color: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.obsidian-glass {
-  background: rgba(22, 19, 16, 0.75);
+.fin-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.fin-card-elevated {
+  background-color: #18181B;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+}
+
+.fin-glass {
+  background: rgba(18, 18, 20, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(246, 239, 227, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.gold-glow {
-  box-shadow: 0 0 20px -3px rgba(240, 169, 60, 0.25);
+/* Subtle single-theme glow */
+.fin-glow {
+  box-shadow: 0 0 24px -4px rgba(245, 158, 11, 0.18);
 }
 
-.gold-border-glow {
-  border-color: rgba(240, 169, 60, 0.35);
-  box-shadow: 0 0 16px -2px rgba(240, 169, 60, 0.15);
-}
-
-/* Hide scrollbar for clean horizontal swipeable cards */
+/* Scrollbar Utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

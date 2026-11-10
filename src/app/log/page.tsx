@@ -18,7 +18,7 @@ export default function QuickLogPage() {
   const recentTransactions = data?.expenses.slice(-5).reverse() || [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0B0B0C] text-white flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
       <Navbar
         referenceDate={referenceDate}
         onDateChange={setReferenceDate}
@@ -27,24 +27,24 @@ export default function QuickLogPage() {
       />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-8 space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <PlusCircle className="h-5 w-5 text-indigo-400" />
+        <div className="pb-4 border-b border-white/[0.07]">
+          <h1 className="text-xl font-medium text-white flex items-center gap-2">
+            <PlusCircle className="h-5 w-5 text-amber-500" />
             Quick Logging & Multi-Month Generators
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs font-mono text-zinc-400 mt-0.5">
             Log ad-hoc transactions or schedule recurring multi-month obligations directly to Google Sheets
           </p>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-1">
+        <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'daily'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <PlusCircle className="h-4 w-4" />
@@ -52,10 +52,10 @@ export default function QuickLogPage() {
           </button>
           <button
             onClick={() => setActiveTab('emi')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'emi'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-500 text-black font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Sliders className="h-4 w-4" />
@@ -72,31 +72,31 @@ export default function QuickLogPage() {
 
         {/* Recent Ledger Entries Preview */}
         {recentTransactions.length > 0 && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 shadow-lg">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-indigo-400" />
+          <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-5 shadow-lg">
+            <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-mono">
+              <Clock className="h-3.5 w-3.5 text-amber-500" />
               Latest Sheet Entries
             </h3>
             <div className="space-y-2">
               {recentTransactions.map((e) => (
                 <div
                   key={e.rowIndex}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-800/80 bg-slate-950/60 text-xs font-mono"
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-white/[0.05] bg-[#18181B] text-xs font-mono"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-500">#{e.rowIndex}</span>
-                    <span className="text-slate-400">{formatDisplayDate(e.date)}</span>
+                    <span className="text-zinc-500">#{e.rowIndex}</span>
+                    <span className="text-zinc-400">{formatDisplayDate(e.date)}</span>
                     <span className="font-sans font-medium text-white">{e.description}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <span
                       className={`font-bold ${
-                        e.type === 'CREDIT' ? 'text-emerald-400' : 'text-rose-400'
+                        e.type === 'CREDIT' ? 'text-emerald-400' : 'text-zinc-100'
                       }`}
                     >
                       {e.type === 'CREDIT' ? '+' : '-'}{formatINR(e.amount)}
                     </span>
-                    <span className="text-indigo-400 font-bold">{formatINR(e.balance)}</span>
+                    <span className="text-zinc-100 font-mono font-medium">{formatINR(e.balance)}</span>
                   </div>
                 </div>
               ))}

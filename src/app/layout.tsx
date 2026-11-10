@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geist.variable} ${newsreader.variable} ${jetbrainsMono.variable} min-h-screen bg-[#100D0A] font-sans text-[#E9E1DB] antialiased selection:bg-[#F0A93C]/30 selection:text-[#FFC981]`}
+        className={`${geist.variable} ${newsreader.variable} ${jetbrainsMono.variable} min-h-screen bg-[#0B0B0C] font-sans text-white antialiased selection:bg-amber-500/30 selection:text-amber-400`}
       >
         <Providers>{children}</Providers>
       </body>

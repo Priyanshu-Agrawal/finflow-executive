@@ -16,7 +16,7 @@ export default function ExcelPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useFinancials(referenceDate);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0B0B0C] text-white flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
       <Navbar
         referenceDate={referenceDate}
         onDateChange={setReferenceDate}
@@ -30,8 +30,8 @@ export default function ExcelPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
-            <p className="text-sm font-medium text-slate-400">
+            <Loader2 className="h-9 w-9 animate-spin text-amber-400" />
+            <p className="text-sm font-medium text-zinc-400">
               Initializing FinFlow Excel Grid Engine...
             </p>
           </div>
@@ -40,7 +40,7 @@ export default function ExcelPage() {
         {/* Error State */}
         {isError && (
           <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-6 text-center space-y-3">
-            <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
+            <AlertCircle className="h-9 w-9 text-rose-400 mx-auto" />
             <h3 className="text-base font-bold text-white">Connection Error</h3>
             <p className="text-xs text-rose-300 max-w-md mx-auto">
               {(error as Error)?.message || 'Failed to communicate with Google Sheets.'}
@@ -67,11 +67,11 @@ export default function ExcelPage() {
 
       {/* Quick Log Modal Overlay */}
       {isQuickLogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md">
           <div className="w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsQuickLogOpen(false)}
-              className="absolute right-4 top-4 z-10 rounded-lg p-1 text-slate-400 hover:text-white hover:bg-slate-800"
+              className="absolute right-4 top-4 z-10 rounded-xl p-1 text-zinc-400 hover:text-white hover:bg-white/[0.05]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -85,7 +85,7 @@ export default function ExcelPage() {
 
       {/* EMI Scheduler Modal Overlay */}
       {isEmiSchedulerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md">
           <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <EmiSchedulerForm
               onClose={() => setIsEmiSchedulerOpen(false)}

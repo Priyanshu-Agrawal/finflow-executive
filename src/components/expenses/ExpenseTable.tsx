@@ -67,15 +67,24 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const deleteMutation = useDeleteExpense();
   const logMutation = useLogExpense();
 
-  // Find the transaction nearest to referenceDate
+  // Find the transaction nearest to referenceDate (targeting the latest entry on or before referenceDate)
   const nearestEntry = useMemo(() => {
     if (expenses.length === 0) return null;
+
+    // 1. If there are actual entries on or before referenceDate, pick the last one
+    // (e.g. on 2026-11-08, picks Row 239 which is the last entry of the 8th)
+    const actuals = expenses.filter((e) => e.date <= referenceDate);
+    if (actuals.length > 0) {
+      return actuals[actuals.length - 1];
+    }
+
+    // 2. If all entries are in the future, pick the entry closest in time (last entry of that closest date)
     const targetTime = new Date(referenceDate).getTime();
     let closest = expenses[0];
     let minDiff = Infinity;
     for (const e of expenses) {
       const diff = Math.abs(new Date(e.date).getTime() - targetTime);
-      if (diff < minDiff) {
+      if (diff <= minDiff) {
         minDiff = diff;
         closest = e;
       }
@@ -143,7 +152,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   // Jump to Nearest Row handler
   const handleJumpToNearest = () => {
     if (!nearestEntry) return;
-    const idx = visibleExpenses.findIndex((e) => e.rowIndex === nearestEntry.rowIndex);
+    let idx = visibleExpenses.findIndex((e) => e.rowIndex === nearestEntry.rowIndex);
     if (idx !== -1) {
       const targetPage = Math.floor(idx / pageSize) + 1;
       setCurrentPage(targetPage);
@@ -152,6 +161,13 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       }, 100);
     } else {
       setIsWindowFilterActive(false);
+      setShowEarlier(true);
+      setShowFuture(true);
+      const allIdx = baseFilteredExpenses.findIndex((e) => e.rowIndex === nearestEntry.rowIndex);
+      if (allIdx !== -1) {
+        const targetPage = Math.floor(allIdx / pageSize) + 1;
+        setCurrentPage(targetPage);
+      }
       setTimeout(() => {
         nearestRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 150);

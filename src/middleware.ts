@@ -4,13 +4,20 @@ import { AUTH_COOKIE_NAMES, verifyAccessToken, verifyRefreshToken } from '@/lib/
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Public paths that never require authentication
+  // Public paths that never require authentication.
+  // Static assets are matched by file extension and never under /api/, so a dotted
+  // API path (e.g. /api/expenses/240.x) cannot skip the session check.
+  const isStaticAsset =
+    !pathname.startsWith('/api/') &&
+    /\.(?:png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|webmanifest|woff2?|ttf)$/i.test(pathname);
+
   if (
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon.ico') ||
-    pathname.includes('.') // public assets like png, jpg, svg
+    pathname === '/login' ||
+    pathname.startsWith('/login/') ||
+    pathname.startsWith('/api/auth/') ||
+    pathname.startsWith('/_next/') ||
+    pathname === '/favicon.ico' ||
+    isStaticAsset
   ) {
     return NextResponse.next();
   }

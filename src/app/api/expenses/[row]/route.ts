@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     const { row } = await context.params;
-    const rowIndex = parseInt(row, 10);
+    const rowIndex = /^\d+$/.test(row) ? Number(row) : NaN; // reject '240.x', '240abc', etc.
 
     if (isNaN(rowIndex) || rowIndex < 2) {
       return NextResponse.json({ error: 'Invalid row index (must be 2 or greater)' }, { status: 400 });
@@ -49,7 +49,7 @@ export async function DELETE(
 ) {
   try {
     const { row } = await context.params;
-    const rowIndex = parseInt(row, 10);
+    const rowIndex = /^\d+$/.test(row) ? Number(row) : NaN; // reject '240.x', '240abc', etc.
 
     if (isNaN(rowIndex) || rowIndex < 2) {
       return NextResponse.json({ error: 'Invalid row index (must be 2 or greater)' }, { status: 400 });

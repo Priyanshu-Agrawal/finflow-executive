@@ -28,7 +28,7 @@ Most consumer finance apps keep your records in a proprietary database. FinFlow 
 A **Next.js 16 App Router** frontend talks to the sheet through the Google Sheets API v4 and adds:
 
 - **Two-way live sync** — edits made in the app are written straight to the sheet; TanStack Query keeps the UI responsive with optimistic updates and background revalidation.
-- **Formula Lineage Defense** — dynamic sheet formulas (`=IF(...)`, `=C240`, `=15000-(C247)`) survive drag-and-drop reorders and chronological date sorts.
+- **Formula Lineage Defense** — dynamic sheet formulas (the `=IF(...)` running balance, the cycle budget formulas on Rows 247–248) and every cross-tab reference survive logging, deletes, drag-and-drop reorders and date sorts.
 - **4-Pillar Budget Pacing Engine** — real-time pacing for General Expenses (anchored to the salary cycle), the Electricity Recharge Budget (with prior-month surplus carryover), Room Rent, and Safe Total Daily Liquid Burn.
 - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) — reverts cell edits, drag-and-drop moves and date sorts in both the UI and the sheet.
 - **Unified Debt Amortization Hub** — deleveraging tracking across active and retired loans toward a debt-free milestone in August 2027 (+₹14,771/month unlocked cash flow).
@@ -128,7 +128,7 @@ graph LR
 Gives an at-a-glance view of liquid capital, short-term obligations and cash runway:
 
 - **Current Liquid Operating Balance** — the settled bank balance as of the dynamic anchor date (e.g. **₹1,14,021** on 11 Nov 2026).
-- **Upcoming Immediate Bills (5-day horizon)** — every `DEBIT` from the anchor date through the next 5 days (e.g. today's General Expenses ₹4,000 + Phone EMI ₹58,465 + Remaining Electricity ₹2,400 + Rent ₹15,000 = ₹79,865).
+- **Upcoming Immediate Bills (5-day horizon)** — every `DEBIT` dated tomorrow through 5 days ahead (e.g. Phone EMI ₹58,465 + Remaining Electricity ₹2,400 + Rent ₹15,000 = ₹75,865). Entries dated today are already paid and already inside the balance, so they are not counted again.
 - **Post-Obligation Real Cushion** — liquidity left once all current-cycle obligations settle: the running balance after the 15 Nov rent row (e.g. **₹38,156** = ₹1,14,021 − ₹58,465 − ₹2,400 − ₹15,000).
 - **Sovereign Wealth Projection (late 2027)** — the running balance on the last projected row (Row 314, **₹2,70,760**). The UI labels it **+100.7% growth**; that label is fixed text, not a computed figure.
 
@@ -156,7 +156,9 @@ The defaults (₹15,000 general budget, ₹3,200 electricity budget, 7th budget 
 - **Formula**:
   $$\text{Safe Daily Spend} = \frac{\text{Remaining Expenses Budget}}{\text{Days Remaining in Cycle}}$$
   - *Worked example*: $\frac{₹11,000}{26\text{ days}} = ₹423\text{/day}$.
-- **Cycle summary rows**: day-to-day spends (food, tea, grocery, fuel) are kept apart from the two cycle summary rows — `Total General Expenses` (`SETTLEMENT`) and `Remaining Expenses Budget` (`DEBIT`).
+- **Each general spend is its own row** (e.g. `General Expenses`, `Food & Dining`, `Chai & Snacks`, `Bike Petrol`). A description counts as general when it matches `general|food|petrol|tea|chai|adhoc|grocery` and not `remaining|total general` — one shared rule (`GENERAL_EXPENSE_PATTERN` in `src/lib/computations.ts`) used by both the app and the sheet.
+- **Remaining budget (app)** = ₹15,000 − every general spend logged in the current cycle up to today.
+- **Cycle summary rows (sheet)**: `Total General Expenses` (`SETTLEMENT`, Row 247) adds up every general `DEBIT` dated in the cycle above it (see [§4.2](#42-cycle-total-formula-row-247)); `Remaining Expenses Budget` (`DEBIT`, Row 248) = `15000 - (C247)` reserves what is left, so the projection never counts a logged spend twice.
 
 #### Pillar 2: Electricity Recharge Budget
 
@@ -210,11 +212,11 @@ sequenceDiagram
    - Keyboard shortcut `Ctrl+Z` (Windows/Linux) or `Cmd+Z` (macOS).
    - Floating toast with a countdown bar and a manual **Undo** button.
    - Reverts single-cell edits, drag-and-drop row moves and table sorts, writing the reversal back to Google Sheets.
-3. **Drag-and-drop row reordering** — reorder rows visually; Column E formula references are rebuilt for the new order.
-4. **Date-ordered logging** — a new transaction is inserted just before the first later-dated row (or appended if it is the latest), so today's balance includes it immediately. Formulas such as `=C240` shift with the inserted row.
-5. **Safe delete** — after a row is removed, the row that moves up is re-linked to the row above it, so the running balance below never breaks (`#REF!`). Rows 1–2 (header, opening balance) cannot be deleted.
+3. **Drag-and-drop row reordering** — moves the whole row (Google Sheets `moveDimension`), so references in the Loans tab, column F notes and other formulas follow the transaction; Column E is then re-linked.
+4. **Date-ordered logging** — a new transaction is inserted just before the first later-dated row (and above that day's cycle summary rows), or appended if it is the latest, so today's balance includes it immediately. Other references shift with the inserted row.
+5. **Delete = clear** — deleting a transaction clears its values but keeps the row, so nothing that refers to Expenses rows by position (Loans tab, column F, `Dashboard_Data`) can break. A cleared row carries the balance forward and is hidden in the app; undo refills it. Rows 1–2 (header, opening balance) cannot be deleted.
 6. **Formula preservation**:
-   - Column C formulas (e.g. Row 247 `=C240`, Row 248 `=15000-(C247)`) are kept intact across sorts, reorders and edits; an edit only replaces the formula when the amount itself is changed.
+   - Column C formulas (Row 247 cycle total, Row 248 `=15000-(C247)`) are kept intact across sorts, reorders and edits; an edit only replaces the formula when the amount itself is changed.
    - Column E balance formulas are never overwritten by edits (including the opening-balance and Time Lapse rows).
 7. **Interactive controls**:
    - Row jump input (`Jump to Row #`).
@@ -310,7 +312,15 @@ This is why budget summary rows and third-party payments are logged as `SETTLEME
 - **Row 38 (gap baseline reset)** — `=0`, applied to the row described as "Time Lapse Clear Balance".
 - **Row 39 (2026 inception anchor)** — `=C{row}`, applied to the row described as "Time Lapse Start Balance" (currently `=C39`).
 - The rule is matched by **description, not row number**, so it moves with these rows and can never be applied to an unrelated transaction that lands on Row 38 or 39.
-- **Sorting safety** — `sortExpensesSheet()` leaves Row 2 (the opening row) in place, sorts Rows 3 to 314+ by date (ties keep their original order), and regenerates every Column E formula. The Row 38/39 rules follow the "Time Lapse" descriptions, so they still apply after a sort. Any `Remaining Expenses Budget` row is rewritten as `=15000 - (C{previous row})`.
+- **Sorting safety** — `sortExpensesSheet()` leaves Row 2 (the opening row) in place and sorts Rows 3 onward by date (ties keep their order) by **moving whole rows**, the same as dragging them in Sheets. Every reference to a moved row — Loans tab, column F notes, Row 247/248 formulas — follows it; then every Column E formula is regenerated. Undo replays the inverse moves.
+
+### 4.2 Cycle total formula (Row 247)
+
+```excel
+=SUMPRODUCT((OFFSET(A$1,2,0,ROW()-3)>=EDATE(INDEX(A:A,ROW())+1,-1))*(OFFSET(A$1,2,0,ROW()-3)<=INDEX(A:A,ROW()))*(OFFSET(D$1,2,0,ROW()-3)="DEBIT")*REGEXMATCH(LOWER(OFFSET(B$1,2,0,ROW()-3)),"general|food|petrol|tea|chai|adhoc|grocery")*(REGEXMATCH(LOWER(OFFSET(B$1,2,0,ROW()-3)),"remaining|total general")=FALSE),OFFSET(C$1,2,0,ROW()-3))
+```
+
+Sums the general-expense `DEBIT`s in the rows above it dated from the cycle start (one month before the day after the row's own date: 7 Nov for the 6 Dec row) to the row's own date. It finds its position with `ROW()`, so it keeps working after inserts, sorts and moves, and it never references its own cell. Generated by `buildCycleGeneralTotalFormula()` in `src/lib/sheets.ts`.
 
 ---
 
@@ -331,11 +341,11 @@ All routes except `/api/auth/*` require a valid session cookie.
 | `/api/expenses/log` | `POST` | Insert a transaction in date order (with its Column E formula); `date` defaults to today | `{ date, description, amount, type }` |
 | `/api/expenses/schedule-emi` | `POST` | Append a series of monthly EMI rows | `{ title, monthlyAmount, months, startDate, type? }` (`type` defaults to `DEBIT`) |
 | `/api/expenses/[row]` | `PATCH` | Update a row | `{ date, description, amount, type }` |
-| `/api/expenses/[row]` | `DELETE` | Delete a row (Row 3 or later) and re-link the running balance | — |
+| `/api/expenses/[row]` | `DELETE` | Clear a transaction (Row 3 or later); the row stays so references elsewhere never break | — |
 | `/api/expenses/[row]/type` | `PATCH` | Change a row's transaction type | `{ newType }` — one of `DEBIT`, `CREDIT`, `SETTLEMENT`, `ADJUSTMENT`, `OTHER`, `DIRECT` |
-| `/api/expenses/reorder` | `POST` | Move a row (drag-and-drop) | `{ sourceIndex, targetIndex }` |
-| `/api/expenses/sort` | `POST` | Sort by date and repair formulas; returns the previous order for undo | `{}` |
-| `/api/expenses/restore` | `POST` | Undo support | `{ actionType: "restore_order", previousOrder }` or `{ actionType: "restore_row", rowIndex, data }` |
+| `/api/expenses/reorder` | `POST` | Move a whole row (drag-and-drop); returns the inverse move for undo | `{ sourceIndex, targetIndex }` |
+| `/api/expenses/sort` | `POST` | Sort by date with whole-row moves and re-link Column E; returns the inverse moves for undo | `{}` |
+| `/api/expenses/restore` | `POST` | Undo support: replay row moves, or refill a cleared row | `{ actionType: "restore_order", previousOrder: { moves } }` or `{ actionType: "restore_row", rowIndex, data }` |
 
 ### 5.3 Loans and ledger
 
@@ -383,7 +393,7 @@ The script prints `FINAL AUDIT VERDICT: VERDICT: PASS ✅` only when all six che
 npm run test:sim
 ```
 
-[`src/scripts/simulate-write-paths.ts`](../src/scripts/simulate-write-paths.ts) takes a **read-only** snapshot of the live `Expenses` tab and runs the real write functions (log, delete, restore, edit, sort) against an in-memory copy that mimics Google Sheets' formula evaluation and reference shifting. It first confirms the copy reproduces every live Column E balance, then checks that each operation keeps the chain intact and that undo restores the sheet exactly. The live sheet is never written.
+[`src/scripts/simulate-write-paths.ts`](../src/scripts/simulate-write-paths.ts) takes a **read-only** snapshot of the live `Expenses` tab (columns A–F) and every Loans-tab reference into it, then runs the real write functions (log, delete, restore, edit, sort, reorder) against an in-memory copy that mimics Google Sheets' formula evaluation and reference shifting on row insert, delete and move. It first confirms the copy reproduces every live Column E balance and column F note, then checks that each operation keeps the balance chain intact, keeps every Loans reference and F note on the same transaction, and that undo restores the sheet exactly. The live sheet is never written.
 
 ### 6.3 End-to-end scripts
 
@@ -457,3 +467,6 @@ git push app main
 3. **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) — non-destructive undo for cell edits, drag-and-drop moves and auto-sorting.
 4. **Prepaid December EMI accounting** — amortization tracking now handles the December bike EMI prepaid on 6 November.
 5. **Formula lineage preservation** — Column C and Column E formulas are protected across all table mutations.
+6. **Sheet-safe write paths (11 Nov)** — logging inserts by date, delete clears instead of removing rows, sort and drag-reorder move whole rows; the Loans tab, column F notes and `Dashboard_Data` stay on the same transactions. The sheet was sorted by date on 11 Nov (a backup tab `Expenses backup 2026-11-11` was kept).
+7. **Per-spend general budget (11 Nov)** — each general spend is logged separately; Row 247 sums them for the cycle and the app's remaining budget follows every logged spend.
+8. **Upcoming bills exclude today (11 Nov)** — the 5-day horizon starts tomorrow, since today's entries are already paid (₹75,865).

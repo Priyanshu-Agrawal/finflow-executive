@@ -1,5 +1,6 @@
 import { google, sheets_v4 } from 'googleapis';
-import { ExpenseEntry, RawLoanRow, TransactionType } from './types';
+import { ExpenseEntry, RawLoanRow, RowMove, RowOrderUndo, TransactionType } from './types';
+import { GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN } from './computations';
 import { normalizeDate } from './date-utils';
 
 function getAuthClient() {
@@ -177,15 +178,37 @@ export function buildBalanceFormula(row: number, description?: string): string {
  * after the last row if none is later. Same-day entries go after existing ones.
  * `colA` is Expenses!A:A as returned by the API (index 0 = Row 1).
  */
-export function findChronologicalInsertRow(colA: unknown[][], newDate: string): number {
-  for (let i = 2; i < colA.length; i++) {
-    const cell = colA[i]?.[0];
+export function findChronologicalInsertRow(colAB: unknown[][], newDate: string): number {
+  for (let i = 2; i < colAB.length; i++) {
+    const cell = colAB[i]?.[0];
     if (cell === undefined || cell === null || cell === '') continue;
-    if (normalizeDate(cell as string | number) > newDate) {
-      return i + 1;
-    }
+    const d = normalizeDate(cell as string | number);
+    if (d > newDate) return i + 1;
+    // Same-day cycle summary rows stay below that day's transactions so the
+    // cycle total formula (rows above it) includes the new entry.
+    if (d === newDate && CYCLE_SUMMARY_RE.test(String(colAB[i]?.[1] ?? ''))) return i + 1;
   }
-  return colA.length + 1;
+  return colAB.length + 1;
+}
+
+const CYCLE_SUMMARY_RE = /total general expenses|remaining expenses budget/i;
+
+/**
+ * Column C formula for a cycle's "Total General Expenses" row: sums the general-expense
+ * DEBITs dated from the cycle start (one month before the day after this row's date)
+ * to this row's date, among the rows above it. Uses ROW()/OFFSET only, so it keeps
+ * working wherever the row moves and never references its own cell.
+ * Classification matches computeBudgetPacing (GENERAL_EXPENSE_PATTERN / _EXCLUDE_).
+ */
+export function buildCycleGeneralTotalFormula(): string {
+  const col = (c: string) => `OFFSET(${c}$1,2,0,ROW()-3)`;
+  return (
+    `=SUMPRODUCT((${col('A')}>=EDATE(INDEX(A:A,ROW())+1,-1))` +
+    `*(${col('A')}<=INDEX(A:A,ROW()))` +
+    `*(${col('D')}="DEBIT")` +
+    `*REGEXMATCH(LOWER(${col('B')}),"${GENERAL_EXPENSE_PATTERN}")` +
+    `*(REGEXMATCH(LOWER(${col('B')}),"${GENERAL_EXCLUDE_PATTERN}")=FALSE),${col('C')})`
+  );
 }
 
 /**
@@ -227,12 +250,12 @@ export async function appendExpenseRow(data: {
 
   const metaRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: 'Expenses!A:A',
+    range: 'Expenses!A:B',
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
-  const colA = metaRes.data.values || [];
-  const lastRow = colA.length;
-  const targetRow = findChronologicalInsertRow(colA, normalizeDate(data.date));
+  const colAB = metaRes.data.values || [];
+  const lastRow = colAB.length;
+  const targetRow = findChronologicalInsertRow(colAB, normalizeDate(data.date));
 
   if (targetRow <= lastRow) {
     await insertExpenseRowAt(targetRow, data);
@@ -362,36 +385,50 @@ export async function updateExpenseType(rowIndex: number, newType: TransactionTy
 }
 
 /**
- * Deletes a row using deleteDimension, then re-links the row that moves up into its
- * place. Without that step its Column E formula would point at the deleted row
- * (#REF!) and every running balance below it would break.
+ * "Deletes" a transaction by clearing its values (A:D) while keeping the row.
+ * Other tabs (Loans), column F notes and Dashboard_Data refer to Expenses rows by
+ * position; removing the row would turn those references into #REF!. A cleared row
+ * carries the balance forward (blank type) and is skipped by the app. Undo refills it.
  */
 export async function deleteExpenseRow(rowIndex: number): Promise<void> {
   if (rowIndex < 3) {
     throw new Error('Rows 1-2 (header and opening balance) cannot be deleted');
   }
   const sheets = getSheets();
-
-  // Sheet gid=0 is Expenses
-  await sheets.spreadsheets.batchUpdate({
+  await sheets.spreadsheets.values.clear({
     spreadsheetId: SPREADSHEET_ID,
-    requestBody: {
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId: 0,
-              dimension: 'ROWS',
-              startIndex: rowIndex - 1, // 0-based inclusive
-              endIndex: rowIndex,       // 0-based exclusive
-            },
-          },
-        },
-      ],
-    },
+    range: `Expenses!A${rowIndex}:D${rowIndex}`,
   });
+}
 
-  await relinkBalanceFormulas(sheets, [rowIndex]);
+/**
+ * Undo for deleteExpenseRow: refills a cleared row in place. If the row is not
+ * empty (e.g. an undo recorded before soft delete existed), inserts a row instead.
+ */
+export async function restoreExpenseRow(
+  rowIndex: number,
+  data: { date: string; description: string; amount: number; type: TransactionType }
+): Promise<void> {
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A${rowIndex}:E${rowIndex}`,
+    valueRenderOption: 'FORMULA',
+  });
+  const cells = res.data.values?.[0] || [];
+  const isEmpty = [0, 1, 2, 3].every((i) => cells[i] === undefined || cells[i] === '');
+  if (!isEmpty) {
+    await insertExpenseRowAt(rowIndex, data);
+    return;
+  }
+  const eIsFormula = typeof cells[4] === 'string' && String(cells[4]).startsWith('=');
+  const row = [data.date, data.description, data.amount, data.type];
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: eIsFormula ? `Expenses!A${rowIndex}:D${rowIndex}` : `Expenses!A${rowIndex}:E${rowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [eIsFormula ? row : [...row, buildBalanceFormula(rowIndex, data.description)]] },
+  });
 }
 
 /**
@@ -444,147 +481,140 @@ export async function insertExpenseRowAt(
   await relinkBalanceFormulas(sheets, [rowIndex + 1]);
 }
 
+const EXPENSES_SHEET_ID = 0; // gid of the Expenses tab
+
+/** Builds a moveDimension request that moves one Expenses row so it ends up at `to`. */
+function moveRowRequest(m: RowMove): sheets_v4.Schema$Request {
+  const s0 = m.from - 1;
+  const t0 = m.to - 1;
+  return {
+    moveDimension: {
+      source: { sheetId: EXPENSES_SHEET_ID, dimension: 'ROWS', startIndex: s0, endIndex: s0 + 1 },
+      // destinationIndex is in coordinates before the row is removed
+      destinationIndex: t0 < s0 ? t0 : t0 + 1,
+    },
+  };
+}
+
+/** Reverses a list of moves (for undo). */
+export function invertMoves(moves: RowMove[]): RowMove[] {
+  return [...moves].reverse().map((m) => ({ from: m.to, to: m.from }));
+}
+
 /**
- * Automatically sorts all transactions in Expenses tab (Row 3 to lastRow)
- * chronologically by date, preserving dynamic Column E continuation formulas.
- * Returns previousOrder for full Undo capability.
+ * Plans the row moves that sort rows 3.. by date (stable: same-day rows keep their
+ * order). `keys` are the column A values of rows 3..last; cleared rows inherit the
+ * date of the row above so they stay where they are.
+ */
+export function planSortMoves(keys: unknown[]): RowMove[] {
+  let prev = '';
+  const dates = keys.map((k) => {
+    if (k === undefined || k === null || k === '') return prev;
+    prev = normalizeDate(k as string | number);
+    return prev;
+  });
+  const target = dates
+    .map((d, i) => ({ d, i }))
+    .sort((x, y) => x.d.localeCompare(y.d) || x.i - y.i)
+    .map((x) => x.i);
+  const current = dates.map((_, i) => i);
+  const moves: RowMove[] = [];
+  for (let pos = 0; pos < target.length; pos++) {
+    const j = current.indexOf(target[pos]);
+    if (j !== pos) {
+      const [item] = current.splice(j, 1);
+      current.splice(pos, 0, item);
+      moves.push({ from: j + 3, to: pos + 3 });
+    }
+  }
+  return moves;
+}
+
+/** Rewrites Column E (rows 3..lastRow) with the running-balance formula for each row. */
+async function rewriteBalanceColumn(sheets: sheets_v4.Sheets, lastRow: number): Promise<void> {
+  if (lastRow < 3) return;
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!B3:B${lastRow}`,
+    valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+  const desc = res.data.values || [];
+  const formulas: string[][] = [];
+  for (let r = 3; r <= lastRow; r++) {
+    formulas.push([buildBalanceFormula(r, String(desc[r - 3]?.[0] ?? ''))]);
+  }
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!E3:E${lastRow}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: formulas },
+  });
+}
+
+/** Applies row moves (whole rows, so every reference follows its row) and re-links Column E. */
+async function applyRowMoves(sheets: sheets_v4.Sheets, moves: RowMove[]): Promise<void> {
+  if (moves.length === 0) return;
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: { requests: moves.map(moveRowRequest) },
+  });
+  const metaRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Expenses!A:A',
+  });
+  await rewriteBalanceColumn(sheets, (metaRes.data.values || []).length);
+}
+
+/**
+ * Sorts transactions (Row 3 onwards) by date by MOVING whole rows, the same as
+ * dragging rows in Sheets: Loans-tab references, column F notes and Column C
+ * formulas keep pointing at the same transactions. Column E is then re-linked.
+ * Returns the inverse moves for undo.
  */
 export async function sortExpensesSheet(): Promise<{
   sortedCount: number;
-  previousOrder: Array<[any, any, any, any]>;
+  previousOrder: RowOrderUndo;
 }> {
   const sheets = getSheets();
 
   const metaRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: 'Expenses!A:A',
+    valueRenderOption: 'UNFORMATTED_VALUE',
   });
-  const lastRow = (metaRes.data.values || []).length;
-  if (lastRow < 3) {
-    return { sortedCount: 0, previousOrder: [] };
+  const colA = metaRes.data.values || [];
+  if (colA.length < 4) {
+    return { sortedCount: 0, previousOrder: { moves: [] } };
   }
 
-  // Fetch all transaction rows A3:D{lastRow} with values and formulas
-  const [dataRes, formulasRes] = await Promise.all([
-    sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `Expenses!A3:D${lastRow}`,
-      valueRenderOption: 'UNFORMATTED_VALUE',
-    }),
-    sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `Expenses!A3:D${lastRow}`,
-      valueRenderOption: 'FORMULA',
-    }),
-  ]);
-
-  const rawRows = dataRes.data.values || [];
-  const rawFormulas = formulasRes.data.values || [];
-
-  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r, idx) => {
-    const colCFormula = rawFormulas[idx]?.[2];
-    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
-      ? colCFormula
-      : (r[2] ?? 0);
-    return [
-      r[0] ?? '',
-      r[1] ?? '',
-      amountVal,
-      r[3] ?? 'DEBIT',
-    ];
-  });
-
-  // Index rows for stable sorting
-  const indexed = rawRows.map((r, idx) => {
-    const colCFormula = rawFormulas[idx]?.[2];
-    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
-      ? colCFormula
-      : (r[2] ?? 0);
-    return {
-      origIdx: idx,
-      date: normalizeDate(r[0]),
-      row: [r[0] ?? '', r[1] ?? '', amountVal, r[3] ?? 'DEBIT'],
-    };
-  });
-
-  indexed.sort((a, b) => {
-    const cmp = a.date.localeCompare(b.date);
-    if (cmp !== 0) return cmp;
-    return a.origIdx - b.origIdx;
-  });
-
-  // Re-write A3:E{lastRow} with sorted values and regenerated dynamic Column E formulas
-  const valuesWithFormulas = indexed.map((item, idx) => {
-    const rowNum = 3 + idx;
-    let colCAmt = item.row[2];
-    // Preserve relative reference for Remaining Expenses Budget (=15000 - C{prevRow})
-    if (String(item.row[1] || '').toLowerCase().includes('remaining expenses budget')) {
-      colCAmt = `=15000 - (C${rowNum - 1})`;
-    }
-    return [
-      item.row[0],
-      item.row[1],
-      colCAmt,
-      item.row[3],
-      buildBalanceFormula(rowNum, item.row[1]),
-    ];
-  });
-
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A3:E${lastRow}`,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: {
-      values: valuesWithFormulas,
-    },
-  });
+  const moves = planSortMoves(colA.slice(2).map((r) => r?.[0]));
+  await applyRowMoves(sheets, moves);
 
   return {
-    sortedCount: indexed.length,
-    previousOrder,
+    sortedCount: colA.length - 2,
+    previousOrder: { moves: invertMoves(moves) },
   };
 }
 
 /**
- * Restores previous row order in Expenses tab (e.g. from Undo sort)
+ * Undo for sort / reorder: replays the inverse row moves.
  */
-export async function restoreExpensesOrder(
-  previousOrder: Array<[any, any, any, any]>
-): Promise<void> {
-  const sheets = getSheets();
-  const lastRow = 2 + previousOrder.length;
-
-  const valuesWithFormulas = previousOrder.map((r, idx) => {
-    const rowNum = 3 + idx;
-    return [
-      r[0],
-      r[1],
-      r[2],
-      r[3],
-      buildBalanceFormula(rowNum, r[1]),
-    ];
-  });
-
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A3:E${lastRow}`,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: {
-      values: valuesWithFormulas,
-    },
-  });
+export async function restoreExpensesOrder(previousOrder: RowOrderUndo): Promise<void> {
+  if (!previousOrder || !Array.isArray(previousOrder.moves)) {
+    throw new Error('This undo was recorded by an older version of the app. Refresh the page.');
+  }
+  await applyRowMoves(getSheets(), previousOrder.moves);
 }
 
 /**
- * Reorders a row from sourceIndex to targetIndex in Expenses tab (rows >= 3),
- * re-writing values and recalculating dynamic Column E continuation formulas.
- * Returns previousOrder for full Undo capability.
+ * Moves one transaction row from sourceIndex to targetIndex (rows >= 3) as a whole
+ * row, then re-links Column E. Returns the inverse move for undo.
  */
 export async function reorderExpenseRows(
   sourceIndex: number,
   targetIndex: number
 ): Promise<{
-  previousOrder: Array<[any, any, any, any]>;
+  previousOrder: RowOrderUndo;
 }> {
   const sheets = getSheets();
 
@@ -593,67 +623,13 @@ export async function reorderExpenseRows(
     range: 'Expenses!A:A',
   });
   const lastRow = (metaRes.data.values || []).length;
-  if (lastRow < 3) return { previousOrder: [] };
-
-  const [dataRes, formulasRes] = await Promise.all([
-    sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `Expenses!A3:D${lastRow}`,
-      valueRenderOption: 'UNFORMATTED_VALUE',
-    }),
-    sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `Expenses!A3:D${lastRow}`,
-      valueRenderOption: 'FORMULA',
-    }),
-  ]);
-
-  const rawRows = dataRes.data.values || [];
-  const rawFormulas = formulasRes.data.values || [];
-
-  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r, idx) => {
-    const colCFormula = rawFormulas[idx]?.[2];
-    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
-      ? colCFormula
-      : (r[2] ?? 0);
-    return [
-      r[0] ?? '',
-      r[1] ?? '',
-      amountVal,
-      r[3] ?? 'DEBIT',
-    ];
-  });
-
-  const fromIdx = sourceIndex - 3;
-  const toIdx = targetIndex - 3;
-
-  if (fromIdx < 0 || fromIdx >= rawRows.length || toIdx < 0 || toIdx >= rawRows.length) {
+  if (sourceIndex < 3 || targetIndex < 3 || sourceIndex > lastRow || targetIndex > lastRow) {
     throw new Error(`Invalid source (${sourceIndex}) or target (${targetIndex}) row index`);
   }
 
-  const updatedRows = [...previousOrder];
-  const [movedItem] = updatedRows.splice(fromIdx, 1);
-  updatedRows.splice(toIdx, 0, movedItem);
-
-  const valuesWithFormulas = updatedRows.map((r, idx) => {
-    const rowNum = 3 + idx;
-    let colCAmt = r[2];
-    if (String(r[1] || '').toLowerCase().includes('remaining expenses budget')) {
-      colCAmt = `=15000 - (C${rowNum - 1})`;
-    }
-    return [r[0], r[1], colCAmt, r[3], buildBalanceFormula(rowNum, r[1])];
-  });
-
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A3:E${lastRow}`,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: {
-      values: valuesWithFormulas,
-    },
-  });
-
-  return { previousOrder };
+  const move: RowMove = { from: sourceIndex, to: targetIndex };
+  await applyRowMoves(sheets, [move]);
+  return { previousOrder: { moves: invertMoves([move]) } };
 }
 
 /**

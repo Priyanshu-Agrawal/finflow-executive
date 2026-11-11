@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { insertExpenseRowAt, restoreExpensesOrder } from '@/lib/sheets';
+import { restoreExpenseRow, restoreExpensesOrder } from '@/lib/sheets';
 import { TransactionType } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
 
     if (actionType === 'restore_order') {
       const { previousOrder } = body;
-      if (!Array.isArray(previousOrder) || previousOrder.length === 0) {
-        return NextResponse.json({ error: 'Valid previousOrder array is required' }, { status: 400 });
+      if (!previousOrder || !Array.isArray(previousOrder.moves)) {
+        return NextResponse.json({ error: 'Valid previousOrder ({ moves }) is required; refresh the page if this undo is old' }, { status: 400 });
       }
 
       await restoreExpensesOrder(previousOrder);
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Valid row data is required' }, { status: 400 });
       }
 
-      await insertExpenseRowAt(numRow, {
+      await restoreExpenseRow(numRow, {
         date: data.date || '2026-11-10',
         description: String(data.description).trim(),
         amount: Number(data.amount) || 0,

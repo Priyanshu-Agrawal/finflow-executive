@@ -10,6 +10,27 @@ import {
 } from './types';
 import { isBeforeOrEqual, isBetweenDates } from './date-utils';
 
+/**
+ * What counts as a general (discretionary) expense, matched against the lower-cased
+ * description. Shared with the sheet's cycle-total formula (buildCycleGeneralTotalFormula)
+ * so the app and the sheet always agree. Keep both as plain regex sources.
+ */
+export const GENERAL_EXPENSE_PATTERN = 'general|food|petrol|tea|chai|adhoc|grocery';
+/** Cycle summary rows that must never count as spending. */
+export const GENERAL_EXCLUDE_PATTERN = 'remaining|total general';
+
+export function isGeneralExpense(description: string): boolean {
+  const desc = description.toLowerCase();
+  return new RegExp(GENERAL_EXPENSE_PATTERN).test(desc) && !new RegExp(GENERAL_EXCLUDE_PATTERN).test(desc);
+}
+
+/** Adds `days` to a YYYY-MM-DD date (local calendar). */
+function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const t = new Date(y, m - 1, d + days);
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
+
 export function computeKPIs(expenses: ExpenseEntry[], referenceDate: string = '2026-11-10'): KPIs {
   if (expenses.length === 0) {
     return {
@@ -41,14 +62,10 @@ export function computeKPIs(expenses: ExpenseEntry[], referenceDate: string = '2
     currentBalance = expenses[0].balance;
   }
 
-  // 2. Upcoming Immediate Bills (Next 5 Days: 2026-11-11 to 2026-11-15)
-  // Scans entries between 2026-11-11 and 2026-11-15 (or refDate+1 to refDate+5)
-  const windowStart = referenceDate === '2026-11-10' ? '2026-11-11' : referenceDate;
-  // Calculate windowEnd 5 days out
-  const refParts = referenceDate.split('-').map(Number);
-  const refObj = new Date(refParts[0], refParts[1] - 1, refParts[2]);
-  const endObj = new Date(refObj.getTime() + 5 * 86400 * 1000);
-  const windowEnd = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
+  // 2. Upcoming Immediate Bills: DEBITs dated in the next 5 days (tomorrow through
+  // refDate+5). Entries dated today are already paid and already inside currentBalance.
+  const windowStart = addDays(referenceDate, 1);
+  const windowEnd = addDays(referenceDate, 5);
 
   let upcomingBills = 0;
   for (const entry of expenses) {
@@ -57,11 +74,6 @@ export function computeKPIs(expenses: ExpenseEntry[], referenceDate: string = '2
         upcomingBills += entry.amount;
       }
     }
-  }
-
-  // If standard 2026-11-10 anchor, verified total is 75400
-  if (referenceDate === '2026-11-10' && Math.abs(upcomingBills - 75400) > 100) {
-    upcomingBills = 75400; // Phone 58k + Electricity 2.4k + Rent 15k
   }
 
   // 3. Net Balance Post-November: Real buffer after November 15 rent clears (₹53,392)
@@ -422,34 +434,19 @@ export function computeBudgetPacing(
   const postRentBuffer = postNovBuffer; // Net cushion after 15th rent payment clears (₹53,392)
 
   // 3. General Expenses Tracking for this Recurring Cycle
-  // Check if an explicit authoritative "Remaining Expenses Budget" row exists in the active cycle
-  const explicitRemainingRow = expenses.find((e) => {
-    const desc = e.description.toLowerCase();
-    return desc.includes('remaining expenses budget') && e.date >= cycleStartDate && e.date <= cycleEndDate;
-  });
 
   const generalExpensesList = expenses.filter((e) => {
     // Only transactions in the active budget cycle up to reference date
     if (e.date < cycleStartDate || e.date > referenceDate) return false;
     if (e.type !== 'DEBIT') return false;
-    const desc = e.description.toLowerCase();
-    // Exclude cycle summary / projection rows (Total General Expenses and Remaining Expenses Budget)
-    if (desc.includes('remaining') || desc.includes('total general')) return false;
-    return (
-      desc.includes('general') ||
-      desc.includes('food') ||
-      desc.includes('petrol') ||
-      desc.includes('tea') ||
-      desc.includes('chai') ||
-      desc.includes('adhoc') ||
-      desc.includes('grocery')
-    );
+    // Each general spend is logged as its own row; summary rows are excluded
+    return isGeneralExpense(e.description);
   });
 
   const generalSpentSoFar = generalExpensesList.reduce((sum, e) => sum + e.amount, 0);
-  const generalRemaining = explicitRemainingRow
-    ? explicitRemainingRow.amount
-    : Math.max(0, customGeneralBudget - generalSpentSoFar);
+  // Budget minus every general spend logged this cycle. (The sheet's "Remaining Expenses
+  // Budget" row is a projection that mirrors this; it is not read here.)
+  const generalRemaining = Math.max(0, customGeneralBudget - generalSpentSoFar);
   // Safe per-day spend across the remaining days of this active cycle: Remaining Expenses Budget / remaining days
   const generalPerDayLimit = Math.round(generalRemaining / daysRemainingInCycle);
   const generalSpentPercent =

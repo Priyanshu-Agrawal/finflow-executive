@@ -195,3 +195,14 @@ export interface ScheduleEmiInput {
   startDate: string;
   type?: TransactionType;
 }
+
+/** One whole-row move in the Expenses tab: the row at `from` ends up at `to` (1-based). */
+export interface RowMove {
+  from: number;
+  to: number;
+}
+
+/** Undo payload for sort / reorder: the row moves that restore the previous order. */
+export interface RowOrderUndo {
+  moves: RowMove[];
+}

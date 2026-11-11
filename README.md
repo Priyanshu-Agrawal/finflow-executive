@@ -25,7 +25,7 @@
 
 - 📊 **Executive Dashboard** — live tracking of:
   - Liquid Operating Balance: **₹1,14,021** (11 Nov 2026)
-  - 5-Day Immediate Obligations: **₹79,865** (General Expenses ₹4,000 + Phone EMI ₹58,465 + Electricity ₹2,400 + Rent ₹15,000)
+  - 5-Day Immediate Obligations: **₹75,865** (Phone EMI ₹58,465 + Electricity ₹2,400 + Rent ₹15,000; today's entries are already paid)
   - Post-Rent Cushion: **₹38,156**
   - Late-2027 terminal sovereign wealth projection: **₹2,70,760**
 - ⚡ **4-Pillar Budget Burn & Runway Engine**
@@ -36,7 +36,8 @@
 - 📑 **Excel Grid Engine**
   - Dynamic Date Anchor highlights today's active baseline (Row 240).
   - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) for cell edits, drag-and-drop row moves and date sorts.
-  - In-cell formula preservation (`=C240`, `=15000-(C247)`) and Column E running-balance lineage defense.
+  - Cycle budget formulas (Row 247 sums every general spend logged this cycle; Row 248 `=15000-(C247)`) and Column E running-balance lineage defense.
+  - Sort and drag-reorder move whole rows, so the Loans tab, column F notes and `Dashboard_Data` keep pointing at the same transactions.
 - 🎯 **Unified Debt Hub** — tracks 7 liabilities: 2 active amortizations (Royal Enfield Meteor Loan, BCA Education Loan) and 5 retired debts, toward a debt-free milestone in August 2027 (**+₹14,771/month** unlocked cash flow).
 - 🤝 **Peer Split Ledger** — shared expense splits and settlements with friends and roommates.
 

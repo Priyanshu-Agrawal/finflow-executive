@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FinancialsResponse, LogExpenseInput, ScheduleEmiInput, TransactionType } from '@/lib/types';
+import { FinancialsResponse, LogExpenseInput, RowOrderUndo, ScheduleEmiInput, TransactionType } from '@/lib/types';
 
 export function useFinancials(
   refDate: string = '2026-11-10',
@@ -264,7 +264,7 @@ export function useSortExpenses() {
         success: boolean;
         message: string;
         sortedCount: number;
-        previousOrder: Array<[any, any, any, any]>;
+        previousOrder: RowOrderUndo;
       }>;
     },
     onSuccess: () => {
@@ -309,7 +309,7 @@ export function useRestoreExpensesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (previousOrder: Array<[any, any, any, any]>) => {
+    mutationFn: async (previousOrder: RowOrderUndo) => {
       const res = await fetch('/api/expenses/restore', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -347,7 +347,7 @@ export function useReorderExpenses() {
       return res.json() as Promise<{
         success: boolean;
         message: string;
-        previousOrder: Array<[any, any, any, any]>;
+        previousOrder: RowOrderUndo;
       }>;
     },
     onSuccess: () => {

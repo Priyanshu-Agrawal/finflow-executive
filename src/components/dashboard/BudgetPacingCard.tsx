@@ -229,13 +229,13 @@ export function BudgetPacingCard({
           </div>
         </div>
 
-        {/* Pillar 2: Electricity Budget & Live Meter Balance */}
+        {/* Pillar 2: Electricity Budget & Recharge Pace */}
         <div className="rounded-2xl border border-amber-500/20 bg-slate-950/70 p-5 relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <Lightbulb className="h-4 w-4" />
-                Electricity & Meter
+                Electricity Budget
               </span>
               <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/20 font-mono">
                 Budget: {formatINR(pacing.electricityTotalBudget || pacing.electricityBudget || 3200)}
@@ -267,9 +267,9 @@ export function BudgetPacingCard({
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Live Meter Balance:</span>
-                <span className="font-mono font-bold text-amber-400">
-                  {formatINR(pacing.electricityMeterBalance ?? 300)} (~{pacing.electricityMeterRunwayDays ?? 4}d runway)
+                <span>Safe Power Allowance:</span>
+                <span className="font-mono font-bold text-white">
+                  {formatINR(pacing.electricityPerDayLimit)} / day
                 </span>
               </div>
             </div>

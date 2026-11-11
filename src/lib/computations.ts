@@ -330,7 +330,7 @@ export function computeBudgetPacing(
   customElectricityBudget: number = 3200,
   availableBalance: number = 128792,
   postNovBuffer: number = 53392,
-  budgetRecurringDay: number = 6, // 6 or 7
+  budgetRecurringDay: number = 7, // recurring salary cycle day (7th)
   rentRecurringDay: number = 15,   // 15
   customRentAmount?: number,      // configurable rent amount (e.g. 15000)
   customElectricityRemaining?: number // configurable live meter balance
@@ -422,6 +422,12 @@ export function computeBudgetPacing(
   const postRentBuffer = postNovBuffer; // Net cushion after 15th rent payment clears (₹53,392)
 
   // 3. General Expenses Tracking for this Recurring Cycle
+  // Check if an explicit authoritative "Remaining Expenses Budget" row exists in the active cycle
+  const explicitRemainingRow = expenses.find((e) => {
+    const desc = e.description.toLowerCase();
+    return desc.includes('remaining expenses budget') && e.date >= cycleStartDate && e.date <= cycleEndDate;
+  });
+
   const generalExpensesList = expenses.filter((e) => {
     // Only transactions in the active budget cycle up to reference date
     if (e.date < cycleStartDate || e.date > referenceDate) return false;
@@ -441,8 +447,10 @@ export function computeBudgetPacing(
   });
 
   const generalSpentSoFar = generalExpensesList.reduce((sum, e) => sum + e.amount, 0);
-  const generalRemaining = Math.max(0, customGeneralBudget - generalSpentSoFar);
-  // Safe per-day spend across the remaining days of this active cycle
+  const generalRemaining = explicitRemainingRow
+    ? explicitRemainingRow.amount
+    : Math.max(0, customGeneralBudget - generalSpentSoFar);
+  // Safe per-day spend across the remaining days of this active cycle: Remaining Expenses Budget / remaining days
   const generalPerDayLimit = Math.round(generalRemaining / daysRemainingInCycle);
   const generalSpentPercent =
     customGeneralBudget > 0 ? Math.round((generalSpentSoFar / customGeneralBudget) * 100) : 0;

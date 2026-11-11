@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const refDate = searchParams.get('refDate') || '2026-11-10';
     const generalBudgetParam = Number(searchParams.get('generalBudget')) || 15000;
     const electricityBudgetParam = Number(searchParams.get('electricityBudget')) || 3200;
-    const budgetRecurringDay = Number(searchParams.get('budgetRecurringDay')) || 6;
+    const budgetRecurringDay = Number(searchParams.get('budgetRecurringDay')) || 7;
     const rentRecurringDay = Number(searchParams.get('rentRecurringDay')) || 15;
     const rentAmountParam = searchParams.get('rentAmount') ? Number(searchParams.get('rentAmount')) : undefined;
     const electricityRemainingParam = searchParams.get('electricityRemaining') ? Number(searchParams.get('electricityRemaining')) : undefined;

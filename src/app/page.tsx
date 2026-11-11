@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const [referenceDate, setReferenceDate] = useState('2026-11-10');
   const [generalBudget, setGeneralBudget] = useState(15000);
   const [electricityBudget, setElectricityBudget] = useState(3200);
-  const [budgetRecurringDay, setBudgetRecurringDay] = useState(6);
+  const [budgetRecurringDay, setBudgetRecurringDay] = useState(7);
   const [rentRecurringDay, setRentRecurringDay] = useState(15);
   const [rentAmount, setRentAmount] = useState(15000);
   const [electricityRemaining, setElectricityRemaining] = useState<number | undefined>(undefined);

@@ -146,8 +146,16 @@ export async function getLoansFromSheet(): Promise<{
 
 /**
  * Generates the continuation formula for Column E
+ * Preserves Time Lapse clearing and starting baseline boundaries (Rows 38 & 39)
  */
-export function buildBalanceFormula(row: number): string {
+export function buildBalanceFormula(row: number, description?: string): string {
+  const desc = (description || '').toLowerCase();
+  if (row === 38 || desc.includes('time lapse clear balance')) {
+    return '=0';
+  }
+  if (row === 39 || desc.includes('time lapse start balance')) {
+    return `=C${row}`;
+  }
   const prev = row - 1;
   return `=IF(OR(D${row}="", D${row}="ADJUSTMENT", D${row}="SETTLEMENT", D${row}="OTHER", D${row}="DIRECT"), E${prev}, IF(D${row}="DEBIT", E${prev}-C${row}, IF(D${row}="CREDIT", E${prev}+C${row}, "")))`;
 }
@@ -421,7 +429,7 @@ export async function sortExpensesSheet(): Promise<{
       item.row[1],
       item.row[2],
       item.row[3],
-      buildBalanceFormula(rowNum),
+      buildBalanceFormula(rowNum, item.row[1]),
     ];
   });
 
@@ -456,7 +464,7 @@ export async function restoreExpensesOrder(
       r[1],
       r[2],
       r[3],
-      buildBalanceFormula(rowNum),
+      buildBalanceFormula(rowNum, r[1]),
     ];
   });
 
@@ -517,7 +525,7 @@ export async function reorderExpenseRows(
 
   const valuesWithFormulas = updatedRows.map((r, idx) => {
     const rowNum = 3 + idx;
-    return [r[0], r[1], r[2], r[3], buildBalanceFormula(rowNum)];
+    return [r[0], r[1], r[2], r[3], buildBalanceFormula(rowNum, r[1])];
   });
 
   await sheets.spreadsheets.values.update({

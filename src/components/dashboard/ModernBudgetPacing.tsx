@@ -42,15 +42,15 @@ export function ModernBudgetPacing({
 }: ModernBudgetPacingProps) {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [tempGeneral, setTempGeneral] = useState(pacing.generalBudget);
-  const [tempElecBudget, setTempElecBudget] = useState(pacing.electricityBudget);
-  const [tempResetDay, setTempResetDay] = useState(pacing.budgetRecurringDay || 6);
+  const [tempElecBudget, setTempElecBudget] = useState(pacing.electricityTotalBudget || pacing.electricityBudget || 3200);
+  const [tempResetDay, setTempResetDay] = useState(pacing.budgetRecurringDay || 7);
   const [tempRentDay, setTempRentDay] = useState(pacing.rentRecurringDay || 15);
   const [tempRentAmt, setTempRentAmt] = useState(pacing.rentAmount || 15000);
-  const [tempElecRemaining, setTempElecRemaining] = useState(pacing.electricityRemaining || 2400);
+  const [tempElecRemaining, setTempElecRemaining] = useState(pacing.electricityMeterBalance || 300);
 
-  // Quick inline edit state for electricity balance
+  // Quick inline edit state for electricity meter balance
   const [isEditingMeter, setIsEditingMeter] = useState(false);
-  const [inlineMeterValue, setInlineMeterValue] = useState<number | string>(pacing.electricityRemaining);
+  const [inlineMeterValue, setInlineMeterValue] = useState<number | string>(pacing.electricityMeterBalance || 300);
   const [meterSavedMsg, setMeterSavedMsg] = useState(false);
 
   const [showTxList, setShowTxList] = useState(false);
@@ -73,7 +73,7 @@ export function ModernBudgetPacing({
       setTempElecRemaining(val);
       setIsEditingMeter(false);
       setMeterSavedMsg(true);
-      setTimeout(() => setMeterSavedMsg(false), 2000);
+      setTimeout(() => setMeterSavedMsg(false), 2500);
     }
   };
 
@@ -202,21 +202,48 @@ export function ModernBudgetPacing({
               </div>
             </div>
 
-            {/* 3. Remaining Electricity Balance */}
+            {/* 3. Total Electricity Budget */}
             <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3 space-y-2">
               <label className="text-zinc-300 font-semibold block">
-                Remaining Electricity Balance (₹)
+                Total Electricity Budget (₹)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={tempElecBudget}
+                onChange={(e) => setTempElecBudget(Number(e.target.value))}
+                placeholder="3200"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
+              />
+              <div className="flex gap-1.5 pt-1">
+                {[3000, 3200, 3500].map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => setTempElecBudget(b)}
+                    className="flex-1 rounded-lg bg-white/[0.04] py-1 text-[10px] font-mono text-zinc-300 hover:text-white hover:bg-white/[0.08]"
+                  >
+                    ₹{b}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. Live Electricity Meter Reading */}
+            <div className="rounded-xl bg-black/40 border border-white/[0.06] p-3 space-y-2">
+              <label className="text-zinc-300 font-semibold block">
+                Live Electricity Meter Reading (₹)
               </label>
               <input
                 type="number"
                 step="1"
                 value={tempElecRemaining}
                 onChange={(e) => setTempElecRemaining(Number(e.target.value))}
-                placeholder="2400"
+                placeholder="300"
                 className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
               />
               <div className="flex gap-1.5 pt-1">
-                {[1500, 2000, 2400, 3000].map((b) => (
+                {[100, 200, 300, 500].map((b) => (
                   <button
                     key={b}
                     type="button"
@@ -364,29 +391,64 @@ export function ModernBudgetPacing({
           </div>
         </div>
 
-        {/* Factor 2: Electricity Balance Factor */}
+        {/* Factor 2: Electricity Architecture (Dual Recharge Budget vs Live Meter Balance) */}
         <div className="rounded-2xl border border-white/[0.07] bg-[#18181B] p-4 sm:p-5 flex flex-col justify-between hover:border-white/[0.14] transition-colors">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-semibold text-zinc-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <Lightbulb className="h-4 w-4 text-amber-400" />
-                Electricity Balance
+                <Zap className="h-4 w-4 text-amber-400" />
+                Electricity & Meter
               </span>
-              <button
-                onClick={() => setIsEditingMeter(!isEditingMeter)}
-                className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-bold text-zinc-300 border border-white/[0.06] flex items-center gap-1 hover:bg-white/[0.08] transition-colors"
-                title="Click to directly update remaining electricity balance"
-              >
-                <Edit2 className="h-3 w-3 text-amber-400" />
-                <span>Update Balance</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.06]">
+                  Total: {formatINR(pacing.electricityTotalBudget || 3200)}
+                </span>
+                <button
+                  onClick={() => setIsEditingMeter(!isEditingMeter)}
+                  className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 hover:bg-amber-500/20 transition-colors"
+                  title="Click to directly update current electricity meter reading"
+                >
+                  <Edit2 className="h-3 w-3 text-amber-400" />
+                  <span>Update Meter</span>
+                </button>
+              </div>
             </div>
 
-            {/* Inline Quick Meter Edit Box */}
+            {/* Sub-Card A: Remaining Recharge Budget (Bank Allocation) */}
+            <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-zinc-400 font-medium block">
+                  Remaining Recharge Budget:
+                </span>
+                <span className="text-[10px] font-mono text-zinc-400">
+                  {formatINR(pacing.electricityTotalBudget || 3200)} pool ({formatINR(pacing.electricityBaseBudget || 3000)} + {formatINR(pacing.electricitySurplus || 200)} surplus)
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="font-serif text-3xl font-bold text-white">
+                  {formatINR(pacing.electricityRemainingBudget ?? pacing.electricityRemaining ?? 2400)}
+                </span>
+                <span className="text-xs font-mono text-emerald-400 font-semibold">in reserve</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-1.5 pt-1.5 border-t border-white/[0.04]">
+                <span>Recharged: <strong className="text-zinc-200 font-mono">{formatINR(pacing.electricityRechargedSoFar ?? pacing.electricitySpentSoFar ?? 800)}</strong> ({pacing.electricitySpentPercent}%)</span>
+                <span>Allowance: <strong className="text-zinc-200 font-mono">{formatINR(pacing.electricityPerDayLimit)}/day</strong></span>
+              </div>
+              {/* Progress bar */}
+              <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mt-2">
+                <div
+                  className="h-full rounded-full bg-amber-500 transition-all"
+                  style={{ width: `${Math.min(100, pacing.electricitySpentPercent)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Sub-Card B: Live Meter Reading & Power Burn Runway */}
             {isEditingMeter ? (
-              <form onSubmit={handleSaveInlineMeter} className="p-3 rounded-xl border border-white/[0.1] bg-black/60 mb-3 space-y-2">
-                <label className="text-[11px] text-zinc-300 block font-semibold font-mono">
-                  Update Remaining Electricity (₹):
+              <form onSubmit={handleSaveInlineMeter} className="p-3 rounded-xl border border-amber-500/30 bg-amber-950/20 mb-3 space-y-2 animate-in fade-in">
+                <label className="text-[11px] text-amber-200 block font-semibold font-mono flex items-center justify-between">
+                  <span>Current Live Meter Reading (₹):</span>
+                  <span className="text-[10px] text-amber-400/80">Physical meter credit</span>
                 </label>
                 <div className="flex gap-1.5">
                   <input
@@ -394,6 +456,7 @@ export function ModernBudgetPacing({
                     required
                     value={inlineMeterValue}
                     onChange={(e) => setInlineMeterValue(e.target.value)}
+                    placeholder="300"
                     className="flex-1 rounded-lg border border-white/[0.1] bg-black/60 px-2.5 py-1 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
                   />
                   <button
@@ -402,59 +465,57 @@ export function ModernBudgetPacing({
                   >
                     Save
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingMeter(false)}
+                    className="px-2 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 text-xs font-mono"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             ) : (
-              <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
+              <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/[0.03] mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-zinc-400 font-medium block">
-                    Remaining Power Balance:
+                  <span className="text-[11px] text-amber-200/90 font-medium flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Live Meter Balance:
                   </span>
-                  {meterSavedMsg && (
+                  {meterSavedMsg ? (
                     <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 font-mono">
-                      <Check className="h-3 w-3" /> Updated!
+                      <Check className="h-3 w-3" /> Saved!
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">
+                      ~{pacing.electricityMeterRunwayDays ?? 4} Days Runway
                     </span>
                   )}
                 </div>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="font-serif text-3xl font-bold text-white">
-                    {formatINR(pacing.electricityRemaining)}
+                <div className="flex items-baseline justify-between mt-1">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-serif text-2xl font-bold text-amber-400 font-mono">
+                      {formatINR(pacing.electricityMeterBalance ?? 300)}
+                    </span>
+                    <span className="text-[11px] font-mono text-zinc-400">on meter</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    ~₹{pacing.electricityDailyBurnRate ?? 75}/day burn
                   </span>
-                  <span className="text-xs font-mono text-zinc-400">pool</span>
                 </div>
-                <span className="text-[10px] text-zinc-500 block mt-1">
-                  {formatINR(pacing.electricityPerDayUntilRent)}/day until {pacing.rentRecurringDay}th rent date
-                </span>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-zinc-400 bg-black/40 px-2 py-1 rounded-lg border border-white/[0.04]">
+                  <span>Power Runway:</span>
+                  <span className="font-mono text-zinc-200 font-semibold">
+                    {(pacing.electricityMeterBalance ?? 300) <= 500
+                      ? `Recharge needed in ~${pacing.electricityMeterRunwayDays ?? 4} days`
+                      : `Sufficient (~${pacing.electricityMeterRunwayDays ?? 4} days)`}
+                  </span>
+                </div>
               </div>
             )}
-
-            {/* Recharges vs Buffer breakdown */}
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-zinc-400">
-                <span>Recharges Done:</span>
-                <span className="font-mono font-bold text-zinc-200">
-                  {formatINR(pacing.electricitySpentSoFar)} ({pacing.electricitySpentPercent}%)
-                </span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Safe Power Burn:</span>
-                <span className="font-mono font-bold text-white">
-                  {formatINR(pacing.electricityPerDayLimit)} / day
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mt-2">
-                <div
-                  className="h-full rounded-full bg-amber-500 transition-all"
-                  style={{ width: `${Math.min(100, pacing.electricitySpentPercent)}%` }}
-                />
-              </div>
-            </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400">
-            <span>{pacing.electricityList.length} meter events</span>
+          <div className="mt-2 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400">
+            <span>{pacing.electricityList.length} meter transactions</span>
             {onOpenQuickLog && (
               <button
                 onClick={onOpenQuickLog}

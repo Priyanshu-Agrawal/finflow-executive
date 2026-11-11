@@ -53,7 +53,7 @@ export function ExcelSpreadsheet({
   const [activeTab, setActiveTab] = useState<SheetTab>('expenses');
 
   // Dynamic Anchor Calculation based on referenceDate (or today's date)
-  const effectiveRefDate = referenceDate || '2026-11-10';
+  const effectiveRefDate = referenceDate || new Date().toLocaleDateString('en-CA');
   const anchorEntry = useMemo(() => {
     if (!expenses || expenses.length === 0) return null;
     const actuals = expenses.filter((e) => e.date <= effectiveRefDate);
@@ -937,7 +937,7 @@ export function ExcelSpreadsheet({
           <span className="hidden md:inline">
             Audit Baseline:{' '}
             <strong className="text-amber-400 font-mono">
-              Row {anchorEntry?.rowIndex || 240} ({anchorEntry ? formatINR(anchorEntry.balance) : '₹1,17,021'})
+              Row {anchorEntry?.rowIndex || 240} ({anchorEntry ? formatINR(anchorEntry.balance) : '₹1,14,021'})
             </strong>
           </span>
           <span className="text-[10px] text-zinc-500 hidden sm:inline">

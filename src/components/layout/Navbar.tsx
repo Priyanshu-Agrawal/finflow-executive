@@ -40,6 +40,7 @@ export function Navbar({
   const pathname = usePathname();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showMobileMore, setShowMobileMore] = useState(false);
+  const todayStr = new Date().toLocaleDateString('en-CA');
 
   const handleLogout = async () => {
     try {
@@ -130,7 +131,7 @@ export function Navbar({
               >
                 <Calendar className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                 <span className="font-mono text-zinc-200 font-semibold text-xs">
-                  {referenceDate === '2026-11-10' ? '10 Nov' : referenceDate}
+                  {referenceDate === todayStr ? 'Today' : referenceDate === '2026-11-10' ? '10 Nov' : referenceDate}
                 </span>
               </button>
 
@@ -138,6 +139,17 @@ export function Navbar({
                 <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-white/[0.1] bg-[#121214] p-3.5 shadow-2xl z-50 animate-in fade-in">
                   <p className="text-xs font-bold text-zinc-100 mb-2">Timeline Baseline Anchor</p>
                   <div className="flex flex-col gap-1.5 mb-3">
+                    <button
+                      onClick={() => handleDatePreset('today')}
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                        referenceDate === todayStr
+                          ? 'bg-amber-500 text-zinc-950 font-bold'
+                          : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
+                      }`}
+                    >
+                      <span>Today ({todayStr})</span>
+                      <span className="text-[10px] font-mono opacity-80">Live</span>
+                    </button>
                     <button
                       onClick={() => handleDatePreset('nov10')}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
@@ -148,17 +160,6 @@ export function Navbar({
                     >
                       <span>10 Nov 2026 (Audit Anchor)</span>
                       <span className="text-[10px] font-mono opacity-80">₹1.28L</span>
-                    </button>
-                    <button
-                      onClick={() => handleDatePreset('today')}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                        referenceDate !== '2026-11-10'
-                          ? 'bg-amber-500 text-zinc-950 font-bold'
-                          : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
-                      }`}
-                    >
-                      <span>System Today</span>
-                      <span className="text-[10px] font-mono opacity-80">Live</span>
                     </button>
                   </div>
                   <div>

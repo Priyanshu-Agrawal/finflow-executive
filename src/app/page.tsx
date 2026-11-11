@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const [referenceDate, setReferenceDate] = useState('2026-11-10');
+  const [referenceDate, setReferenceDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [generalBudget, setGeneralBudget] = useState(15000);
   const [electricityBudget, setElectricityBudget] = useState(3200);
   const [budgetRecurringDay, setBudgetRecurringDay] = useState(7);
@@ -279,6 +279,7 @@ export default function DashboardPage() {
                   expenses={data.expenses}
                   loans={data.loans}
                   peerLedger={data.peerLedger}
+                  referenceDate={referenceDate}
                   onOpenQuickLog={() => setIsQuickLogOpen(true)}
                 />
               </div>

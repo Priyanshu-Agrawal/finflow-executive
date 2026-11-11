@@ -18,7 +18,8 @@ import { FinancialsResponse } from '@/lib/types';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const refDate = searchParams.get('refDate') || '2026-11-10';
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const refDate = searchParams.get('refDate') || todayStr;
     const generalBudgetParam = Number(searchParams.get('generalBudget')) || 15000;
     const electricityBudgetParam = Number(searchParams.get('electricityBudget')) || 3200;
     const budgetRecurringDay = Number(searchParams.get('budgetRecurringDay')) || 7;

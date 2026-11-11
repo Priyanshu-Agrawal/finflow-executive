@@ -9,7 +9,7 @@ import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import { AlertCircle, Loader2, TableProperties, X } from 'lucide-react';
 
 export default function ExcelPage() {
-  const [referenceDate, setReferenceDate] = useState('2026-11-10');
+  const [referenceDate, setReferenceDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   const [isEmiSchedulerOpen, setIsEmiSchedulerOpen] = useState(false);
 

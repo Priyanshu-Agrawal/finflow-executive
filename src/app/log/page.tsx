@@ -9,7 +9,7 @@ import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import { Clock, PlusCircle, Sliders } from 'lucide-react';
 
 export default function QuickLogPage() {
-  const [referenceDate, setReferenceDate] = useState('2026-11-10');
+  const [referenceDate, setReferenceDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [activeTab, setActiveTab] = useState<'daily' | 'emi'>('daily');
 
   const { data, refetch, isFetching } = useFinancials(referenceDate);

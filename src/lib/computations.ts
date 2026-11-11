@@ -455,27 +455,64 @@ export function computeBudgetPacing(
   const generalSpentPercent =
     customGeneralBudget > 0 ? Math.round((generalSpentSoFar / customGeneralBudget) * 100) : 0;
 
-  // 4. Electricity Balance Factor (Separate Tracking)
-  // Scans electricity recharges in the active window
+  // 4. Electricity Architecture: Recharge Budget vs Live Meter Balance
+  // Base allocation is ₹3,000, surplus carryover from previous month is ₹200 (Total Budget = ₹3,200)
+  const electricityBaseBudget = 3000;
+  const electricitySurplus = Math.max(0, customElectricityBudget - electricityBaseBudget);
+  const electricityTotalBudget = electricityBaseBudget + electricitySurplus;
+
+  // Scans electricity transactions in the active window
   const electricityList = expenses.filter((e) => {
     if (e.date < cycleStartDate || e.date > referenceDate) return false;
     const desc = e.description.toLowerCase();
     return desc.includes('electricity') || desc.includes('recharge') || desc.includes('meter') || desc.includes('bijli');
   });
 
-  const electricitySpentSoFar = electricityList
-    .filter((e) => e.type === 'DEBIT')
-    .reduce((sum, e) => sum + e.amount, 0);
+  // Check if explicit cycle rows exist (Row 242 Total Electricity Recharge & Row 243 Remaining Electricity Budget)
+  const explicitElecRechargeRow = expenses.find((e) => {
+    const desc = e.description.toLowerCase();
+    return desc.includes('total electricity recharge') && e.date >= cycleStartDate && e.date <= cycleEndDate;
+  });
 
-  const electricityRemaining = customElectricityRemaining !== undefined && !isNaN(customElectricityRemaining)
+  const explicitElecRemainingBudgetRow = expenses.find((e) => {
+    const desc = e.description.toLowerCase();
+    return desc.includes('remaining electricity budget') && e.date >= cycleStartDate && e.date <= cycleEndDate;
+  });
+
+  // Check for historical live meter reading (e.g. Row 221 Remaining Electricity Balance)
+  const explicitMeterRow = expenses.find((e) => {
+    const desc = e.description.toLowerCase();
+    return (desc.includes('remaining electricity balance') || desc.includes('meter balance')) && e.date <= referenceDate;
+  });
+
+  // Recharges done so far: from explicit row (Row 242 SETTLEMENT = ₹800) or sum of debit recharges
+  let electricityRechargedSoFar = 0;
+  if (explicitElecRechargeRow) {
+    electricityRechargedSoFar = explicitElecRechargeRow.amount;
+  } else {
+    const adHocRecharges = electricityList.filter((e) => e.type === 'DEBIT');
+    electricityRechargedSoFar = adHocRecharges.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  // Remaining budget to do recharges: from explicit row (Row 243 DEBIT = ₹2,400) or total - recharged
+  const electricityRemainingBudget = explicitElecRemainingBudgetRow
+    ? explicitElecRemainingBudgetRow.amount
+    : Math.max(0, electricityTotalBudget - electricityRechargedSoFar);
+
+  // Live electricity meter balance currently in physical/online electric meter (₹300)
+  const electricityMeterBalance = customElectricityRemaining !== undefined && !isNaN(customElectricityRemaining)
     ? customElectricityRemaining
-    : Math.max(0, customElectricityBudget - electricitySpentSoFar);
-  // Power burn per day across remaining cycle days
-  const electricityPerDayLimit = Math.round(electricityRemaining / daysRemainingInCycle);
-  // Power runway per day until next rent/electricity reconciliation date (15th)
-  const electricityPerDayUntilRent = Math.round(electricityRemaining / Math.max(1, daysUntilRent));
+    : (explicitMeterRow ? explicitMeterRow.amount : 300);
+
+  // Daily power burn rate on physical meter (~₹75-80/day) & power runway days
+  const electricityDailyBurnRate = 75;
+  const electricityMeterRunwayDays = Math.max(0, Math.round(electricityMeterBalance / electricityDailyBurnRate));
+
+  // Budget burn allowances
+  const electricityPerDayLimit = Math.round(electricityRemainingBudget / daysRemainingInCycle);
+  const electricityPerDayUntilRent = Math.round(electricityRemainingBudget / Math.max(1, daysUntilRent));
   const electricitySpentPercent =
-    customElectricityBudget > 0 ? Math.round(((customElectricityBudget - electricityRemaining) / customElectricityBudget) * 100) : 0;
+    electricityTotalBudget > 0 ? Math.round((electricityRechargedSoFar / electricityTotalBudget) * 100) : 0;
 
   // 5. Safe Total Daily Burn from Available Liquid Buffer
   const safeTotalDailyBurn = Math.round(postRentBuffer / daysRemainingInCycle);
@@ -507,9 +544,20 @@ export function computeBudgetPacing(
     generalSpentPercent,
     generalExpensesList,
 
-    electricityBudget: customElectricityBudget,
-    electricitySpentSoFar: Math.round(electricitySpentSoFar),
-    electricityRemaining: Math.round(electricityRemaining),
+    // Dual Distinction Electricity Architecture
+    electricityBaseBudget,
+    electricitySurplus,
+    electricityTotalBudget,
+    electricityRechargedSoFar: Math.round(electricityRechargedSoFar),
+    electricityRemainingBudget: Math.round(electricityRemainingBudget),
+    electricityMeterBalance: Math.round(electricityMeterBalance),
+    electricityDailyBurnRate,
+    electricityMeterRunwayDays,
+
+    // Backward-compatible mappings
+    electricityBudget: electricityTotalBudget,
+    electricitySpentSoFar: Math.round(electricityRechargedSoFar),
+    electricityRemaining: Math.round(electricityRemainingBudget),
     electricityPerDayLimit,
     electricityPerDayUntilRent,
     electricitySpentPercent,

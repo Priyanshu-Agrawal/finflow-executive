@@ -120,10 +120,20 @@ export interface BudgetPacing {
   generalSpentPercent: number;// e.g. 23%
   generalExpensesList: ExpenseEntry[];
 
-  // Electricity Balance Factor (Separate)
-  electricityBudget: number;      // e.g. 3200
-  electricitySpentSoFar: number;  // e.g. 800 (recharges done)
-  electricityRemaining: number;   // e.g. 2400 (remaining balance)
+  // Electricity Architecture: Dual Distinction (Recharge Budget vs Live Meter Balance)
+  electricityBaseBudget: number;         // e.g. 3000 (monthly base allocation)
+  electricitySurplus: number;            // e.g. 200 (previous month surplus carryover)
+  electricityTotalBudget: number;        // e.g. 3200 (base + surplus)
+  electricityRechargedSoFar: number;     // e.g. 800 (total recharges done from Row 242 SETTLEMENT)
+  electricityRemainingBudget: number;    // e.g. 2400 (remaining budget in bank/allocation to recharge from Row 243 DEBIT)
+  electricityMeterBalance: number;       // e.g. 300 (live balance currently in electric meter / wallet)
+  electricityDailyBurnRate: number;      // e.g. ~75 / day
+  electricityMeterRunwayDays: number;    // e.g. ~4 days of power left on meter
+
+  // Backward compatibility fields
+  electricityBudget: number;      // e.g. 3200 (electricityTotalBudget)
+  electricitySpentSoFar: number;  // e.g. 800 (electricityRechargedSoFar)
+  electricityRemaining: number;   // e.g. 2400 (electricityRemainingBudget)
   electricityPerDayLimit: number; // e.g. 92/day (across cycle)
   electricityPerDayUntilRent: number; // e.g. 480/day (until 15th rent date)
   electricitySpentPercent: number;

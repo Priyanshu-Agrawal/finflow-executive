@@ -11,7 +11,7 @@ import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import { AlertCircle, CreditCard, Loader2, X } from 'lucide-react';
 
 export default function LoansPage() {
-  const [referenceDate, setReferenceDate] = useState('2026-11-10');
+  const [referenceDate, setReferenceDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   const [isEmiSchedulerOpen, setIsEmiSchedulerOpen] = useState(false);
 

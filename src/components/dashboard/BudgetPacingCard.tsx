@@ -229,32 +229,32 @@ export function BudgetPacingCard({
           </div>
         </div>
 
-        {/* Pillar 2: Electricity Budget & Recharge Pace */}
-        <div className="rounded-2xl border border-blue-500/20 bg-slate-950/70 p-5 relative overflow-hidden flex flex-col justify-between">
+        {/* Pillar 2: Electricity Budget & Live Meter Balance */}
+        <div className="rounded-2xl border border-amber-500/20 bg-slate-950/70 p-5 relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
                 <Lightbulb className="h-4 w-4" />
-                Electricity & Recharge Budget
+                Electricity & Meter
               </span>
-              <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue-500/20 font-mono">
-                Target: {formatINR(pacing.electricityBudget)}
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/20 font-mono">
+                Budget: {formatINR(pacing.electricityTotalBudget || pacing.electricityBudget || 3200)}
               </span>
             </div>
 
-            {/* Big Per-Day Metric */}
-            <div className="my-3 p-3.5 rounded-xl border border-blue-500/30 bg-blue-950/20">
-              <span className="text-[11px] text-blue-300 font-medium block">
-                Daily Power Allowance:
+            {/* Big Remaining Recharge Budget Metric */}
+            <div className="my-3 p-3.5 rounded-xl border border-white/[0.08] bg-black/40">
+              <span className="text-[11px] text-zinc-400 font-medium block">
+                Remaining Recharge Budget:
               </span>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="font-mono text-3xl font-extrabold text-blue-400">
-                  {formatINR(pacing.electricityPerDayLimit)}
+                <span className="font-mono text-3xl font-extrabold text-white">
+                  {formatINR(pacing.electricityRemainingBudget ?? pacing.electricityRemaining ?? 2400)}
                 </span>
-                <span className="text-xs text-blue-300/80 font-semibold">/ day</span>
+                <span className="text-xs text-emerald-400 font-semibold">in reserve</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
-                Based on meter recharge pace
+              <span className="text-[10px] text-zinc-400 block mt-1">
+                From {formatINR(pacing.electricityTotalBudget || 3200)} allocation ({formatINR(pacing.electricityBaseBudget || 3000)} + {formatINR(pacing.electricitySurplus || 200)} surplus)
               </span>
             </div>
 
@@ -263,13 +263,13 @@ export function BudgetPacingCard({
               <div className="flex justify-between text-slate-400">
                 <span>Recharges Done:</span>
                 <span className="font-mono font-bold text-slate-200">
-                  {formatINR(pacing.electricitySpentSoFar)} ({pacing.electricitySpentPercent}%)
+                  {formatINR(pacing.electricityRechargedSoFar ?? pacing.electricitySpentSoFar ?? 800)} ({pacing.electricitySpentPercent}%)
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Remaining Power Buffer:</span>
-                <span className="font-mono font-bold text-emerald-400">
-                  {formatINR(pacing.electricityRemaining)}
+                <span>Live Meter Balance:</span>
+                <span className="font-mono font-bold text-amber-400">
+                  {formatINR(pacing.electricityMeterBalance ?? 300)} (~{pacing.electricityMeterRunwayDays ?? 4}d runway)
                 </span>
               </div>
             </div>
@@ -278,7 +278,7 @@ export function BudgetPacingCard({
             <div className="mt-3 space-y-1">
               <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all"
+                  className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all"
                   style={{ width: `${Math.min(100, pacing.electricitySpentPercent)}%` }}
                 />
               </div>

@@ -427,6 +427,8 @@ export function computeBudgetPacing(
     if (e.date < cycleStartDate || e.date > referenceDate) return false;
     if (e.type !== 'DEBIT') return false;
     const desc = e.description.toLowerCase();
+    // Exclude cycle summary / projection rows (Total General Expenses and Remaining Expenses Budget)
+    if (desc.includes('remaining') || desc.includes('total general')) return false;
     return (
       desc.includes('general') ||
       desc.includes('food') ||

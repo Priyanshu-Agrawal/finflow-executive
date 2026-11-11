@@ -393,27 +393,48 @@ export async function sortExpensesSheet(): Promise<{
     return { sortedCount: 0, previousOrder: [] };
   }
 
-  // Fetch all transaction rows A3:D{lastRow}
-  const dataRes = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A3:D${lastRow}`,
-    valueRenderOption: 'UNFORMATTED_VALUE',
-  });
-
-  const rawRows = dataRes.data.values || [];
-  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r) => [
-    r[0] ?? '',
-    r[1] ?? '',
-    r[2] ?? 0,
-    r[3] ?? 'DEBIT',
+  // Fetch all transaction rows A3:D{lastRow} with values and formulas
+  const [dataRes, formulasRes] = await Promise.all([
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!A3:D${lastRow}`,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!A3:D${lastRow}`,
+      valueRenderOption: 'FORMULA',
+    }),
   ]);
 
+  const rawRows = dataRes.data.values || [];
+  const rawFormulas = formulasRes.data.values || [];
+
+  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r, idx) => {
+    const colCFormula = rawFormulas[idx]?.[2];
+    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
+      ? colCFormula
+      : (r[2] ?? 0);
+    return [
+      r[0] ?? '',
+      r[1] ?? '',
+      amountVal,
+      r[3] ?? 'DEBIT',
+    ];
+  });
+
   // Index rows for stable sorting
-  const indexed = rawRows.map((r, idx) => ({
-    origIdx: idx,
-    date: normalizeDate(r[0]),
-    row: [r[0] ?? '', r[1] ?? '', r[2] ?? 0, r[3] ?? 'DEBIT'],
-  }));
+  const indexed = rawRows.map((r, idx) => {
+    const colCFormula = rawFormulas[idx]?.[2];
+    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
+      ? colCFormula
+      : (r[2] ?? 0);
+    return {
+      origIdx: idx,
+      date: normalizeDate(r[0]),
+      row: [r[0] ?? '', r[1] ?? '', amountVal, r[3] ?? 'DEBIT'],
+    };
+  });
 
   indexed.sort((a, b) => {
     const cmp = a.date.localeCompare(b.date);
@@ -424,10 +445,15 @@ export async function sortExpensesSheet(): Promise<{
   // Re-write A3:E{lastRow} with sorted values and regenerated dynamic Column E formulas
   const valuesWithFormulas = indexed.map((item, idx) => {
     const rowNum = 3 + idx;
+    let colCAmt = item.row[2];
+    // Preserve relative reference for Remaining Expenses Budget (=15000 - C{prevRow})
+    if (String(item.row[1] || '').toLowerCase().includes('remaining expenses budget')) {
+      colCAmt = `=15000 - (C${rowNum - 1})`;
+    }
     return [
       item.row[0],
       item.row[1],
-      item.row[2],
+      colCAmt,
       item.row[3],
       buildBalanceFormula(rowNum, item.row[1]),
     ];
@@ -498,19 +524,34 @@ export async function reorderExpenseRows(
   const lastRow = (metaRes.data.values || []).length;
   if (lastRow < 3) return { previousOrder: [] };
 
-  const dataRes = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A3:D${lastRow}`,
-    valueRenderOption: 'UNFORMATTED_VALUE',
-  });
+  const [dataRes, formulasRes] = await Promise.all([
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!A3:D${lastRow}`,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!A3:D${lastRow}`,
+      valueRenderOption: 'FORMULA',
+    }),
+  ]);
 
   const rawRows = dataRes.data.values || [];
-  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r) => [
-    r[0] ?? '',
-    r[1] ?? '',
-    r[2] ?? 0,
-    r[3] ?? 'DEBIT',
-  ]);
+  const rawFormulas = formulasRes.data.values || [];
+
+  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r, idx) => {
+    const colCFormula = rawFormulas[idx]?.[2];
+    const amountVal = (typeof colCFormula === 'string' && colCFormula.startsWith('='))
+      ? colCFormula
+      : (r[2] ?? 0);
+    return [
+      r[0] ?? '',
+      r[1] ?? '',
+      amountVal,
+      r[3] ?? 'DEBIT',
+    ];
+  });
 
   const fromIdx = sourceIndex - 3;
   const toIdx = targetIndex - 3;
@@ -519,13 +560,17 @@ export async function reorderExpenseRows(
     throw new Error(`Invalid source (${sourceIndex}) or target (${targetIndex}) row index`);
   }
 
-  const updatedRows = [...rawRows];
+  const updatedRows = [...previousOrder];
   const [movedItem] = updatedRows.splice(fromIdx, 1);
   updatedRows.splice(toIdx, 0, movedItem);
 
   const valuesWithFormulas = updatedRows.map((r, idx) => {
     const rowNum = 3 + idx;
-    return [r[0], r[1], r[2], r[3], buildBalanceFormula(rowNum, r[1])];
+    let colCAmt = r[2];
+    if (String(r[1] || '').toLowerCase().includes('remaining expenses budget')) {
+      colCAmt = `=15000 - (C${rowNum - 1})`;
+    }
+    return [r[0], r[1], colCAmt, r[3], buildBalanceFormula(rowNum, r[1])];
   });
 
   await sheets.spreadsheets.values.update({

@@ -73,16 +73,35 @@ async function runIntegrityAudit() {
   console.log(`[CHECK 4] Column E dynamic formula lineage: ${hasFormula235 ? 'PASS ✅' : 'FAIL ❌'}`);
   if (!hasFormula235) allPassed = false;
 
-  // 5. Verify November 10 liquid balance resolves to ₹1,17,021 (with prepaid Bike EMI of ₹11,771 on Nov 6)
+  // 5. Verify November 11 liquid balance resolves to ₹1,14,021 (with ₹4,000 General Expenses logged)
   const resBalance = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: 'Expenses!E240',
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
   const valBalance = Math.round(Number(resBalance.data.values?.[0]?.[0]));
-  const passedBalance = valBalance === 117021;
-  console.log(`[CHECK 5] Liquid balance on 2026-11-10 (Row 240): expected 117021, got ${valBalance} -> ${passedBalance ? 'PASS ✅' : 'FAIL ❌'}`);
+  const passedBalance = valBalance === 114021;
+  console.log(`[CHECK 5] Liquid balance on 2026-11-11 (Row 240): expected 114021, got ${valBalance} -> ${passedBalance ? 'PASS ✅' : 'FAIL ❌'}`);
   if (!passedBalance) allPassed = false;
+
+  // 6. Verify December 6 Budget Settlement & Projection: Row 247 SETTLEMENT (₹4,000) & Row 248 DEBIT (₹11,000 -> ₹21,621)
+  const resDecBudget = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: 'Expenses!B247:E248',
+    valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+  const row247 = resDecBudget.data.values?.[0] || [];
+  const row248 = resDecBudget.data.values?.[1] || [];
+  const passedDecBudget =
+    row247[0] === 'Total General Expenses' &&
+    Math.round(Number(row247[1])) === 4000 &&
+    row247[2] === 'SETTLEMENT' &&
+    row248[0] === 'Remaining Expenses Budget' &&
+    Math.round(Number(row248[1])) === 11000 &&
+    row248[2] === 'DEBIT' &&
+    Math.round(Number(row248[3])) === 21621;
+  console.log(`[CHECK 6] December 6 Cycle Budget & Projection (Rows 247-248): ${passedDecBudget ? 'PASS ✅' : 'FAIL ❌'}`);
+  if (!passedDecBudget) allPassed = false;
 
   console.log('-------------------------------------------');
   console.log(`FINAL AUDIT VERDICT: ${allPassed ? 'VERDICT: PASS ✅' : 'VERDICT: FAIL ❌'}`);

@@ -23,7 +23,13 @@ function getAuthClient() {
       client_email: email,
       private_key: sanitizedKey,
     },
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    // FINFLOW_SHEETS_READONLY=1 (set for automated micro-sessions) requests a read-only
+    // token, so any write to the live sheet is rejected by Google, whatever the code does.
+    scopes: [
+      process.env.FINFLOW_SHEETS_READONLY === '1'
+        ? 'https://www.googleapis.com/auth/spreadsheets.readonly'
+        : 'https://www.googleapis.com/auth/spreadsheets',
+    ],
   });
 }
 

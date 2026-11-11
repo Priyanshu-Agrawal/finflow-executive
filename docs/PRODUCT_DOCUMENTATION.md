@@ -211,10 +211,12 @@ sequenceDiagram
    - Floating toast with a countdown bar and a manual **Undo** button.
    - Reverts single-cell edits, drag-and-drop row moves and table sorts, writing the reversal back to Google Sheets.
 3. **Drag-and-drop row reordering** — reorder rows visually; Column E formula references are rebuilt for the new order.
-4. **Formula preservation**:
-   - Column C formulas (e.g. Row 247 `=C240`, Row 248 `=15000-(C247)`) are kept intact across sorts and reorders.
-   - Column E balance formulas are protected from being overwritten with hard-coded values.
-5. **Interactive controls**:
+4. **Date-ordered logging** — a new transaction is inserted just before the first later-dated row (or appended if it is the latest), so today's balance includes it immediately. Formulas such as `=C240` shift with the inserted row.
+5. **Safe delete** — after a row is removed, the row that moves up is re-linked to the row above it, so the running balance below never breaks (`#REF!`). Rows 1–2 (header, opening balance) cannot be deleted.
+6. **Formula preservation**:
+   - Column C formulas (e.g. Row 247 `=C240`, Row 248 `=15000-(C247)`) are kept intact across sorts, reorders and edits; an edit only replaces the formula when the amount itself is changed.
+   - Column E balance formulas are never overwritten by edits (including the opening-balance and Time Lapse rows).
+7. **Interactive controls**:
    - Row jump input (`Jump to Row #`).
    - Search across descriptions, dates and row numbers.
    - Transaction type selector: `DEBIT`, `CREDIT`, `SETTLEMENT`, `ADJUSTMENT`, `OTHER`, `DIRECT`.
@@ -305,8 +307,9 @@ This is why budget summary rows and third-party payments are logged as `SETTLEME
 
 #### Special gap-row protections
 
-- **Row 38 (gap baseline reset)** — always `=0` (also applied to any row described as "Time Lapse Clear Balance").
-- **Row 39 (2026 inception anchor)** — always `=C39`, the Essence salary credit (also applied to any row described as "Time Lapse Start Balance").
+- **Row 38 (gap baseline reset)** — `=0`, applied to the row described as "Time Lapse Clear Balance".
+- **Row 39 (2026 inception anchor)** — `=C{row}`, applied to the row described as "Time Lapse Start Balance" (currently `=C39`).
+- The rule is matched by **description, not row number**, so it moves with these rows and can never be applied to an unrelated transaction that lands on Row 38 or 39.
 - **Sorting safety** — `sortExpensesSheet()` leaves Row 2 (the opening row) in place, sorts Rows 3 to 314+ by date (ties keep their original order), and regenerates every Column E formula. The Row 38/39 rules follow the "Time Lapse" descriptions, so they still apply after a sort. Any `Remaining Expenses Budget` row is rewritten as `=15000 - (C{previous row})`.
 
 ---
@@ -325,10 +328,10 @@ All routes except `/api/auth/*` require a valid session cookie.
 
 | Route | Method | Purpose | Payload |
 |---|---|---|---|
-| `/api/expenses/log` | `POST` | Append a transaction (with its Column E formula) | `{ date, description, amount, type }` |
+| `/api/expenses/log` | `POST` | Insert a transaction in date order (with its Column E formula); `date` defaults to today | `{ date, description, amount, type }` |
 | `/api/expenses/schedule-emi` | `POST` | Append a series of monthly EMI rows | `{ title, monthlyAmount, months, startDate, type? }` (`type` defaults to `DEBIT`) |
 | `/api/expenses/[row]` | `PATCH` | Update a row | `{ date, description, amount, type }` |
-| `/api/expenses/[row]` | `DELETE` | Delete a row | — |
+| `/api/expenses/[row]` | `DELETE` | Delete a row (Row 3 or later) and re-link the running balance | — |
 | `/api/expenses/[row]/type` | `PATCH` | Change a row's transaction type | `{ newType }` — one of `DEBIT`, `CREDIT`, `SETTLEMENT`, `ADJUSTMENT`, `OTHER`, `DIRECT` |
 | `/api/expenses/reorder` | `POST` | Move a row (drag-and-drop) | `{ sourceIndex, targetIndex }` |
 | `/api/expenses/sort` | `POST` | Sort by date and repair formulas; returns the previous order for undo | `{}` |
@@ -360,7 +363,7 @@ All routes except `/api/auth/*` require a valid session cookie.
 A 6-point integrity audit lives in [`src/scripts/integrity-check.ts`](../src/scripts/integrity-check.ts). It reads the live spreadsheet (no writes) and checks known anchors:
 
 ```bash
-npx tsx --env-file=.env.local src/scripts/integrity-check.ts
+npm run integrity   # or: npx tsx --env-file=.env.local src/scripts/integrity-check.ts
 ```
 
 | # | Invariant | What it protects |
@@ -374,7 +377,15 @@ npx tsx --env-file=.env.local src/scripts/integrity-check.ts
 
 The script prints `FINAL AUDIT VERDICT: VERDICT: PASS ✅` only when all six checks pass.
 
-### 6.2 End-to-end scripts
+### 6.2 Write-path simulation
+
+```bash
+npm run test:sim
+```
+
+[`src/scripts/simulate-write-paths.ts`](../src/scripts/simulate-write-paths.ts) takes a **read-only** snapshot of the live `Expenses` tab and runs the real write functions (log, delete, restore, edit, sort) against an in-memory copy that mimics Google Sheets' formula evaluation and reference shifting. It first confirms the copy reproduces every live Column E balance, then checks that each operation keeps the chain intact and that undo restores the sheet exactly. The live sheet is never written.
+
+### 6.3 End-to-end scripts
 
 Playwright scripts in `src/scripts/` (`test-playwright.ts`, `test-executive-experience.ts`, `test-cycles-e2e.ts`, `test-lan-mobile-login.ts`) drive a running server for desktop/mobile visual checks and LAN login. Most target `http://localhost:3000`; `test-lan-mobile-login.ts` targets `http://10.95.71.75:3000`. Start the app first, then run one with `npx tsx <script>`.
 
@@ -424,7 +435,7 @@ npm run build
 npm run start -- -p 3000
 ```
 
-Before committing, run `npm run lint` and `npm run type-check`.
+Before committing, run `npm run type-check`, `npm run integrity` and `npm run test:sim`.
 
 ### 7.3 Dual Git remotes
 

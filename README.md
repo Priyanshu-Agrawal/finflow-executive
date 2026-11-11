@@ -92,6 +92,8 @@ npm run start -- -p 3000    # production server
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint |
 | `npm run type-check` | Run the TypeScript compiler with `--noEmit` |
+| `npm run integrity` | 6-point integrity audit against the live sheet (read-only) |
+| `npm run test:sim` | Simulate every write path on an in-memory copy of the sheet (read-only) |
 
 ---
 

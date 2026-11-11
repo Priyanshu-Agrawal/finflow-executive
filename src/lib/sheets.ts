@@ -26,7 +26,15 @@ function getAuthClient() {
   });
 }
 
+let sheetsClientOverride: sheets_v4.Sheets | null = null;
+
+/** Test-only: route all Sheets calls to an in-memory client (pass null to reset). */
+export function __setSheetsClientForTests(client: sheets_v4.Sheets | null): void {
+  sheetsClientOverride = client;
+}
+
 function getSheets(): sheets_v4.Sheets {
+  if (sheetsClientOverride) return sheetsClientOverride;
   const auth = getAuthClient();
   return google.sheets({ version: 'v4', auth });
 }
@@ -145,15 +153,18 @@ export async function getLoansFromSheet(): Promise<{
 }
 
 /**
- * Generates the continuation formula for Column E
- * Preserves Time Lapse clearing and starting baseline boundaries (Rows 38 & 39)
+ * Generates the continuation formula for Column E.
+ * The Time Lapse boundary rows (currently Rows 38 & 39) are recognised by their
+ * description, not their row number, so the rule follows them if rows shift and can
+ * never be applied to an unrelated transaction that lands on Row 38 or 39.
+ * Always pass the row's description.
  */
 export function buildBalanceFormula(row: number, description?: string): string {
   const desc = (description || '').toLowerCase();
-  if (row === 38 || desc.includes('time lapse clear balance')) {
+  if (desc.includes('time lapse clear balance')) {
     return '=0';
   }
-  if (row === 39 || desc.includes('time lapse start balance')) {
+  if (desc.includes('time lapse start balance')) {
     return `=C${row}`;
   }
   const prev = row - 1;
@@ -161,8 +172,50 @@ export function buildBalanceFormula(row: number, description?: string): string {
 }
 
 /**
- * Appends a single transaction to Expenses tab
- * Writes raw data to A:D and formula to E
+ * Returns the 1-based row where a transaction dated `newDate` (YYYY-MM-DD) belongs:
+ * just before the first transaction row (Row 3 onwards) dated later than it, or
+ * after the last row if none is later. Same-day entries go after existing ones.
+ * `colA` is Expenses!A:A as returned by the API (index 0 = Row 1).
+ */
+export function findChronologicalInsertRow(colA: unknown[][], newDate: string): number {
+  for (let i = 2; i < colA.length; i++) {
+    const cell = colA[i]?.[0];
+    if (cell === undefined || cell === null || cell === '') continue;
+    if (normalizeDate(cell as string | number) > newDate) {
+      return i + 1;
+    }
+  }
+  return colA.length + 1;
+}
+
+/**
+ * Re-links the Column E running-balance formula of the given rows (if they exist).
+ * Used after a row insert/delete, where only the row next to the change loses its
+ * link to the row above; every other reference is shifted correctly by Sheets.
+ */
+async function relinkBalanceFormulas(sheets: sheets_v4.Sheets, rows: number[]): Promise<void> {
+  for (const row of rows) {
+    if (row < 3) continue; // Row 2 holds the opening balance; never rewrite it
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!A${row}:B${row}`,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+    });
+    const cells = res.data.values?.[0];
+    if (!cells || cells[0] === undefined || cells[0] === '') continue; // no transaction here
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!E${row}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[buildBalanceFormula(row, String(cells[1] ?? ''))]] },
+    });
+  }
+}
+
+/**
+ * Logs a single transaction in date order: it is inserted before the first
+ * later-dated row (or appended if none), so today's balance reflects it
+ * immediately. Formulas elsewhere (e.g. =C240) shift with the inserted row.
  */
 export async function appendExpenseRow(data: {
   date: string;
@@ -172,22 +225,27 @@ export async function appendExpenseRow(data: {
 }): Promise<{ newRow: number }> {
   const sheets = getSheets();
 
-  // Find the last row
   const metaRes = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: 'Expenses!A:A',
+    valueRenderOption: 'UNFORMATTED_VALUE',
   });
+  const colA = metaRes.data.values || [];
+  const lastRow = colA.length;
+  const targetRow = findChronologicalInsertRow(colA, normalizeDate(data.date));
 
-  const lastRow = (metaRes.data.values || []).length;
+  if (targetRow <= lastRow) {
+    await insertExpenseRowAt(targetRow, data);
+    return { newRow: targetRow };
+  }
+
   const newRow = lastRow + 1;
-  const formula = buildBalanceFormula(newRow);
-
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `Expenses!A${newRow}:E${newRow}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
-      values: [[data.date, data.description, data.amount, data.type, formula]],
+      values: [[data.date, data.description, data.amount, data.type, buildBalanceFormula(newRow, data.description)]],
     },
   });
 
@@ -217,7 +275,7 @@ export async function batchAppendExpenses(
 
   const valuesToWrite = rows.map((r, idx) => {
     const currentRow = startRow + idx;
-    const formula = buildBalanceFormula(currentRow);
+    const formula = buildBalanceFormula(currentRow, r.description);
     return [r.date, r.description, r.amount, r.type, formula];
   });
 
@@ -236,7 +294,11 @@ export async function batchAppendExpenses(
 }
 
 /**
- * Updates columns A:D of an existing row, preserving/refreshing E formula
+ * Updates columns A:D of an existing row.
+ * - A Column C formula (e.g. =C240, =15000-(C247)) is kept unless the amount was
+ *   actually changed, so editing a description or date never flattens it.
+ * - Column E is left alone when it already holds a formula (including the opening
+ *   balance and Time Lapse rows); it is only (re)written when missing.
  */
 export async function updateExpenseRow(
   rowIndex: number,
@@ -248,14 +310,36 @@ export async function updateExpenseRow(
   }
 ): Promise<void> {
   const sheets = getSheets();
-  const formula = buildBalanceFormula(rowIndex);
+
+  const [formulaRes, valueRes] = await Promise.all([
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!C${rowIndex}:E${rowIndex}`,
+      valueRenderOption: 'FORMULA',
+    }),
+    sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `Expenses!C${rowIndex}`,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+    }),
+  ]);
+  const currentC = formulaRes.data.values?.[0]?.[0];
+  const currentE = formulaRes.data.values?.[0]?.[2];
+  const currentCValue = Number(valueRes.data.values?.[0]?.[0]);
+
+  const cIsFormula = typeof currentC === 'string' && currentC.startsWith('=');
+  const amountUnchanged = Number.isFinite(currentCValue) && Math.abs(currentCValue - data.amount) < 0.005;
+  const amountCell = cIsFormula && amountUnchanged ? currentC : data.amount;
+
+  const eIsFormula = typeof currentE === 'string' && currentE.startsWith('=');
+  const row = [data.date, data.description, amountCell, data.type];
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
-    range: `Expenses!A${rowIndex}:E${rowIndex}`,
+    range: eIsFormula ? `Expenses!A${rowIndex}:D${rowIndex}` : `Expenses!A${rowIndex}:E${rowIndex}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
-      values: [[data.date, data.description, data.amount, data.type, formula]],
+      values: [eIsFormula ? row : [...row, buildBalanceFormula(rowIndex, data.description)]],
     },
   });
 }
@@ -278,9 +362,14 @@ export async function updateExpenseType(rowIndex: number, newType: TransactionTy
 }
 
 /**
- * Deletes a row using deleteDimension (preserves downstream formula references)
+ * Deletes a row using deleteDimension, then re-links the row that moves up into its
+ * place. Without that step its Column E formula would point at the deleted row
+ * (#REF!) and every running balance below it would break.
  */
 export async function deleteExpenseRow(rowIndex: number): Promise<void> {
+  if (rowIndex < 3) {
+    throw new Error('Rows 1-2 (header and opening balance) cannot be deleted');
+  }
   const sheets = getSheets();
 
   // Sheet gid=0 is Expenses
@@ -301,6 +390,8 @@ export async function deleteExpenseRow(rowIndex: number): Promise<void> {
       ],
     },
   });
+
+  await relinkBalanceFormulas(sheets, [rowIndex]);
 }
 
 /**
@@ -338,39 +429,19 @@ export async function insertExpenseRowAt(
     },
   });
 
-  // 2. Fetch new lastRow
-  const metaRes = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: 'Expenses!A:A',
-  });
-  const lastRow = (metaRes.data.values || []).length;
-
-  // 3. Write data to inserted row
-  const formula = buildBalanceFormula(rowIndex);
+  // 2. Write data + balance formula to the inserted row
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `Expenses!A${rowIndex}:E${rowIndex}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
-      values: [[data.date, data.description, data.amount, data.type, formula]],
+      values: [[data.date, data.description, data.amount, data.type, buildBalanceFormula(rowIndex, data.description)]],
     },
   });
 
-  // 4. Regenerate downstream Column E formulas from rowIndex to lastRow
-  if (rowIndex < lastRow) {
-    const downstreamFormulas: string[][] = [];
-    for (let r = rowIndex + 1; r <= lastRow; r++) {
-      downstreamFormulas.push([buildBalanceFormula(r)]);
-    }
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `Expenses!E${rowIndex + 1}:E${lastRow}`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: downstreamFormulas,
-      },
-    });
-  }
+  // 3. The row pushed down still points at the row above the insert; re-link it to
+  //    the new row. Rows further down were shifted correctly by Sheets.
+  await relinkBalanceFormulas(sheets, [rowIndex + 1]);
 }
 
 /**

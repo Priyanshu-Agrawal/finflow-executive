@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await appendExpenseRow({
-      date: date || '2026-11-10',
+      date: date || new Date().toLocaleDateString('en-CA'),
       description: description.trim(),
       amount: numAmount,
       type: txType,

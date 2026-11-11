@@ -51,15 +51,15 @@ export async function DELETE(
     const { row } = await context.params;
     const rowIndex = /^\d+$/.test(row) ? Number(row) : NaN; // reject '240.x', '240abc', etc.
 
-    if (isNaN(rowIndex) || rowIndex < 2) {
-      return NextResponse.json({ error: 'Invalid row index (must be 2 or greater)' }, { status: 400 });
+    if (isNaN(rowIndex) || rowIndex < 3) {
+      return NextResponse.json({ error: 'Invalid row index (must be 3 or greater; Row 2 is the opening balance)' }, { status: 400 });
     }
 
     await deleteExpenseRow(rowIndex);
 
     return NextResponse.json({
       success: true,
-      message: `Row ${rowIndex} deleted and downstream formulas re-indexed`,
+      message: `Row ${rowIndex} deleted and running balance re-linked`,
     });
   } catch (error: any) {
     console.error('Error in DELETE /api/expenses/[row]:', error);

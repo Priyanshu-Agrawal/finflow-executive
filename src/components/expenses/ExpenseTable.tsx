@@ -285,7 +285,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const handleDeleteRow = async (entry: ExpenseEntry) => {
     if (
       confirm(
-        `Delete Row ${entry.rowIndex} (${entry.description} - ${formatINR(entry.amount)})? Google Sheets will re-index downstream formulas.`
+        `Delete Row ${entry.rowIndex} (${entry.description} - ${formatINR(entry.amount)})? Running balances below will be re-linked automatically.`
       )
     ) {
       const backup = { ...entry };
@@ -313,7 +313,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
     if (selectedRows.length === 0) return;
     if (
       confirm(
-        `Are you sure you want to delete ${selectedRows.length} selected row(s)? Google Sheets will re-index downstream formulas.`
+        `Are you sure you want to delete ${selectedRows.length} selected row(s)? Running balances below will be re-linked automatically.`
       )
     ) {
       const targets = selectedRows
@@ -329,7 +329,8 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       pushUndo({
         description: `Deleted ${targets.length} rows in bulk`,
         undo: async () => {
-          for (const t of targets) {
+          // Restore top-to-bottom so each row lands back at its original index
+          for (const t of [...targets].sort((a, b) => a.rowIndex - b.rowIndex)) {
             await restoreRowMutation.mutateAsync({
               rowIndex: t.rowIndex,
               data: {

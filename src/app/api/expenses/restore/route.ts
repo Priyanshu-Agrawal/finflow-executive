@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
       const { rowIndex, data } = body;
       const numRow = Number(rowIndex);
 
-      if (isNaN(numRow) || numRow < 2) {
-        return NextResponse.json({ error: 'Valid rowIndex >= 2 is required' }, { status: 400 });
+      if (isNaN(numRow) || numRow < 3) {
+        return NextResponse.json({ error: 'Valid rowIndex >= 3 is required' }, { status: 400 });
       }
 
       if (!data || !data.description) {

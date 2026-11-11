@@ -60,6 +60,7 @@ export default function ExcelPage() {
             expenses={data.expenses || []}
             loans={data.loans || []}
             peerLedger={data.peerLedger || []}
+            referenceDate={referenceDate}
             onOpenQuickLog={() => setIsQuickLogOpen(true)}
           />
         )}

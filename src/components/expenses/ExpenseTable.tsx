@@ -15,6 +15,7 @@ import {
   Copy,
   Edit2,
   Filter,
+  GripVertical,
   History,
   Lock,
   MoreVertical,
@@ -33,6 +34,7 @@ import {
   useSortExpenses,
   useRestoreExpenseRow,
   useRestoreExpensesOrder,
+  useReorderExpenses,
 } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
 import { EditExpenseModal } from './EditExpenseModal';
@@ -80,7 +82,27 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const sortExpensesMutation = useSortExpenses();
   const restoreRowMutation = useRestoreExpenseRow();
   const restoreOrderMutation = useRestoreExpensesOrder();
+  const reorderMutation = useReorderExpenses();
   const { pushUndo } = useUndo();
+
+  // Drag-and-drop row reordering state
+  const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
+  const [dragOverRowIndex, setDragOverRowIndex] = useState<number | null>(null);
+
+  const handleDropRow = async (sourceRow: number, targetRow: number) => {
+    if (sourceRow === targetRow) return;
+    try {
+      const res = await reorderMutation.mutateAsync({ sourceIndex: sourceRow, targetIndex: targetRow });
+      pushUndo({
+        description: `Moved Row #${sourceRow} to Row #${targetRow} in Google Sheets`,
+        undo: async () => {
+          await restoreOrderMutation.mutateAsync(res.previousOrder);
+        },
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Failed to reorder row in Google Sheets');
+    }
+  };
 
   // Find the transaction nearest to referenceDate (targeting the latest entry on or before referenceDate)
   const nearestEntry = useMemo(() => {
@@ -372,7 +394,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
           {/* Auto-Sort Sheet Button */}
           <button
             onClick={handleAutoSort}
-            disabled={sortExpensesMutation.isPending}
+            disabled={sortExpensesMutation.isPending || reorderMutation.isPending}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium border border-amber-500/20 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             title="Sort rows chronologically by date in Google Sheets (re-indexing Column E continuation formulas)"
           >
@@ -383,6 +405,14 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
             )}
             <span>{sortExpensesMutation.isPending ? 'Sorting...' : 'Auto-Sort by Date'}</span>
           </button>
+
+          {/* Row Reordering Active Indicator */}
+          {reorderMutation.isPending && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono animate-pulse">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              <span>Reordering in Sheets...</span>
+            </div>
+          )}
 
           {/* Rolling Window Scope Switcher */}
           <div className="flex items-center rounded-xl bg-[#18181B] p-1 border border-white/[0.07] text-xs">
@@ -537,7 +567,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-white/[0.07] bg-[#18181B] text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider">
-              <th className="py-3 px-3 w-10 text-center">
+              <th className="py-3 px-1.5 w-8 text-center" title="Drag row handle to reorder in Google Sheets">
+                <span className="sr-only">Reorder</span>
+              </th>
+              <th className="py-3 px-2 w-10 text-center">
                 <input
                   type="checkbox"
                   checked={
@@ -565,7 +598,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
           <tbody className="divide-y divide-white/[0.04] bg-[#121214] font-medium">
             {paginatedExpenses.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-zinc-500">
+                <td colSpan={9} className="py-10 text-center text-zinc-500">
                   No transactions match your search and filter criteria.
                 </td>
               </tr>
@@ -581,16 +614,53 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                   <tr
                     key={entry.rowIndex}
                     ref={isNearest ? nearestRowRef : undefined}
-                    className={`transition-colors ${
+                    onDragOver={(ev) => {
+                      ev.preventDefault();
+                      ev.dataTransfer.dropEffect = 'move';
+                      if (draggedRowIndex && draggedRowIndex !== entry.rowIndex) {
+                        setDragOverRowIndex(entry.rowIndex);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverRowIndex === entry.rowIndex) setDragOverRowIndex(null);
+                    }}
+                    onDrop={async (ev) => {
+                      ev.preventDefault();
+                      if (draggedRowIndex && draggedRowIndex !== entry.rowIndex) {
+                        await handleDropRow(draggedRowIndex, entry.rowIndex);
+                      }
+                      setDraggedRowIndex(null);
+                      setDragOverRowIndex(null);
+                    }}
+                    className={`transition-colors group ${
                       isNearest
                         ? 'bg-amber-500/10 border-l-4 border-l-amber-500'
                         : isSelected
                         ? 'bg-white/[0.05]'
                         : 'hover:bg-[#18181B]/70'
+                    } ${draggedRowIndex === entry.rowIndex ? 'opacity-30 bg-amber-500/20' : ''} ${
+                      dragOverRowIndex === entry.rowIndex ? 'border-t-2 border-amber-500 shadow-lg' : ''
                     }`}
                   >
+                    {/* Drag Handle */}
+                    <td
+                      draggable={true}
+                      onDragStart={(ev) => {
+                        ev.dataTransfer.setData('text/plain', String(entry.rowIndex));
+                        setDraggedRowIndex(entry.rowIndex);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedRowIndex(null);
+                        setDragOverRowIndex(null);
+                      }}
+                      className="py-2.5 px-1.5 text-center cursor-grab active:cursor-grabbing select-none"
+                      title="Drag row to reorder in Google Sheets"
+                    >
+                      <GripVertical className="h-3.5 w-3.5 text-zinc-600 group-hover:text-amber-400 mx-auto transition-colors" />
+                    </td>
+
                     {/* Checkbox */}
-                    <td className="py-2.5 px-3 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}

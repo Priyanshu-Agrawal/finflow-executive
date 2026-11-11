@@ -343,7 +343,7 @@ export function BudgetPacingCard({
               <ShieldCheck className="h-3.5 w-3.5" />
               Capital Safety Secured
             </span>
-            <span className="font-mono text-slate-500">Row 239 Intact</span>
+            <span className="font-mono text-slate-500">Formula Chain Verified</span>
           </div>
         </div>
       </div>

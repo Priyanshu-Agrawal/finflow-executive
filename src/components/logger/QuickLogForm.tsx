@@ -293,7 +293,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
       </div>
 
       {/* Main Logging Form */}
-      <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-3.5">
+      <form onSubmit={(e) => handleSubmit(e, false)} data-modal-form="true" className="space-y-3.5">
         {/* Date Selector Row */}
         <div>
           <div className="flex items-center justify-between mb-1.5">

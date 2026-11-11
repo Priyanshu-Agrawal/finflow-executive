@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useScheduleEmi } from '@/hooks/useFinancials';
+import { useScheduleEmi, useDeleteExpense } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 import { formatINR } from '@/lib/date-utils';
 import { Calendar, CheckCircle, Clock, Layers, Sliders, X } from 'lucide-react';
 
@@ -18,6 +19,8 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
   const [isSuccess, setIsSuccess] = useState(false);
 
   const scheduleMutation = useScheduleEmi();
+  const deleteMutation = useDeleteExpense();
+  const { pushUndo } = useUndo();
 
   // Generate live preview list
   const previewList = useMemo(() => {
@@ -47,13 +50,25 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
     e.preventDefault();
     if (!title || !monthlyAmount || months <= 0) return;
 
-    await scheduleMutation.mutateAsync({
+    const res = await scheduleMutation.mutateAsync({
       title: title.trim(),
       monthlyAmount,
       months,
       startDate,
       type: 'DEBIT',
     });
+
+    if (res?.startRow && res?.count) {
+      const rows = Array.from({ length: res.count }, (_, i) => res.startRow + i);
+      pushUndo({
+        description: `Scheduled ${res.count} installments for ${title.trim()}`,
+        undo: async () => {
+          for (const r of [...rows].reverse()) {
+            await deleteMutation.mutateAsync(r);
+          }
+        },
+      });
+    }
 
     setIsSuccess(true);
     setTimeout(() => {
@@ -85,7 +100,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} data-modal-form="true" className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">

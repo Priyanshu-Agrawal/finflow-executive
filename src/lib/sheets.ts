@@ -471,6 +471,68 @@ export async function restoreExpensesOrder(
 }
 
 /**
+ * Reorders a row from sourceIndex to targetIndex in Expenses tab (rows >= 3),
+ * re-writing values and recalculating dynamic Column E continuation formulas.
+ * Returns previousOrder for full Undo capability.
+ */
+export async function reorderExpenseRows(
+  sourceIndex: number,
+  targetIndex: number
+): Promise<{
+  previousOrder: Array<[any, any, any, any]>;
+}> {
+  const sheets = getSheets();
+
+  const metaRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: 'Expenses!A:A',
+  });
+  const lastRow = (metaRes.data.values || []).length;
+  if (lastRow < 3) return { previousOrder: [] };
+
+  const dataRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A3:D${lastRow}`,
+    valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+
+  const rawRows = dataRes.data.values || [];
+  const previousOrder: Array<[any, any, any, any]> = rawRows.map((r) => [
+    r[0] ?? '',
+    r[1] ?? '',
+    r[2] ?? 0,
+    r[3] ?? 'DEBIT',
+  ]);
+
+  const fromIdx = sourceIndex - 3;
+  const toIdx = targetIndex - 3;
+
+  if (fromIdx < 0 || fromIdx >= rawRows.length || toIdx < 0 || toIdx >= rawRows.length) {
+    throw new Error(`Invalid source (${sourceIndex}) or target (${targetIndex}) row index`);
+  }
+
+  const updatedRows = [...rawRows];
+  const [movedItem] = updatedRows.splice(fromIdx, 1);
+  updatedRows.splice(toIdx, 0, movedItem);
+
+  const valuesWithFormulas = updatedRows.map((r, idx) => {
+    const rowNum = 3 + idx;
+    return [r[0], r[1], r[2], r[3], buildBalanceFormula(rowNum)];
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `Expenses!A3:E${lastRow}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: valuesWithFormulas,
+    },
+  });
+
+  return { previousOrder };
+}
+
+/**
  * Reads peer-to-peer expense split matrix from the Ledger tab
  */
 export async function getPeerLedgerFromSheet() {

@@ -329,3 +329,29 @@ export function useRestoreExpensesOrder() {
     },
   });
 }
+
+export function useReorderExpenses() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sourceIndex, targetIndex }: { sourceIndex: number; targetIndex: number }) => {
+      const res = await fetch('/api/expenses/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceIndex, targetIndex }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to reorder expenses');
+      }
+      return res.json() as Promise<{
+        success: boolean;
+        message: string;
+        previousOrder: Array<[any, any, any, any]>;
+      }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financials'] });
+    },
+  });
+}

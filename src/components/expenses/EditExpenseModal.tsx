@@ -74,7 +74,7 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} data-modal-form="true" className="space-y-4">
           <div>
             <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
               Date (YYYY-MM-DD)

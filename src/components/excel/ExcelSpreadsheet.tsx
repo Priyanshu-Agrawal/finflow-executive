@@ -9,7 +9,7 @@ import {
   TransactionType,
 } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
-import { useUpdateExpense, useToggleType, useSortExpenses, useRestoreExpensesOrder } from '@/hooks/useFinancials';
+import { useUpdateExpense, useToggleType, useSortExpenses, useRestoreExpensesOrder, useReorderExpenses } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
 import {
   ArrowUpDown,
@@ -20,6 +20,7 @@ import {
   FileSpreadsheet,
   Filter,
   Grid,
+  GripVertical,
   Info,
   Layers,
   Lock,
@@ -36,6 +37,7 @@ interface ExcelSpreadsheetProps {
   expenses: ExpenseEntry[];
   loans: LoanStatus[];
   peerLedger: PeerLedgerEntry[];
+  referenceDate?: string;
   onOpenQuickLog?: () => void;
 }
 
@@ -45,11 +47,24 @@ export function ExcelSpreadsheet({
   expenses,
   loans,
   peerLedger,
+  referenceDate,
   onOpenQuickLog,
 }: ExcelSpreadsheetProps) {
   const [activeTab, setActiveTab] = useState<SheetTab>('expenses');
+
+  // Dynamic Anchor Calculation based on referenceDate (or today's date)
+  const effectiveRefDate = referenceDate || '2026-11-10';
+  const anchorEntry = useMemo(() => {
+    if (!expenses || expenses.length === 0) return null;
+    const actuals = expenses.filter((e) => e.date <= effectiveRefDate);
+    if (actuals.length > 0) {
+      return actuals[actuals.length - 1];
+    }
+    return expenses[0];
+  }, [expenses, effectiveRefDate]);
+
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: string }>({
-    row: 239,
+    row: 240,
     col: 'B',
   });
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
@@ -59,14 +74,45 @@ export function ExcelSpreadsheet({
   const [jumpRowInput, setJumpRowInput] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
+  // Drag-and-drop row reordering state
+  const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
+  const [dragOverRowIndex, setDragOverRowIndex] = useState<number | null>(null);
+
   const updateMutation = useUpdateExpense();
   const toggleMutation = useToggleType();
   const sortExpensesMutation = useSortExpenses();
   const restoreOrderMutation = useRestoreExpensesOrder();
-  const { pushUndo } = useUndo();
+  const reorderMutation = useReorderExpenses();
+  const { pushUndo, triggerUndo } = useUndo();
 
   const editInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Focus and select active cell on dynamic anchor change
+  useEffect(() => {
+    if (anchorEntry) {
+      setSelectedCell((prev) => ({
+        ...prev,
+        row: anchorEntry.rowIndex,
+      }));
+    }
+  }, [anchorEntry]);
+
+  // Handle Drag-and-Drop Row Movement with full Undo
+  const handleDropRow = async (sourceRow: number, targetRow: number) => {
+    if (sourceRow === targetRow) return;
+    try {
+      const res = await reorderMutation.mutateAsync({ sourceIndex: sourceRow, targetIndex: targetRow });
+      pushUndo({
+        description: `Moved Row #${sourceRow} to Row #${targetRow} in Google Sheets`,
+        undo: async () => {
+          await restoreOrderMutation.mutateAsync(res.previousOrder);
+        },
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Failed to reorder row in Google Sheets');
+    }
+  };
 
   // Focus inline edit input when entering edit mode
   useEffect(() => {
@@ -76,9 +122,20 @@ export function ExcelSpreadsheet({
     }
   }, [editingCell]);
 
-  // Keyboard navigation across cells
+  // Keyboard navigation across cells + instant Ctrl+Z Undo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Catch Ctrl+Z / Cmd+Z directly
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (editingCell) {
+          setEditingCell(null);
+        }
+        triggerUndo();
+        return;
+      }
+
       if (editingCell) {
         if (e.key === 'Escape') {
           setEditingCell(null);
@@ -200,6 +257,17 @@ export function ExcelSpreadsheet({
       amount: entry.amount,
       type: entry.type,
     };
+
+    // If unchanged, don't execute API mutation or push undo
+    if (
+      updated.date === prevData.date &&
+      updated.description === prevData.description &&
+      updated.amount === prevData.amount &&
+      updated.type === prevData.type
+    ) {
+      setEditingCell(null);
+      return;
+    }
 
     try {
       await updateMutation.mutateAsync({
@@ -531,23 +599,56 @@ export function ExcelSpreadsheet({
                 const rowNum = e.rowIndex;
                 const isSelectedRow = selectedCell.row === rowNum;
 
+                const isAnchorRow = Boolean(anchorEntry && rowNum === anchorEntry.rowIndex);
+
                 return (
                   <tr
                     key={rowNum}
                     id={`excel-row-${rowNum}`}
-                    className={`hover:bg-[#18181B]/50 transition-colors ${
-                      rowNum === 239 ? 'bg-amber-500/10' : ''
+                    onDragOver={(ev) => {
+                      ev.preventDefault();
+                      ev.dataTransfer.dropEffect = 'move';
+                      setDragOverRowIndex(rowNum);
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverRowIndex === rowNum) setDragOverRowIndex(null);
+                    }}
+                    onDrop={async (ev) => {
+                      ev.preventDefault();
+                      if (draggedRowIndex && draggedRowIndex !== rowNum) {
+                        await handleDropRow(draggedRowIndex, rowNum);
+                      }
+                      setDraggedRowIndex(null);
+                      setDragOverRowIndex(null);
+                    }}
+                    className={`hover:bg-[#18181B]/50 transition-all ${
+                      isAnchorRow ? 'bg-amber-500/10' : ''
+                    } ${draggedRowIndex === rowNum ? 'opacity-30 bg-amber-500/20' : ''} ${
+                      dragOverRowIndex === rowNum ? 'border-t-2 border-amber-500 shadow-lg' : ''
                     }`}
                   >
-                    {/* Row Header Number */}
+                    {/* Row Header Number with Drag Handle */}
                     <td
-                      className={`border-r border-b border-white/[0.05] p-1 text-center font-mono text-[11px] sticky left-0 z-10 transition-colors ${
+                      draggable={true}
+                      onDragStart={(ev) => {
+                        ev.dataTransfer.setData('text/plain', String(rowNum));
+                        setDraggedRowIndex(rowNum);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedRowIndex(null);
+                        setDragOverRowIndex(null);
+                      }}
+                      className={`border-r border-b border-white/[0.05] p-1 text-center font-mono text-[11px] sticky left-0 z-10 transition-colors cursor-grab active:cursor-grabbing group select-none ${
                         isSelectedRow
                           ? 'bg-amber-500/15 text-amber-400 font-bold border-r-2 border-r-amber-500'
-                          : 'bg-[#18181B] text-zinc-500'
+                          : 'bg-[#18181B] text-zinc-500 hover:text-amber-400'
                       }`}
+                      title="Click to select • Drag row to reorder in Google Sheets"
                     >
-                      {rowNum}
+                      <div className="flex items-center justify-center gap-0.5">
+                        <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-100 text-zinc-400 transition-opacity" />
+                        <span>{rowNum}</span>
+                      </div>
                     </td>
 
                     {/* Cell A: Date */}
@@ -563,10 +664,23 @@ export function ExcelSpreadsheet({
                       {editingCell?.row === rowNum && editingCell?.col === 'A' ? (
                         <input
                           ref={editInputRef}
+                          data-cell-input="true"
                           type="text"
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
+                          onKeyDown={(ev) => {
+                            if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                              setEditingCell(null);
+                              triggerUndo();
+                            } else if (ev.key === 'Enter') {
+                              commitCellEdit();
+                            } else if (ev.key === 'Escape') {
+                              setEditingCell(null);
+                            }
+                          }}
                           className="w-full bg-black text-white font-mono text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
@@ -587,17 +701,30 @@ export function ExcelSpreadsheet({
                       {editingCell?.row === rowNum && editingCell?.col === 'B' ? (
                         <input
                           ref={editInputRef}
+                          data-cell-input="true"
                           type="text"
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
+                          onKeyDown={(ev) => {
+                            if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                              setEditingCell(null);
+                              triggerUndo();
+                            } else if (ev.key === 'Enter') {
+                              commitCellEdit();
+                            } else if (ev.key === 'Escape') {
+                              setEditingCell(null);
+                            }
+                          }}
                           className="w-full bg-black text-white text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
                         <div className="flex items-center justify-between">
                           <span>{e.description}</span>
-                          {rowNum === 239 && (
-                            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-400">
+                          {isAnchorRow && (
+                            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-400 border border-amber-500/30">
                               ANCHOR
                             </span>
                           )}
@@ -620,10 +747,23 @@ export function ExcelSpreadsheet({
                       {editingCell?.row === rowNum && editingCell?.col === 'C' ? (
                         <input
                           ref={editInputRef}
+                          data-cell-input="true"
                           type="number"
                           value={editValue}
                           onChange={(ev) => setEditValue(ev.target.value)}
                           onBlur={commitCellEdit}
+                          onKeyDown={(ev) => {
+                            if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                              setEditingCell(null);
+                              triggerUndo();
+                            } else if (ev.key === 'Enter') {
+                              commitCellEdit();
+                            } else if (ev.key === 'Escape') {
+                              setEditingCell(null);
+                            }
+                          }}
                           className="w-full bg-black text-white text-right font-serif text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
@@ -634,10 +774,17 @@ export function ExcelSpreadsheet({
                     {/* Cell D: Type */}
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'D' })}
-                      onDoubleClick={() => {
+                      onDoubleClick={async () => {
+                        const prevType = e.type;
                         const nextType: TransactionType =
                           e.type === 'DEBIT' ? 'CREDIT' : e.type === 'CREDIT' ? 'SETTLEMENT' : 'DEBIT';
-                        toggleMutation.mutate({ rowIndex: rowNum, newType: nextType });
+                        await toggleMutation.mutateAsync({ rowIndex: rowNum, newType: nextType });
+                        pushUndo({
+                          description: `Cycled Row #${rowNum} Type to ${nextType}`,
+                          undo: async () => {
+                            await toggleMutation.mutateAsync({ rowIndex: rowNum, newType: prevType });
+                          },
+                        });
                       }}
                       className={`border-r border-b border-white/[0.05] p-1.5 text-center cursor-pointer transition-all ${
                         isSelectedRow && selectedCell.col === 'D'
@@ -767,10 +914,17 @@ export function ExcelSpreadsheet({
       {/* Classic Excel Status Bar */}
       <div className="border-t border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-1.5 flex items-center justify-between text-[11px] text-zinc-400 font-mono">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-amber-400 font-medium">
-            <Check className="h-3 w-3" />
-            READY
-          </span>
+          {reorderMutation.isPending || sortExpensesMutation.isPending ? (
+            <span className="flex items-center gap-1 text-amber-400 font-medium animate-pulse">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              SYNCING SHEETS...
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-amber-400 font-medium">
+              <Check className="h-3 w-3" />
+              READY
+            </span>
+          )}
           <span className="hidden sm:inline">
             Active: <strong className="text-white">{selectedCell.col}{selectedCell.row}</strong>
           </span>
@@ -781,10 +935,13 @@ export function ExcelSpreadsheet({
 
         <div className="flex items-center gap-3">
           <span className="hidden md:inline">
-            Audit Baseline: <strong className="text-amber-400 font-mono">Row 239 (₹1,28,792)</strong>
+            Audit Baseline:{' '}
+            <strong className="text-amber-400 font-mono">
+              Row {anchorEntry?.rowIndex || 240} ({anchorEntry ? formatINR(anchorEntry.balance) : '₹1,17,021'})
+            </strong>
           </span>
           <span className="text-[10px] text-zinc-500 hidden sm:inline">
-            DoubleClick to Edit • Enter to Save • Arrows to Navigate
+            DoubleClick to Edit • Enter to Save • Drag Row to Reorder
           </span>
         </div>
       </div>

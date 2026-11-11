@@ -54,7 +54,7 @@ export function ExecutiveHero({
         <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-mono font-medium text-amber-400 border border-amber-500/20">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>Row 239 Intact</span>
+            <span>Formula Chain Verified</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-white/[0.03] px-2.5 py-1 text-[11px] font-mono font-medium text-zinc-400 border border-white/[0.06]">

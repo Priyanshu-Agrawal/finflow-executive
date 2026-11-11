@@ -47,7 +47,7 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
           </div>
           <div className="mt-2.5 sm:mt-4 flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-emerald-400">
             <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-            <span className="truncate">Row 239 Baseline Intact</span>
+            <span className="truncate">Formula Chain Verified</span>
           </div>
         </div>
 

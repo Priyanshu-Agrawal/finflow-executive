@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { LoanStatus, ExpenseEntry } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
-import { useLoanAction } from '@/hooks/useFinancials';
+import { useLoanAction, useDeleteExpense } from '@/hooks/useFinancials';
+import { useUndo } from '@/context/UndoContext';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -47,6 +48,8 @@ export function LoanActionModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loanActionMutation = useLoanAction();
+  const deleteMutation = useDeleteExpense();
+  const { pushUndo } = useUndo();
 
   const isBca = loan.id === 'bca' || loan.name.toLowerCase().includes('bca');
   const bcaNeedsReset = isBca && b2RawValue !== undefined && Math.round(b2RawValue) !== 18000;
@@ -63,6 +66,17 @@ export function LoanActionModal({
         date,
         notes: notes.trim() || undefined,
       });
+
+      if (res?.newRow) {
+        const createdRow = res.newRow;
+        pushUndo({
+          description: `Logged Payment of ₹${amount} for ${loan.name} (Row ${createdRow})`,
+          undo: async () => {
+            await deleteMutation.mutateAsync(createdRow);
+          },
+        });
+      }
+
       setSuccessMessage(res.message);
       setTimeout(() => {
         onClose();
@@ -84,6 +98,17 @@ export function LoanActionModal({
         payer: payer.trim() || 'External Person',
         notes: notes.trim() || undefined,
       });
+
+      if (res?.newRow) {
+        const createdRow = res.newRow;
+        pushUndo({
+          description: `Recorded External Payment of ₹${amount} by ${payer} for ${loan.name}`,
+          undo: async () => {
+            await deleteMutation.mutateAsync(createdRow);
+          },
+        });
+      }
+
       setSuccessMessage(res.message);
       setTimeout(() => {
         onClose();
@@ -277,7 +302,7 @@ export function LoanActionModal({
 
         {/* Mode 1: Log Payment */}
         {activeTab === 'pay' && (
-          <form onSubmit={handlePay} className="space-y-4">
+          <form onSubmit={handlePay} data-modal-form="true" className="space-y-4">
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">Personal Outlay (DEBIT)</span>
               This deducts directly from your bank balance in Column E and logs a payment row into Expenses.
@@ -337,7 +362,7 @@ export function LoanActionModal({
 
         {/* Mode 2: External Person Pays */}
         {activeTab === 'external' && (
-          <form onSubmit={handleExternalPayment} className="space-y-4">
+          <form onSubmit={handleExternalPayment} data-modal-form="true" className="space-y-4">
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">
                 Third-Party Settlement (No Bank Debit!)
@@ -475,7 +500,7 @@ export function LoanActionModal({
 
         {/* Mode 4: Settle from Existing Expense */}
         {activeTab === 'link' && (
-          <form onSubmit={handleSettleFromExpense} className="space-y-4">
+          <form onSubmit={handleSettleFromExpense} data-modal-form="true" className="space-y-4">
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">Link Existing Transaction</span>
               Link an already-logged transaction from the Expenses ledger to this liability so there is zero duplicate debit.
@@ -540,7 +565,7 @@ export function LoanActionModal({
 
         {/* Mode 5: Edit Due Amount in Sheet Directly */}
         {activeTab === 'edit' && (
-          <form onSubmit={handleUpdateBaseline} className="space-y-4">
+          <form onSubmit={handleUpdateBaseline} data-modal-form="true" className="space-y-4">
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">Direct Sheet Cell Sync</span>
               Modify the exact baseline / due balance stored in{' '}

@@ -73,15 +73,15 @@ async function runIntegrityAudit() {
   console.log(`[CHECK 4] Column E dynamic formula lineage: ${hasFormula235 ? 'PASS ✅' : 'FAIL ❌'}`);
   if (!hasFormula235) allPassed = false;
 
-  // 5. Verify November 9 liquid balance resolves to ₹1,28,792
+  // 5. Verify November 10 liquid balance resolves to ₹1,07,021 (with prepaid Bike EMI of ₹11,771 on Nov 6)
   const resBalance = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'Expenses!E239',
+    range: 'Expenses!E240',
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
   const valBalance = Math.round(Number(resBalance.data.values?.[0]?.[0]));
-  const passedBalance = valBalance === 128792;
-  console.log(`[CHECK 5] Liquid balance on 2026-11-09 (Row 239): expected 128792, got ${valBalance} -> ${passedBalance ? 'PASS ✅' : 'FAIL ❌'}`);
+  const passedBalance = valBalance === 107021;
+  console.log(`[CHECK 5] Liquid balance on 2026-11-10 (Row 240): expected 107021, got ${valBalance} -> ${passedBalance ? 'PASS ✅' : 'FAIL ❌'}`);
   if (!passedBalance) allPassed = false;
 
   console.log('-------------------------------------------');

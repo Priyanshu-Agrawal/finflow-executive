@@ -586,7 +586,7 @@ export function ModernBudgetPacing({
               <CheckCircle2 className="h-3 w-3" />
               Capital Safety Secured
             </span>
-            <span className="text-zinc-500">Row 239 Intact</span>
+            <span className="text-zinc-500">Formula Chain Verified</span>
           </div>
         </div>
       </div>

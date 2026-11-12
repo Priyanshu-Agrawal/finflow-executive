@@ -87,6 +87,12 @@ The sheet can also be edited directly in Google Sheets, and row numbers shift wh
 - **Offline (PWA), owner decision: read only.** The last snapshot is cached and readable with a clear "Offline, showing saved copy from 14:02" banner. Nothing can be changed offline (Log, edit, delete and move are disabled with the reason shown), because row numbers can't be trusted until the app has re-read the sheet.
 - Data freshness: refetch on app foreground; 30 s stale time as today.
 
+### Measured limits (12 Nov 2026, Phase 0)
+
+- **Sheets read latency** from the owner's Mac: `getExpensesFromSheet()` min 523 ms, median 542 ms, max 774 ms (314 rows, 5 reads). One `/api/financials` call takes about 1 s. A Vercel function in a nearby region should be similar or faster; to be re-measured on a preview deployment.
+- **Sheets read quota: 60 reads per minute per user.** A burst of test loads (each `/api/financials` makes several Sheets reads, and React Query retried failed calls twice) returned HTTP 429 for the whole app for about a minute. Rules for the remake: no automatic retry on a 429 (show "Sheets is busy, retrying in a moment" in the sync chip and back off 30 s), one shared financials query per screen (never one per component), refetch on focus at most once per 30 s, and background refresh only while the app is visible.
+- **Vercel function time limit:** not yet read. Owner to check Vercel, project `finflow-app`, Settings, Functions, and tell us the figure. Rule once known: any bulk write (sort, bulk move, bulk delete) that could take more than half the limit is split into steps with progress shown in the sync chip.
+
 ## 6. Undo and redo
 
 - One **history store** for the whole app, session-only (row numbers don't survive a reload). 50 entries.

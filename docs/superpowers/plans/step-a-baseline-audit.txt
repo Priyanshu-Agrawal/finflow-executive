@@ -1,0 +1,155 @@
+PASS  R7 static tokens     credit blue contrast 5.35 on #0B0B0C, 5.09 on #121214 (need 4.5)
+FAIL  R1 phone  /          no labelled "More" button for Splits and Budget
+FAIL  R2 phone  /          0 h1 elements
+PASS  R3 phone  /          
+PASS  R4 phone  /          
+FAIL  R5 phone  /          206 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 218 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | span.text-xs.font-mono.font-semibold "Sovereign Wealth Portf" ; 46 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span.font-serif.text-4xl.sm:text-5xl "₹1,14,021" | h3.text-base.font-serif.font-bold "Savings Meter"
+FAIL  R6 phone  /          3 ISO dates, e.g. span.text-amber-400.font-medium.flex "2027-08-06" | span.text-amber-400.font-medium.flex "2027-03-05" | span.text-amber-400.font-medium.flex "2026-11-16"
+FAIL  R7 phone  /          green classes: svg.lucide.lucide-arrow-up-right.h-3.5 "" | span.text-xs.font-mono.text-emerald-400 "in reserve" | span.font-mono.font-semibold.text-emerald-400 "Funded in Bank Reser" ; green text: span.text-xs.font-mono.text-emerald-400 "in reserve" | span.font-mono.font-semibold.text-emerald-400 "Funded in Bank Reserve" | span.flex.items-center.gap-1 "Capital Safety Secured" ; 10 credits not blue, e.g. span.font-mono.text-lg.sm:text-xl "+₹16,229" rgb(255,255,255)
+FAIL  R8 phone  /          page is 393px wide in 390px; wide: table.sr-only right=393 | caption right=393 | thead right=393 | tr right=393
+FAIL  R9 phone  /          22 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 3 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | button.flex.h-11.w-11
+FAIL  R10 phone  /          contains "58k" ; contains "100.7%" ; contains "August 2027" ; contains "Audit Anchor" ; "Anchor: 12 Nov 2026" but the anchor row is 2026-11-11 ; "Anchor: 12 Nov 2026" but the anchor row is 2026-11-11 ; upcoming-bills caption lacks real bills: Remaining Electricity Budget, SBI Card Payment
+FAIL  R1 phone  /budget    HTTP 404
+FAIL  R2 phone  /budget    HTTP 404
+FAIL  R3 phone  /budget    HTTP 404
+FAIL  R4 phone  /budget    HTTP 404
+FAIL  R5 phone  /budget    HTTP 404
+FAIL  R6 phone  /budget    HTTP 404
+FAIL  R7 phone  /budget    HTTP 404
+FAIL  R8 phone  /budget    HTTP 404
+FAIL  R9 phone  /budget    HTTP 404
+FAIL  R10 phone  /budget    HTTP 404
+FAIL  R1 phone  /expenses  no labelled "More" button for Splits and Budget
+FAIL  R2 phone  /expenses  first data row starts 811px down (max 300)
+FAIL  R3 phone  /expenses  table header not sticky: table.w-full.text-left.border-collapse
+FAIL  R4 phone  /expenses  no floating Today button after scrolling the anchor row out of view
+FAIL  R5 phone  /expenses  147 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 242 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | p.text-xs.font-mono.text-zinc-400 "Continuous running led" ; 82 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | td.py-2.5.px-4.text-right "+" | td.py-2.5.px-4.text-right "₹9,200"
+PASS  R6 phone  /expenses  
+FAIL  R7 phone  /expenses  green classes: td.py-2.5.px-4.text-right "+₹9,200" | button.rounded-lg.px-2.5.py-0.5 "CREDIT" | td.py-2.5.px-4.text-right "+₹25,000" ; green text: td.py-2.5.px-4.text-right "+" | td.py-2.5.px-4.text-right "₹9,200" | button.rounded-lg.px-2.5.py-0.5 "CREDIT" ; 11 credits not blue, e.g. button.px-2.5.py-1.rounded-lg "CREDIT" rgb(159,159,169)
+PASS  R8 phone  /expenses  
+FAIL  R9 phone  /expenses  27 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 181 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | button.flex.h-11.w-11
+FAIL  R10 phone  /expenses  contains "Audit Anchor"
+FAIL  R1 phone  /excel     no labelled "More" button for Splits and Budget
+FAIL  R2 phone  /excel     0 h1 elements
+PASS  R3 phone  /excel     
+FAIL  R4 phone  /excel     no [data-anchor-row] element to place at 30%
+FAIL  R5 phone  /excel     643 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 1586 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | div.flex.items-center.gap-1.5 "Matrix View" ; 316 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | div.text-amber-500.font-serif.italic "fx" | td.border-r.border-b.border-white/[0.05] "₹0"
+FAIL  R6 phone  /excel     314 ISO dates, e.g. td.border-r.border-b.border-white/[0.05] "2025-08-12" | td.border-r.border-b.border-white/[0.05] "2025-08-13" | td.border-r.border-b.border-white/[0.05] "2025-08-15"
+FAIL  R7 phone  /excel     green classes: td.border-r.border-b.border-white/[0.05] "₹1,000" | span.rounded.px-1.5.py-0.5 "CREDIT" | td.border-r.border-b.border-white/[0.05] "₹1,000" ; green text: td.border-r.border-b.border-white/[0.05] "₹1,000" | span.rounded.px-1.5.py-0.5 "CREDIT" | td.border-r.border-b.border-white/[0.05] "₹1,000" ; 62 credits not blue, e.g. span.rounded.px-1.5.py-0.5 "CREDIT" rgb(0,212,146)
+PASS  R8 phone  /excel     
+FAIL  R9 phone  /excel     15 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 3 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | button.flex.h-11.w-11
+FAIL  R10 phone  /excel     contains "Audit Anchor"
+FAIL  R1 phone  /loans     no labelled "More" button for Splits and Budget
+PASS  R2 phone  /loans     
+PASS  R3 phone  /loans     
+PASS  R4 phone  /loans     
+FAIL  R5 phone  /loans     112 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 98 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | p.text-xs.font-mono.text-zinc-400 "Multi-column debt amor" ; 29 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span "Complete Liabilities P" | span.text-base.font-serif.font-bold "Royal Enfield Meteor B"
+FAIL  R6 phone  /loans     3 ISO dates, e.g. span.text-amber-400.font-medium.flex "2027-08-06" | span.text-amber-400.font-medium.flex "2027-03-05" | span.text-amber-400.font-medium.flex "2026-11-16"
+FAIL  R7 phone  /loans     green classes: span.font-mono.text-base.font-bold "₹3,15,998" | span.font-serif.font-bold.text-emerald-400 "₹58,855" | span.font-serif.font-bold.text-emerald-400 "₹6,000" ; green text: span.font-mono.text-base.font-bold "₹3,15,998" | span.font-serif.font-bold.text-emerald-400 "₹58,855" | span.font-serif.font-bold.text-emerald-400 "₹6,000" ; 1 credits not blue, e.g. span "+₹14,771/mo Total We" rgb(255,185,0)
+PASS  R8 phone  /loans     
+FAIL  R9 phone  /loans     24 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 3 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | button.flex.h-11.w-11
+FAIL  R10 phone  /loans     contains "Audit Anchor"
+FAIL  R1 phone  /ledger    no labelled "More" button for Splits and Budget
+PASS  R2 phone  /ledger    
+FAIL  R3 phone  /ledger    table header not sticky: table.w-full.text-left.border-collapse
+PASS  R4 phone  /ledger    
+FAIL  R5 phone  /ledger    86 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 71 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | p.text-xs.font-mono.text-zinc-400 "Live split tracking am" ; 41 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span.font-serif.text-2xl.font-bold "₹24,400" | span.font-serif.text-2xl.font-bold "₹18,895"
+PASS  R6 phone  /ledger    
+PASS  R7 phone  /ledger    
+FAIL  R8 phone  /ledger    page is 407px wide in 390px; wide: div.flex.items-center.gap-1 right=407 | button.px-2.5.py-1.rounded-lg right=402
+FAIL  R9 phone  /ledger    16 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 3 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | button.flex.h-11.w-11
+FAIL  R10 phone  /ledger    contains "Audit Anchor"
+FAIL  R1 phone  /log       no labelled "More" button for Splits and Budget
+PASS  R2 phone  /log       
+PASS  R3 phone  /log       
+PASS  R4 phone  /log       
+FAIL  R5 phone  /log       28 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].font-medium "Home" | span.text-[10px].font-medium "Ledger" ; 60 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.font-mono.text-zinc-200.font-semibold "Today" | p.text-xs.font-mono.text-zinc-400 "Log ad-hoc transaction" ; 1 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow"
+PASS  R6 phone  /log       
+FAIL  R7 phone  /log       green classes: span.font-bold.text-emerald-400 "+₹83,000" ; green text: span.font-bold.text-emerald-400 "+" | span.font-bold.text-emerald-400 "₹83,000" ; 2 credits not blue, e.g. button.rounded-xl.py-2.5.text-xs "CREDIT" rgb(159,159,169)
+PASS  R8 phone  /log       
+FAIL  R9 phone  /log       27 controls under 44px: a.flex.items-center.gap-2.5 h=36 "FinFlowPORTALscrip" | button.flex.items-center.gap-1.5 h=30 "Today" | button.flex.h-8.w-8 h=32 "" | button.flex.lg:hidden.h-8 h=32 "" ; 3 unlabelled icon controls: button.flex.h-8.w-8 | button.flex.lg:hidden.h-8 | input.w-full.rounded-xl.border
+FAIL  R10 phone  /log       contains "Audit Anchor"
+FAIL  R1 laptop /          top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+FAIL  R2 laptop /          0 h1 elements
+PASS  R3 laptop /          
+PASS  R4 laptop /          
+FAIL  R5 laptop /          225 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span "Formula Chain Verified" ; 243 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 46 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span.font-serif.text-4xl.sm:text-5xl "₹1,14,021" | h3.text-base.font-serif.font-bold "Savings Meter"
+FAIL  R6 laptop /          3 ISO dates, e.g. span.text-amber-400.font-medium.flex "2027-08-06" | span.text-amber-400.font-medium.flex "2027-03-05" | span.text-amber-400.font-medium.flex "2026-11-16"
+FAIL  R7 laptop /          green classes: svg.lucide.lucide-arrow-up-right.h-3.5 "" | span.text-xs.font-mono.text-emerald-400 "in reserve" | span.font-mono.font-semibold.text-emerald-400 "Funded in Bank Reser" ; green text: span.text-xs.font-mono.text-emerald-400 "in reserve" | span.font-mono.font-semibold.text-emerald-400 "Funded in Bank Reserve" | span.flex.items-center.gap-1 "Capital Safety Secured" ; 10 credits not blue, e.g. span.font-mono.text-lg.sm:text-xl "+₹16,229" rgb(255,255,255)
+PASS  R8 laptop /          
+FAIL  R9 laptop /          2 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8
+FAIL  R10 laptop /          contains "58k" ; contains "100.7%" ; contains "August 2027" ; contains "Audit Anchor" ; "Anchor: 12 Nov 2026" but the anchor row is 2026-11-11 ; "Anchor: 12 Nov 2026" but the anchor row is 2026-11-11 ; upcoming-bills caption lacks real bills: Remaining Electricity Budget, SBI Card Payment
+FAIL  R1 laptop /budget    HTTP 404
+FAIL  R2 laptop /budget    HTTP 404
+FAIL  R3 laptop /budget    HTTP 404
+FAIL  R4 laptop /budget    HTTP 404
+FAIL  R5 laptop /budget    HTTP 404
+FAIL  R6 laptop /budget    HTTP 404
+FAIL  R7 laptop /budget    HTTP 404
+FAIL  R8 laptop /budget    HTTP 404
+FAIL  R9 laptop /budget    HTTP 404
+FAIL  R10 laptop /budget    HTTP 404
+FAIL  R1 laptop /expenses  top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+PASS  R2 laptop /expenses  
+FAIL  R3 laptop /expenses  table header not sticky: table.w-full.text-left.border-collapse
+FAIL  R4 laptop /expenses  no floating Today button after scrolling the anchor row out of view
+FAIL  R5 laptop /expenses  137 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.rounded-full.bg-amber-500/10.px-2.5 "LEDGER MASTER" ; 243 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 82 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | td.py-2.5.px-4.text-right "+" | td.py-2.5.px-4.text-right "₹9,200"
+PASS  R6 laptop /expenses  
+FAIL  R7 laptop /expenses  green classes: td.py-2.5.px-4.text-right "+₹9,200" | button.rounded-lg.px-2.5.py-0.5 "CREDIT" | td.py-2.5.px-4.text-right "+₹25,000" ; green text: td.py-2.5.px-4.text-right "+" | td.py-2.5.px-4.text-right "₹9,200" | button.rounded-lg.px-2.5.py-0.5 "CREDIT" ; 11 credits not blue, e.g. button.px-2.5.py-1.rounded-lg "CREDIT" rgb(159,159,169)
+PASS  R8 laptop /expenses  
+FAIL  R9 laptop /expenses  180 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8 | input.rounded.border-white/20.bg-[#18181B]
+FAIL  R10 laptop /expenses  contains "Audit Anchor"
+FAIL  R1 laptop /excel     top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+FAIL  R2 laptop /excel     0 h1 elements
+PASS  R3 laptop /excel     
+FAIL  R4 laptop /excel     no [data-anchor-row] element to place at 30%
+FAIL  R5 laptop /excel     650 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.text-[11px].font-mono.text-zinc-400 "Go:" ; 1599 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 316 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | div.text-amber-500.font-serif.italic "fx" | td.border-r.border-b.border-white/[0.05] "₹0"
+FAIL  R6 laptop /excel     314 ISO dates, e.g. td.border-r.border-b.border-white/[0.05] "2025-08-12" | td.border-r.border-b.border-white/[0.05] "2025-08-13" | td.border-r.border-b.border-white/[0.05] "2025-08-15"
+FAIL  R7 laptop /excel     green classes: td.border-r.border-b.border-white/[0.05] "₹1,000" | span.rounded.px-1.5.py-0.5 "CREDIT" | td.border-r.border-b.border-white/[0.05] "₹1,000" ; green text: td.border-r.border-b.border-white/[0.05] "₹1,000" | span.rounded.px-1.5.py-0.5 "CREDIT" | td.border-r.border-b.border-white/[0.05] "₹1,000" ; 62 credits not blue, e.g. span.rounded.px-1.5.py-0.5 "CREDIT" rgb(0,212,146)
+PASS  R8 laptop /excel     
+FAIL  R9 laptop /excel     2 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8
+FAIL  R10 laptop /excel     contains "Audit Anchor"
+FAIL  R1 laptop /loans     top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+PASS  R2 laptop /loans     
+PASS  R3 laptop /loans     
+PASS  R4 laptop /loans     
+FAIL  R5 laptop /loans     109 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.rounded-md.bg-amber-500/10.px-2 "UNIFIED DEBT HUB" ; 99 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 29 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span "Complete Liabilities P" | span.text-base.font-serif.font-bold "Royal Enfield Meteor B"
+FAIL  R6 laptop /loans     3 ISO dates, e.g. span.text-amber-400.font-medium.flex "2027-08-06" | span.text-amber-400.font-medium.flex "2027-03-05" | span.text-amber-400.font-medium.flex "2026-11-16"
+FAIL  R7 laptop /loans     green classes: span.font-mono.text-base.font-bold "₹3,15,998" | span.font-serif.font-bold.text-emerald-400 "₹58,855" | span.font-serif.font-bold.text-emerald-400 "₹6,000" ; green text: span.font-mono.text-base.font-bold "₹3,15,998" | span.font-serif.font-bold.text-emerald-400 "₹58,855" | span.font-serif.font-bold.text-emerald-400 "₹6,000" ; 1 credits not blue, e.g. span "+₹14,771/mo Total We" rgb(255,185,0)
+PASS  R8 laptop /loans     
+FAIL  R9 laptop /loans     2 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8
+FAIL  R10 laptop /loans     contains "Audit Anchor"
+FAIL  R1 laptop /ledger    top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+PASS  R2 laptop /ledger    
+FAIL  R3 laptop /ledger    table header not sticky: table.w-full.text-left.border-collapse
+PASS  R4 laptop /ledger    
+FAIL  R5 laptop /ledger    77 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.text-[11px].font-mono.text-zinc-500 "19" ; 72 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 41 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow" | span.font-serif.text-2xl.font-bold "₹24,400" | span.font-serif.text-2xl.font-bold "₹18,895"
+PASS  R6 laptop /ledger    
+PASS  R7 laptop /ledger    
+PASS  R8 laptop /ledger    
+FAIL  R9 laptop /ledger    2 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8
+FAIL  R10 laptop /ledger    contains "Audit Anchor"
+FAIL  R1 laptop /log       top menu is [Dashboard, Expenses, Excel Mode, Loans & Payoff, Peer Split]
+PASS  R2 laptop /log       
+PASS  R3 laptop /log       
+PASS  R4 laptop /log       
+FAIL  R5 laptop /log       25 under 12px: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | button.flex.items-center.gap-1 "Add Custom Item" ; 61 mono outside Excel grid: span.rounded.bg-amber-500/10.px-1.5 "PORTAL" | span.text-[10px].text-zinc-400.font-mono "scriptingBear • Execut" | span.font-mono.text-zinc-200.font-semibold "Today" ; 1 serif outside wordmark/hero: span.font-serif.text-base.sm:text-lg "FinFlow"
+PASS  R6 laptop /log       
+FAIL  R7 laptop /log       green classes: span.font-bold.text-emerald-400 "+₹83,000" ; green text: span.font-bold.text-emerald-400 "+" | span.font-bold.text-emerald-400 "₹83,000" ; 2 credits not blue, e.g. button.rounded-xl.py-2.5.text-xs "CREDIT" rgb(159,159,169)
+PASS  R8 laptop /log       
+FAIL  R9 laptop /log       3 unlabelled icon controls: button.flex.h-8.w-8 | button.hidden.sm:flex.h-8 | input.w-full.rounded-xl.border
+FAIL  R10 laptop /log       contains "Audit Anchor"
+
+Summary (pass/fail per rule):
+  R1   0 pass, 14 fail
+  R2   7 pass, 7 fail
+  R3   8 pass, 6 fail
+  R4   8 pass, 6 fail
+  R5   0 pass, 14 fail
+  R6   6 pass, 8 fail
+  R7   3 pass, 12 fail
+  R8   10 pass, 4 fail
+  R9   0 pass, 14 fail
+  R10  0 pass, 14 fail
+99 FAIL of 141 checks
+report: /tmp/audit.json, screenshots: /tmp/audit-shots

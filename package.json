@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "integrity": "npx tsx --env-file=.env.local src/scripts/integrity-check.ts",
     "test:sim": "npx tsx --env-file=.env.local src/scripts/simulate-write-paths.ts",
-    "test:unit": "npx tsx --env-file=.env.local --test $(find src/v2 -name '*.test.ts')"
+    "test:unit": "npx tsx --env-file=.env.local --test $(find src/v2 -name '*.test.ts')",
+    "audit:ui": "node --env-file=.env.local src/scripts/audit-ui.cjs"
   },
   "dependencies": {
     "@googleapis/sheets": "18.1.2",

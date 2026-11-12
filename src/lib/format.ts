@@ -26,6 +26,12 @@ export function formatDateShort(iso: string): string {
   return p ? `${p.d} ${MONTHS[p.m - 1]}` : iso;
 }
 
+/** `2027-08-06` becomes `Aug 2027`. */
+export function formatMonthYear(iso: string): string {
+  const p = parseIso(iso);
+  return p ? `${MONTHS[p.m - 1]} ${p.y}` : iso;
+}
+
 /** `2026-11-12` becomes `Thu 12 Nov`. */
 export function formatWeekdayDate(iso: string): string {
   const p = parseIso(iso);

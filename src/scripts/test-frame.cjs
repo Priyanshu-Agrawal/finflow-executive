@@ -12,6 +12,12 @@ const check = (ok, msg) => {
 const inr = (v) => (v < 0 ? '−' : '') + '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.abs(Math.round(v)));
 const short = (iso) => `${Number(iso.slice(8))} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(iso.slice(5, 7)) - 1]}`;
 
+const addDays = (iso, n) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d + n));
+  return t.toISOString().slice(0, 10);
+};
+
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome' });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -89,6 +95,28 @@ const short = (iso) => `${Number(iso.slice(8))} ${['Jan','Feb','Mar','Apr','May'
   const body = await page.locator('body').innerText();
   check(body.includes(inr(api.kpis.currentBalance)), `Home shows the balance from the API (${inr(api.kpis.currentBalance)})`);
   if (today === '2026-11-12' || today === '2026-11-11') check(inr(api.kpis.currentBalance) === '₹1,14,021', 'anchor balance is ₹1,14,021');
+
+  // 6b. Task 4: Home has no inner tab strip, every hero sentence comes from the data
+  const strip = await page.locator('main button').filter({ hasText: /Overview|Budget Burn|Ledger \(|Excel Mode|Loans & Payoff|Peer Split/ }).count();
+  check(strip === 0, 'Home has no inner tab strip');
+  const lower = body.toLowerCase();
+  const bills = api.expenses.filter((e) => e.type === 'DEBIT' && e.date > today && e.date <= addDays(today, 5));
+  check(bills.length > 0 && bills.every((b) => lower.includes(b.description.toLowerCase()) && body.includes(inr(b.amount))), `bills caption lists the real bills: ${bills.map((b) => b.description + ' ' + inr(b.amount)).join(', ')}`);
+  check(body.includes('By ' + short(addDays(today, 5))), `deadline reads "By ${short(addDays(today, 5))}"`);
+  const sum = bills.reduce((a, b) => a + b.amount, 0);
+  check(Math.round(sum) === api.kpis.upcomingBills, `bills caption adds up to the KPI (${inr(sum)} = ${inr(api.kpis.upcomingBills)})`);
+  check(body.includes(inr(api.kpis.postNovBalance)) && body.includes(inr(api.kpis.projectedEndBalance)), 'cushion and projected end equal the API');
+  const open = api.loans.filter((l) => !l.isPaidOff && l.targetPayoffDate);
+  const emi = Math.round(open.reduce((a, l) => a + (l.monthlyEmi || 0), 0));
+  check(open.length === 0 || body.includes('freeing ' + inr(emi) + ' a month'), `debt-free line shows the EMIs freed (${inr(emi)})`);
+  check(!/58k|100\.7%|August 2027/.test(body), 'no hard-coded hero text left');
+  for (const href of ['/budget', '/loans']) check((await page.locator(`main a[href="${href}"]`).count()) > 0, `Home links to ${href}`);
+
+  // 6c. Budget is its own page and shows the real safe daily spend
+  await page.goto(`${BASE}/budget`);
+  await ready();
+  check((await page.getByRole('heading', { level: 1 }).first().innerText()).trim() === 'Budget', 'Budget page has its own title');
+  check((await page.locator('body').innerText()).includes(inr(api.budgetPacing.safeTotalDailyBurn)), `Budget shows the safe daily spend (${inr(api.budgetPacing.safeTotalDailyBurn)})`);
 
   // 7. a saved budget setting is used from the first request (no duplicate request with defaults)
   const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await ctx.storageState() });

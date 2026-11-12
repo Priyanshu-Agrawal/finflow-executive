@@ -67,9 +67,6 @@ export function ModernBudgetPacing({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.06]">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs tabular-nums font-bold text-amber-400 border border-amber-500/20">
-              Budget
-            </span>
             <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-xs tabular-nums font-medium text-zinc-300 border border-white/[0.06]">
               Cycle: {pacing.cycleLabel || `${pacing.budgetRecurringDay}th reset`}
             </span>
@@ -79,7 +76,7 @@ export function ModernBudgetPacing({
           </div>
           <h2 className="text-lg tabular-nums font-bold text-white tracking-tight mt-1.5 flex items-center gap-2">
             <Gauge className="h-4 w-4 text-amber-400" />
-            <span>Configurable Budget & Cycle Pacing</span>
+            <span>Budget this cycle</span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
             Budget recurring on <strong className="text-zinc-200">{pacing.budgetRecurringDay}th</strong> • Rent recurring on <strong className="text-zinc-200">{pacing.rentRecurringDay}th</strong> • Remaining electricity balance factor.

@@ -1,8 +1,9 @@
 import { chromium } from 'playwright';
 
+// Run: npx tsx --env-file=.env.local src/scripts/test-lan-mobile-login.ts
 async function main() {
   console.log('--- TESTING LAN IP MOBILE AUTHENTICATION ---');
-  const targetUrl = 'http://10.95.71.75:3000';
+  const targetUrl = (process.env.BASE || 'http://10.95.71.75:3000').replace(/\/$/, ''); // BASE=http://localhost:3007 to test a build on another port
 
   const browser = await chromium.launch({
     headless: true,
@@ -26,8 +27,8 @@ async function main() {
   // Verify username and password
   const usernameInput = page.locator('input[name="username"]');
   const passwordInput = page.locator('input[name="password"]');
-  await usernameInput.fill('scriptingBear');
-  await passwordInput.fill('FinFlow@2026!');
+  await usernameInput.fill(process.env.AUTH_USERNAME ?? '');
+  await passwordInput.fill(process.env.AUTH_PASSWORD ?? '');
 
   console.log('Submitting credentials over LAN HTTP...');
   await page.click('button[type="submit"]');
@@ -35,7 +36,7 @@ async function main() {
   // Verify that it redirects to dashboard without getting stuck on "Verifying Session..."
   console.log('Waiting for navigation to dashboard...');
   await page.waitForURL(`${targetUrl}/`, { timeout: 10000 });
-  await page.waitForSelector('text=Current Liquid Operating Balance', { timeout: 15000 });
+  await page.waitForSelector('text=Balance now', { timeout: 15000 });
   console.log('SUCCESS! Navigated to dashboard on LAN IP mobile device!');
 
   // Check the stored cookies
@@ -56,7 +57,7 @@ async function main() {
   // Refresh page on LAN mobile to ensure session persists cleanly
   console.log('Testing session persistence across page reload...');
   await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForSelector('text=Current Liquid Operating Balance', { timeout: 10000 });
+  await page.waitForSelector('text=Balance now', { timeout: 10000 });
   console.log('Session successfully persisted on mobile device over LAN IP!');
 
   await browser.close();

@@ -1,82 +1,66 @@
+// Run: npx tsx --env-file=.env.local src/scripts/test-executive-experience.ts
+// Optional: BASE=http://localhost:3007 (a test build on another port), SHOT_DIR=<folder for the screenshot>.
+// Reads only: every write request is blocked. Needs AUTH_USERNAME and AUTH_PASSWORD (from .env.local).
 import { chromium } from 'playwright';
+import path from 'path';
+
+const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/$/, '');
+const SHOT_DIR = process.env.SHOT_DIR || process.cwd();
 
 async function testFullExperience() {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-  });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await context.route(/\/api\/(expenses|ledger|loans)/, (route) =>
+    route.request().method() === 'GET' ? route.continue() : route.fulfill({ status: 200, json: { ok: true } })
+  );
   const page = await context.newPage();
 
-  console.log('1. Navigating to http://localhost:3000 (should redirect to /login)...');
-  await page.goto('http://localhost:3000');
+  console.log(`1. Opening ${BASE} (should redirect to /login)...`);
+  await page.goto(BASE);
   await page.waitForURL('**/login**');
-  console.log('Redirected to:', page.url());
 
-  // Fill login with username & password
-  console.log('2. Logging into FinFlow Executive with username & password...');
-  await page.fill('input[name="username"]', 'scriptingBear');
-  await page.fill('input[name="password"]', 'FinFlow@2026!');
+  console.log('2. Signing in...');
+  await page.fill('input[name="username"]', process.env.AUTH_USERNAME ?? '');
+  await page.fill('input[name="password"]', process.env.AUTH_PASSWORD ?? '');
   await page.click('button[type="submit"]');
+  await page.waitForURL(`${BASE}/`);
+  await page.waitForSelector('text=Balance now');
+  console.log('Home loaded, balance card present.');
 
-  await page.waitForURL('http://localhost:3000/');
-  console.log('Successfully logged in! Landed on:', page.url());
+  // Home has one navigation (the top menu), no inner tab strip.
+  const nav = await page.$$eval('header nav a', (links) => links.map((l) => l.textContent?.trim()));
+  console.log('Top menu:', nav.join(', '));
+  if (nav.join(',') !== 'Home,Ledger,Excel,Loans,Splits,Budget') throw new Error('Unexpected navigation labels');
 
-  // Wait for financials to load
-  await page.waitForSelector('text=Current Liquid Operating Balance');
-  console.log('Executive Hero balance loaded!');
-
-  // Check tabs
-  const tabTexts = await page.$$eval('div.no-scrollbar button', (buttons) =>
-    buttons.map((b) => b.textContent?.trim())
-  );
-  console.log('Active switcher tabs:', tabTexts);
-  const hasMeteorTab = tabTexts.some((t) => t?.toLowerCase().includes('meteor'));
-  console.log('Has Meteor tab?', hasMeteorTab, '(Expected false)');
-
-  // 3. Test Loans Tab
-  console.log('3. Navigating to Loans & Payoff tab...');
-  const loansTabBtn = page.getByRole('button', { name: /Loans & Payoff/i });
-  await loansTabBtn.click();
+  console.log('3. Loans...');
+  await page.locator('header nav').getByRole('link', { name: 'Loans', exact: true }).click();
+  await page.waitForURL(`${BASE}/loans`);
   await page.waitForSelector('text=Complete Liabilities Portfolio');
 
-  // Verify SBI Credit Card is visible and clickable
-  console.log('Checking all loans are clickable...');
-  const sbiCard = page.locator('text=Credit Card SBI').first();
-  await sbiCard.click();
-
-  // Wait for Loan Action Modal
-  await page.waitForSelector('text=Credit Card SBI');
+  console.log('Checking a loan opens its action sheet...');
+  await page.locator('text=Credit Card SBI').first().click();
   await page.waitForSelector('text=External');
-  console.log('Loan Action Modal opened successfully!');
-
-  // Click on "External" tab
-  const externalTabBtn = page.getByRole('button', { name: 'External', exact: true });
-  await externalTabBtn.click();
+  await page.getByRole('button', { name: 'External', exact: true }).click();
   await page.waitForSelector('text=Third-Party Settlement (No Bank Debit!)');
-  console.log('External Person Pays tab is active! Khushboo/Bhaiya options present.');
-
-  // Close modal
+  console.log('External Person Pays tab is present.');
   await page.click('button:has(svg.lucide-x)');
 
-  // 4. Test Expenses Ledger Tab
-  console.log('4. Navigating to Ledger tab...');
-  const ledgerTabBtn = page.getByRole('button', { name: /Ledger \(314\+\)/i });
-  await ledgerTabBtn.click();
-  await page.waitForSelector('text=Transactions & Formula Lineage Ledger');
+  console.log('4. Ledger...');
+  await page.locator('header nav').getByRole('link', { name: 'Ledger', exact: true }).click();
+  await page.waitForURL(`${BASE}/expenses`);
+  await page.getByRole('heading', { level: 1, name: 'Ledger' }).waitFor();
+  const banner = await page.locator('text=earlier transactions before').first().textContent().catch(() => null);
+  console.log('Earlier-transactions banner:', banner ? 'present' : 'none');
+  const badge = await page.locator('[data-anchor-row] >> text=Today').first().textContent().catch(() => null);
+  console.log('Today badge on the anchor row?', badge ? 'yes' : 'no');
+  if (!badge) throw new Error('No Today badge on the anchor row');
 
-  // Check Rolling Focus controls
-  const rollingBannerText = await page.locator('text=earlier transactions before').textContent().catch(() => null);
-  console.log('Rolling focus earlier banner:', rollingBannerText ? 'Present' : 'None');
-
-  const anchorBadge = await page.locator('text=ANCHOR').first().textContent().catch(() => null);
-  console.log('Today Anchor badge visible on nearest transaction?', anchorBadge ? 'Yes' : 'No');
-
-  // Take screenshot
-  await page.screenshot({ path: 'finflow-executive-verified.png', fullPage: false });
-  console.log('Captured verification screenshot: finflow-executive-verified.png');
+  const shot = path.join(SHOT_DIR, 'finflow-executive-verified.png');
+  await page.screenshot({ path: shot, fullPage: false });
+  console.log('Screenshot:', shot);
 
   await browser.close();
-  console.log('\nALL PLAYWRIGHT TESTS PASSED! ✅');
+  console.log('\nALL PLAYWRIGHT TESTS PASSED');
 }
 
 testFullExperience().catch((err) => {

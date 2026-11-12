@@ -42,7 +42,9 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const [referenceDate, setReferenceDate] = useState(todayIso);
   const [config, setConfig] = useState<CycleConfig>(readConfig);
   const configRef = useRef(config);
-  configRef.current = config;
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
   const [logOpen, setLogOpen] = useState(false);
   const [emiOpen, setEmiOpen] = useState(false);
 

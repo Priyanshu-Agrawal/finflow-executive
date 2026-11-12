@@ -33,7 +33,6 @@ import {
   RotateCcw,
   Search,
   Table,
-  TableProperties,
   X,
 } from 'lucide-react';
 

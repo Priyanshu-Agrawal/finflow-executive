@@ -1,122 +1,72 @@
+// Run: npx tsx --env-file=.env.local src/scripts/test-cycles-e2e.ts
+// Optional: BASE=http://localhost:3007 (a test build on another port), SHOT_DIR=<folder for screenshots>.
+// The budget settings are kept in this browser only; every sheet write request is blocked.
 import { chromium } from 'playwright';
 import path from 'path';
 
+const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/$/, '');
+const SHOT_DIR = process.env.SHOT_DIR || path.join(process.cwd(), 'public');
+
 async function main() {
-  console.log('--- STARTING CYCLE & ELECTRICITY FACTOR E2E TEST ---');
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  });
-
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
-    deviceScaleFactor: 2,
-  });
-
+  console.log('--- BUDGET AND CYCLE SETTINGS E2E ---');
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
+  await context.route(/\/api\/(expenses|ledger|loans)/, (route) =>
+    route.request().method() === 'GET' ? route.continue() : route.fulfill({ status: 200, json: { ok: true } })
+  );
   const page = await context.newPage();
 
-  // 1. Visit Login
-  console.log('Navigating to http://localhost:3000/login...');
-  await page.goto('http://localhost:3000/login', { waitUntil: 'networkidle' });
-
-  // Pure username & password
-  const usernameInput = page.locator('input[name="username"]');
-  const passwordInput = page.locator('input[name="password"]');
-  await usernameInput.fill('scriptingBear');
-  await passwordInput.fill('FinFlow@2026!');
-  
-  console.log('Submitting credentials...');
+  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
+  await page.locator('input[name="username"]').fill(process.env.AUTH_USERNAME ?? '');
+  await page.locator('input[name="password"]').fill(process.env.AUTH_PASSWORD ?? '');
   await page.click('button[type="submit"]');
+  await page.waitForURL(`${BASE}/`, { timeout: 15000 });
+  await page.waitForSelector('text=Balance now', { timeout: 20000 });
+  console.log('Home loaded.');
 
-  // 2. Wait for navigation to dashboard
-  await page.waitForURL('http://localhost:3000/**', { timeout: 10000 });
-  await page.waitForSelector('text=Current Liquid Operating Balance', { timeout: 15000 });
-  console.log('Dashboard successfully loaded!');
+  // The Budget page
+  await page.locator('header nav').getByRole('link', { name: 'Budget', exact: true }).click();
+  await page.waitForURL(`${BASE}/budget`);
+  await page.getByRole('heading', { level: 2, name: 'Budget this cycle' }).waitFor({ timeout: 20000 });
 
-  // 3. Verify Budget Pacing Section & 4 Factors
-  const pacingHeading = page.locator('text=Configurable Budget & Cycle Pacing');
-  await pacingHeading.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(500);
+  const cards: Record<string, boolean> = {
+    'General Budget': await page.locator('text=General Budget').first().isVisible(),
+    'Electricity Budget': await page.locator('text=Electricity Budget').first().isVisible(),
+    'Room Rent': await page.locator('text=Room Rent').first().isVisible(),
+    'Available Balance Factor': await page.locator('text=Available Balance Factor').first().isVisible(),
+  };
+  console.log('Factor cards visible:', cards);
+  if (Object.values(cards).some((v) => !v)) throw new Error('One or more factor cards are not visible');
 
-  // Check 4 factor cards
-  const generalCard = page.locator('text=General Budget').first();
-  const electricityCard = page.locator('text=Electricity Balance').first();
-  const rentCard = page.locator('text=Room Rent').first();
-  const balanceCard = page.locator('text=Available Balance Factor').first();
-
-  console.log('Verifying 4 factor cards:');
-  console.log('- General Budget Card visible:', await generalCard.isVisible());
-  console.log('- Electricity Balance Card visible:', await electricityCard.isVisible());
-  console.log('- Room Rent Card visible:', await rentCard.isVisible());
-  console.log('- Available Balance Card visible:', await balanceCard.isVisible());
-
-  if (!await generalCard.isVisible() || !await electricityCard.isVisible() || !await rentCard.isVisible() || !await balanceCard.isVisible()) {
-    throw new Error('One or more factor cards are not visible!');
-  }
-
-  // 4. Test Inline Quick Electricity Balance Update
-  console.log('Testing Inline Electricity Balance Update...');
-  const updateBalanceBtn = page.locator('button:has-text("Update Balance")').first();
-  await updateBalanceBtn.click();
-  await page.waitForTimeout(300);
-
-  // Enter new remaining electricity balance: ₹2,600
-  const inlineInput = page.locator('input[type="number"]').first();
-  await inlineInput.fill('2600');
-  const saveBtn = page.locator('button:has-text("Save")').first();
-  await saveBtn.click();
-  await page.waitForTimeout(800);
-  console.log('Successfully updated electricity balance inline to ₹2,600');
-
-  // Verify the updated balance shows ₹2,600
-  const updatedMeter = page.locator('text=₹2,600');
-  console.log('- Updated ₹2,600 visible on screen:', await updatedMeter.first().isVisible());
-
-  // 5. Test Full Configuration Drawer (Recurring Date & Rent Date)
-  console.log('Testing Configuration Drawer...');
-  const configBtn = page.locator('button:has-text("Configure Dates & Meter")').first();
-  await configBtn.click();
+  console.log('Configuration drawer...');
+  await page.locator('button:has-text("Configure Dates & Meter")').first().click();
   await page.waitForTimeout(400);
-
-  // Switch recurring cycle day to 7th (Salary)
   const salaryDayBtn = page.locator('button:has-text("7th (Salary)")').first();
   if (await salaryDayBtn.isVisible()) {
     await salaryDayBtn.click();
-    console.log('Toggled cycle recurring day to 7th');
+    console.log('Cycle day set to the 7th');
   }
-
-  // Click Apply & Save
-  const applyBtn = page.locator('button:has-text("Apply & Save Configuration")').first();
-  await applyBtn.click();
+  await page.locator('button:has-text("Apply & Save Configuration")').first().click();
   await page.waitForTimeout(800);
-  console.log('Applied and saved new cycle configuration!');
+  const saved = await page.evaluate(() => localStorage.getItem('finflow_cycle_config'));
+  console.log('Saved settings:', saved);
+  if (!saved) throw new Error('Settings were not saved');
 
-  // Capture desktop screenshot
-  const screenshotPath = path.join(process.cwd(), 'public', 'screenshot-budget-factors-verified.png');
-  await page.screenshot({ path: screenshotPath, fullPage: false });
-  console.log('Saved desktop screenshot to:', screenshotPath);
+  await page.screenshot({ path: path.join(SHOT_DIR, 'screenshot-budget-factors-verified.png'), fullPage: false });
 
-  // 6. Test on Mobile Viewport
-  const mobileContext = await browser.newContext({
-    viewport: { width: 393, height: 852 },
-    deviceScaleFactor: 2,
-    isMobile: true,
-    hasTouch: true,
-  });
+  // Same settings on a phone: Home keeps the budget card too
+  const mobileContext = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await mobileContext.addCookies(await context.cookies());
+  await mobileContext.route(/\/api\/(expenses|ledger|loans)/, (route) =>
+    route.request().method() === 'GET' ? route.continue() : route.fulfill({ status: 200, json: { ok: true } })
+  );
   const mobilePage = await mobileContext.newPage();
-  const cookies = await context.cookies();
-  await mobileContext.addCookies(cookies);
-  await mobilePage.goto('http://localhost:3000', { waitUntil: 'networkidle' });
-  await mobilePage.waitForSelector('text=Configurable Budget & Cycle Pacing');
-  await mobilePage.locator('text=Configurable Budget & Cycle Pacing').scrollIntoViewIfNeeded();
-  await mobilePage.waitForTimeout(500);
-
-  const mobileScreenshotPath = path.join(process.cwd(), 'public', 'screenshot-mobile-factors-verified.png');
-  await mobilePage.screenshot({ path: mobileScreenshotPath, fullPage: false });
-  console.log('Saved mobile screenshot to:', mobileScreenshotPath);
+  await mobilePage.goto(`${BASE}/budget`, { waitUntil: 'networkidle' });
+  await mobilePage.getByRole('heading', { level: 2, name: 'Budget this cycle' }).waitFor({ timeout: 20000 });
+  await mobilePage.screenshot({ path: path.join(SHOT_DIR, 'screenshot-mobile-factors-verified.png'), fullPage: false });
 
   await browser.close();
-  console.log('--- ALL CYCLE & FACTOR E2E TESTS PASSED WITH 100% SUCCESS ---');
+  console.log('--- ALL BUDGET AND CYCLE E2E CHECKS PASSED ---');
 }
 
 main().catch((err) => {

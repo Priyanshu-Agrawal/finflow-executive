@@ -242,7 +242,7 @@ export default function DashboardPage() {
                 />
 
                 {/* Milestone Roadmap */}
-                <MilestoneTimeline />
+                <MilestoneTimeline loans={data.loans} />
               </div>
             )}
 
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                   recentExpenses={data.expenses}
                   b2RawValue={data.bcaCycle?.b2Value}
                 />
-                <MilestoneTimeline />
+                <MilestoneTimeline loans={data.loans} />
                 <LoanSimulator />
               </div>
             )}

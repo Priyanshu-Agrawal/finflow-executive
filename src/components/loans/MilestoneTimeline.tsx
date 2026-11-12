@@ -2,31 +2,42 @@
 
 import React from 'react';
 import { Flag, Sparkles, Zap } from 'lucide-react';
+import { LoanStatus } from '@/lib/types';
+import { formatDisplayDate } from '@/lib/date-utils';
 
-export function MilestoneTimeline() {
+const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
+const monthYear = (d?: string) => (d ? formatDisplayDate(d).split(' ').slice(1).join(' ') : 'TBD');
+
+export function MilestoneTimeline({ loans = [] }: { loans?: LoanStatus[] }) {
+  const bca = loans.find((l) => l.id === 'bca');
+  const bike = loans.find((l) => l.id === 'bike');
+  const active = loans.filter((l) => !l.isPaidOff);
+  const lastPayoff = active.map((l) => l.targetPayoffDate || '').sort().pop();
+  const freed = active.reduce((sum, l) => sum + (l.monthlyEmi || 0), 0);
+
   const milestones = [
     {
       id: 'm1',
-      date: '5 March 2027',
+      date: bca?.targetPayoffDate ? formatDisplayDate(bca.targetPayoffDate) : 'TBD',
       title: 'BCA Education Loan Cleared',
-      description: 'Final installment of ₹3,000 cleared in the 6-month cycle.',
-      impact: 'Frees +₹3,000/mo cash flow',
+      description: bca ? `${inr(bca.currentDue)} left at ${inr(bca.monthlyEmi || 0)}/mo.` : 'Loan data unavailable.',
+      impact: `Frees +${inr(bca?.monthlyEmi || 0)}/mo cash flow`,
       status: 'pending',
     },
     {
       id: 'm2',
-      date: '2 August 2027',
+      date: bike?.targetPayoffDate ? formatDisplayDate(bike.targetPayoffDate) : 'TBD',
       title: 'Royal Enfield Meteor Cleared',
-      description: 'Principal amortizes to ₹0 after 13+ monthly ₹11,771 payments.',
-      impact: 'Frees +₹11,771/mo cash flow',
+      description: bike ? `${inr(bike.currentDue)} left at ${inr(bike.monthlyEmi || 0)}/mo.` : 'Loan data unavailable.',
+      impact: `Frees +${inr(bike?.monthlyEmi || 0)}/mo cash flow`,
       status: 'pending',
     },
     {
       id: 'm3',
-      date: 'August 2027+',
+      date: `${monthYear(lastPayoff)}+`,
       title: '100% Total Debt-Free Status',
-      description: 'All 7 historical liabilities transitioned to zero balance.',
-      impact: '+₹14,771/mo Total Wealth Capacity',
+      description: `All ${loans.length || 7} tracked liabilities at zero balance.`,
+      impact: `+${inr(freed)}/mo Total Wealth Capacity`,
       status: 'ultimate',
     },
   ];
@@ -45,7 +56,7 @@ export function MilestoneTimeline() {
         </div>
         <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-mono font-semibold text-amber-400 border border-amber-500/20 flex items-center gap-1.5 self-start sm:self-auto">
           <Sparkles className="h-3.5 w-3.5" />
-          Zero Debt by August 2027
+          Zero Debt by {monthYear(lastPayoff)}
         </span>
       </div>
 

@@ -70,7 +70,7 @@ export default function LoansPage() {
             />
 
             {/* Milestone Timeline */}
-            <MilestoneTimeline />
+            <MilestoneTimeline loans={data.loans} />
 
             {/* Interactive Loan & Interest Simulator */}
             <LoanSimulator />

@@ -178,18 +178,92 @@ export function computeBcaCycle(b2RawValue: number, expenses: ExpenseEntry[], re
   };
 }
 
-export function computeLoanPortfolio(loanRows: RawLoanRow[], b2RawValue: number, refDate: string = '2026-11-10'): LoanStatus[] {
-  // 1. BCA Loan (Oct 2026 - Mar 2027)
-  const bcaBaseline = 18000;
-  const bcaPaid = 6000; // 2 of 6 paid as of Nov 10, 2026
-  const bcaCurrent = bcaBaseline - bcaPaid;
+/** Bike loan principal: the Loans tab sets column C to this on the "Bike DP" row. */
+export const BIKE_LOAN_PRINCIPAL = 153022;
+/** Active BCA cycle: 6 × ₹3,000 from Oct 2026 (Loans!B2 baseline). */
+export const BCA_CYCLE_TOTAL = 18000;
+export const BCA_CYCLE_START = '2026-10-01';
 
-  // 2. Bike loan (Royal Enfield Meteor Loan)
-  // Initial: 153022. With Dec 2026 EMI (₹11,770.92) prepaid on Nov 06,
-  // 5 of 13 installments completed (₹58,855 paid), 8 remaining (₹94,167 due).
-  const bikeInitial = 153022;
-  const bikeCurrent = 94167;
+export interface EmiTrack {
+  principal: number;
+  paid: number;            // cash actually paid (DEBIT rows) up to refDate
+  due: number;             // principal - paid, never below 0
+  emi: number;             // latest EMI amount in the sheet
+  paidCount: number;
+  remainingCount: number;  // scheduled DEBIT rows after refDate
+  payoffDate?: string;     // date the scheduled DEBITs reach the principal
+  lastScheduledDate?: string;
+  unscheduled: number;     // principal not covered by any scheduled DEBIT row
+}
+
+/**
+ * Tracks a loan from its EMI rows in Expenses (description exactly `label`, as the
+ * Loans tab formulas match it), whatever the row order. Only DEBIT rows count as paid:
+ * a SETTLEMENT row (e.g. an EMI prepaid earlier) moves no money.
+ */
+export function trackEmiLoan(
+  expenses: ExpenseEntry[],
+  label: string,
+  principal: number,
+  refDate: string,
+  fromDate: string = '0000-00-00'
+): EmiTrack {
+  const want = label.trim().toLowerCase();
+  const rows = expenses
+    .filter(e => e.description.trim().toLowerCase() === want && e.type === 'DEBIT' && e.amount > 0 && e.date >= fromDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  let paid = 0;
+  let paidCount = 0;
+  let cumulative = 0;
+  let payoffDate: string | undefined;
+  for (const r of rows) {
+    cumulative += r.amount;
+    if (isBeforeOrEqual(r.date, refDate)) {
+      paid += r.amount;
+      paidCount++;
+    }
+    if (!payoffDate && cumulative >= principal - 1) payoffDate = r.date;
+  }
+
+  const due = Math.max(0, principal - paid);
+  return {
+    principal,
+    paid,
+    due: due < 1 ? 0 : due,
+    emi: rows.length ? rows[rows.length - 1].amount : 0,
+    paidCount,
+    remainingCount: rows.length - paidCount,
+    payoffDate,
+    lastScheduledDate: rows.length ? rows[rows.length - 1].date : undefined,
+    unscheduled: Math.max(0, Math.round(principal - cumulative)),
+  };
+}
+
+export function computeLoanPortfolio(
+  loanRows: RawLoanRow[],
+  b2RawValue: number,
+  refDate: string = '2026-11-10',
+  expenses: ExpenseEntry[] = []
+): LoanStatus[] {
+  // 1. BCA Loan (active cycle from Oct 2026), from the "BCA EMI" rows in Expenses
+  const bca = trackEmiLoan(expenses, 'BCA EMI', BCA_CYCLE_TOTAL, refDate, BCA_CYCLE_START);
+  const bcaBaseline = BCA_CYCLE_TOTAL;
+  const bcaCurrent = Math.round(bca.due);
+  const bcaPaid = bcaBaseline - bcaCurrent;
+
+  // 2. Bike loan (Royal Enfield Meteor), from the "Bike EMI" rows in Expenses
+  const bike = trackEmiLoan(expenses, 'Bike EMI', BIKE_LOAN_PRINCIPAL, refDate);
+  const bikeInitial = BIKE_LOAN_PRINCIPAL;
+  const bikeCurrent = Math.round(bike.due);
   const bikePaid = bikeInitial - bikeCurrent;
+  const bikeEmi = Math.round(bike.emi * 100) / 100;
+  const bikePayoff = bike.payoffDate ?? bike.lastScheduledDate;
+  const bikeNotes =
+    `Amortizes at ₹${bikeEmi.toLocaleString('en-IN')}/mo. ${bike.paidCount} EMIs paid, ${bike.remainingCount} scheduled in the sheet.` +
+    (bike.unscheduled > 0
+      ? ` ₹${bike.unscheduled.toLocaleString('en-IN')} is not covered by any scheduled EMI row after ${bike.lastScheduledDate}.`
+      : '');
 
   return [
     {
@@ -201,10 +275,10 @@ export function computeLoanPortfolio(loanRows: RawLoanRow[], b2RawValue: number,
       currentDue: bikeCurrent,
       paidToDate: bikePaid,
       progressPercent: Math.round((bikePaid / bikeInitial) * 100),
-      isPaidOff: false,
-      monthlyEmi: 11770.92,
-      targetPayoffDate: '2027-07-02',
-      notes: 'Amortizes at ₹11,770.92/mo. Dec 2026 EMI prepaid early. Debt-free milestone accelerated to Jul 2027.',
+      isPaidOff: bikeCurrent === 0,
+      monthlyEmi: bikeEmi,
+      targetPayoffDate: bikePayoff,
+      notes: bikeNotes,
     },
     {
       id: 'bca',
@@ -215,10 +289,10 @@ export function computeLoanPortfolio(loanRows: RawLoanRow[], b2RawValue: number,
       currentDue: bcaCurrent,
       paidToDate: bcaPaid,
       progressPercent: Math.round((bcaPaid / bcaBaseline) * 100),
-      isPaidOff: false,
-      monthlyEmi: 3000,
-      targetPayoffDate: '2027-03-05',
-      notes: '6 monthly EMIs of ₹3,000. 2 paid, 4 remaining.',
+      isPaidOff: bcaCurrent === 0,
+      monthlyEmi: Math.round(bca.emi),
+      targetPayoffDate: bca.payoffDate ?? bca.lastScheduledDate,
+      notes: `${bca.paidCount + bca.remainingCount} monthly EMIs of ₹${Math.round(bca.emi).toLocaleString('en-IN')}. ${bca.paidCount} paid, ${bca.remainingCount} remaining.`,
     },
     {
       id: 'sbi-cc',

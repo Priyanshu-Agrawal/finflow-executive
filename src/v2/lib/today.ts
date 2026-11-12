@@ -5,7 +5,7 @@ import { isGeneralExpense } from '../../lib/computations';
 import { formatINR } from '../../lib/date-utils';
 
 /** Rows the sheet keeps as budget placeholders; shown as "set aside", never as bills. */
-const SET_ASIDE_RE = /remaining .*budget|total general/i;
+export const SET_ASIDE_RE = /remaining .*budget|total general/i;
 
 export function generalSpentOn(rows: ExpenseEntry[], date: string): number {
   return rows

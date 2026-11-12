@@ -1,0 +1,41 @@
+/* Today screen. Colours only through the tokens in tokens.css. */
+.v2 .t-head { display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+.v2 .t-head b { font-size: 15px; font-weight: 650; }
+.v2 .t-hero { padding: 24px 4px 4px; }
+.v2 .t-lead { font-size: 17px; line-height: 24px; font-weight: 400; color: var(--ink2); }
+.v2 .t-big { font-size: 84px; line-height: 84px; margin-top: 2px; }
+.v2 .t-sub { margin-top: 6px; font-size: 17px; line-height: 24px; color: var(--ink2); }
+.v2 .t-meter { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.v2 .t-track { height: 10px; border-radius: 5px; background: var(--sunk); overflow: hidden; }
+.v2 .t-fill { height: 100%; background: var(--ink); }
+.v2 .t-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.v2 .t-note { margin-top: 14px; padding: 12px 14px; border-radius: 14px; font-size: 14px; line-height: 20px; background: var(--sunk); color: var(--ink2); }
+.v2 .t-note[data-kind="over"] { background: var(--orange-soft); color: var(--orange); }
+.v2 .t-chip { margin-top: 12px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.v2 .t-hard { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--ink2); }
+.v2 .t-hard strong { color: var(--ink); }
+.v2 .t-card { margin-top: 12px; padding: 18px 16px; background: var(--surface); border-radius: 24px; }
+.v2 .t-card h2 { font-size: 17px; font-weight: 650; }
+.v2 .t-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.v2 .t-figure { font-size: 24px; line-height: 30px; }
+.v2 .t-blue { color: var(--blue); }
+.v2 .t-orange { color: var(--orange); }
+.v2 .t-chart { display: block; width: 100%; height: auto; margin-top: 12px; overflow: visible; }
+.v2 .t-sec { margin: 18px 0 6px; font-size: 15px; font-weight: 650; }
+.v2 .t-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.v2 .t-day { width: 44px; flex: none; text-align: center; display: flex; flex-direction: column; }
+.v2 .t-day b { font-size: 18px; line-height: 20px; font-weight: 700; }
+.v2 .t-day span { font-size: 11px; line-height: 14px; color: var(--ink2); }
+.v2 .t-grow { flex: 1; min-width: 0; font-size: 15px; }
+.v2 .t-amt { font-size: 15px; font-weight: 650; }
+.v2 .t-bars { position: relative; display: flex; gap: 6px; height: 96px; margin-top: 12px; }
+.v2 .t-bars::before { content: ""; position: absolute; left: 0; right: 0; top: 48px; height: 1px; background: var(--line); }
+.v2 .t-barcol { flex: 1; position: relative; }
+.v2 .t-bar { position: absolute; left: 0; right: 0; border-radius: 4px; }
+.v2 .t-bar[data-sign="saved"] { bottom: 48px; background: var(--blue); }
+.v2 .t-bar[data-sign="over"] { top: 48px; background: var(--orange); }
+.v2 .t-bar[data-kind="projected"] { opacity: 0.4; }
+.v2 .t-bar[data-kind="current"] { outline: 2px solid var(--ink); outline-offset: 2px; }
+.v2 .t-empty { padding: 8px 0 12px; font-size: 14px; line-height: 20px; color: var(--ink2); }
+.v2 .t-err { padding: 24px 4px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.v2 .t-btn { min-height: 44px; padding: 0 16px; border-radius: 14px; border: 0; background: var(--btn); color: var(--btn-ink); font: inherit; font-weight: 650; }

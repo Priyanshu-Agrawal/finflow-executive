@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Mona_Sans } from 'next/font/google';
 import '@/v2/styles/tokens.css';
+import '@/v2/styles/today.css';
 import { V2Providers } from '@/v2/V2Providers';
 import { AppShell } from '@/v2/shell/AppShell';
 import { RegisterSW } from '@/v2/pwa/RegisterSW';

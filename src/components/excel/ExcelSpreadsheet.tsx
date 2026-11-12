@@ -433,7 +433,7 @@ export function ExcelSpreadsheet({
   }, [currentExpenseRow, selectedCell]);
 
   return (
-    <div className="relative flex flex-col h-[calc(100vh-8.5rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
+    <div className="relative flex flex-col h-[calc(100vh-12rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
       {anchorRow && (!anchorInView || activeTab !== 'expenses') && typeof document !== 'undefined' &&
         createPortal(
         <button

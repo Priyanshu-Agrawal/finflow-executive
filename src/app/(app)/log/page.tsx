@@ -1,42 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useFinancials } from '@/hooks/useFinancials';
-import { Navbar } from '@/components/layout/Navbar';
+import { useFrame } from '@/components/layout/FrameContext';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
 import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import { Clock, PlusCircle, Sliders } from 'lucide-react';
 
 export default function QuickLogPage() {
-  const [referenceDate, setReferenceDate] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const { referenceDate, data } = useFrame();
   const [activeTab, setActiveTab] = useState<'daily' | 'emi'>('daily');
-
-  const { data, refetch, isFetching } = useFinancials(referenceDate);
 
   // Recent 5 transactions
   const recentTransactions = data?.expenses.slice(-5).reverse() || [];
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] text-white flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
-      <Navbar
-        referenceDate={referenceDate}
-        onDateChange={setReferenceDate}
-        onRefresh={() => refetch()}
-        isRefreshing={isFetching}
-      />
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-8 space-y-4 sm:space-y-6">
-        <div className="pb-4 border-b border-white/[0.07]">
-          <h1 className="text-xl font-medium text-white flex items-center gap-2">
-            <PlusCircle className="h-5 w-5 text-amber-500" />
-            Quick Logging & Multi-Month Generators
-          </h1>
-          <p className="text-xs font-mono text-zinc-400 mt-0.5">
-            Log ad-hoc transactions or schedule recurring multi-month obligations directly to Google Sheets
-          </p>
-        </div>
-
+    <>
+      <PageHeader title="Log" description="Add a transaction, or schedule a loan EMI for several months." />
+      <div className="space-y-4 sm:space-y-6 max-w-4xl">
         {/* Tab Selector */}
         <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
           <button
@@ -103,7 +85,7 @@ export default function QuickLogPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

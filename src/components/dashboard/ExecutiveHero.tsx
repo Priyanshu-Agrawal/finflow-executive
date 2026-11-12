@@ -128,22 +128,22 @@ export function ExecutiveHero({
           </p>
         </div>
 
-        {/* Pillar 2: Real Post-November Buffer (Unified with no random blue) */}
+        {/* Pillar 2: Cycle cushion — lowest balance before the next salary */}
         <div className="rounded-2xl border border-white/[0.07] bg-[#18181B] p-4 hover:border-white/[0.15] transition-colors">
           <div className="flex items-center justify-between text-zinc-400 text-xs mb-1.5">
             <span className="font-medium flex items-center gap-1.5 text-zinc-300">
               <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
-              Post-Nov Buffer
+              Cycle Cushion
             </span>
             <span className="text-[10px] font-mono rounded bg-white/[0.05] px-1.5 py-0.5 text-zinc-300 font-semibold">
-              Real Cushion
+              Before {formatDisplayDate(kpis.cushionUntil).split(' ').slice(0, 2).join(' ')}
             </span>
           </div>
           <div className="font-mono text-2xl font-bold text-white">
             {formatINR(kpis.postNovBalance)}
           </div>
           <p className="mt-1 text-[11px] text-zinc-400 line-clamp-1">
-            Safe operating margin after Nov 15 obligations clear
+            Lowest balance before the {formatDisplayDate(kpis.cushionUntil).split(' ').slice(0, 2).join(' ')} salary, after every bill
           </p>
         </div>
 

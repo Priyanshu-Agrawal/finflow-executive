@@ -19,13 +19,28 @@ export function placeRowInView(
   el: HTMLElement,
   { fraction = ANCHOR_VIEW_FRACTION, smooth = true }: { fraction?: number; smooth?: boolean } = {}
 ): void {
-  const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
   const rowTop = el.getBoundingClientRect().top;
   const container = scrollParent(el);
   if (container) {
     const top = container.getBoundingClientRect().top;
-    container.scrollTo({ top: container.scrollTop + rowTop - top - fraction * container.clientHeight, behavior });
+    const target = container.scrollTop + rowTop - top - fraction * container.clientHeight;
+    glide((y, b) => container.scrollTo({ top: y, behavior: b }), container.scrollTop, target, container.clientHeight, smooth);
   } else {
-    window.scrollTo({ top: window.scrollY + rowTop - fraction * window.innerHeight, behavior });
+    const target = window.scrollY + rowTop - fraction * window.innerHeight;
+    glide((y, b) => window.scrollTo({ top: y, behavior: b }), window.scrollY, target, window.innerHeight, smooth);
   }
+}
+
+/** Smooth scroll that jumps most of a long distance first, so it lands quickly. */
+function glide(
+  scroll: (y: number, behavior: ScrollBehavior) => void,
+  from: number,
+  to: number,
+  view: number,
+  smooth: boolean
+): void {
+  if (!smooth) return scroll(to, 'auto');
+  const dist = to - from;
+  if (Math.abs(dist) > view * 1.5) scroll(to - Math.sign(dist) * view * 0.75, 'auto');
+  scroll(to, 'smooth');
 }

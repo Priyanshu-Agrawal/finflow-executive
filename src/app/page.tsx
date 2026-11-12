@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { Navbar } from '@/components/layout/Navbar';
 import { ExecutiveHero } from '@/components/dashboard/ExecutiveHero';
+import { SavingsMeter } from '@/components/dashboard/SavingsMeter';
 import { ModernBudgetPacing } from '@/components/dashboard/ModernBudgetPacing';
 import { BalanceTimeline } from '@/components/dashboard/BalanceTimeline';
 import { SpendingBreakdown } from '@/components/dashboard/SpendingBreakdown';
@@ -215,6 +216,9 @@ export default function DashboardPage() {
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* Cash Flow Timeline Curve */}
                 <BalanceTimeline expenses={data.expenses} referenceDate={referenceDate} />
+
+                {/* Savings per salary cycle */}
+                {data.savingsTrend && <SavingsMeter trend={data.savingsTrend} />}
 
                 {/* Monthly Budget Burn Snapshot */}
                 {data.budgetPacing && (

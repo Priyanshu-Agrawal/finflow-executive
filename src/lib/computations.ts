@@ -1,4 +1,4 @@
-import {
+import { SavingsCycle,
   BcaCycle,
   BudgetPacing,
   DuplicateGroup,
@@ -50,16 +50,83 @@ export function nextRentDateFor(referenceDate: string, rentRecurringDay: number 
   return `${rentYear}-${String(rentMonth).padStart(2, '0')}-${String(rentRecurringDay).padStart(2, '0')}`;
 }
 
+/** Next salary / budget-cycle start strictly after referenceDate ('YYYY-MM-DD'). */
+export function nextCycleStartFor(referenceDate: string, budgetRecurringDay: number = 7): string {
+  const [year, month, day] = referenceDate.split('-').map(Number);
+  let y = year;
+  let m = month;
+  if (day >= budgetRecurringDay) {
+    m += 1;
+    if (m === 13) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return `${y}-${String(m).padStart(2, '0')}-${String(budgetRecurringDay).padStart(2, '0')}`;
+}
+
+/**
+ * Saving per salary cycle (budgetRecurringDay → budgetRecurringDay): the change in the
+ * running balance from the day before one salary to the day before the next. Returns up
+ * to `past` completed cycles, the current one and `future` projected ones. Cycles that
+ * contain a Time Lapse row (the balance reset in Mar 2026) are skipped: not real saving.
+ */
+export function computeSavingsTrend(
+  expenses: ExpenseEntry[],
+  referenceDate: string,
+  budgetRecurringDay: number = 7,
+  past: number = 6,
+  future: number = 3
+): SavingsCycle[] {
+  const asOf = (date: string): number | null => {
+    let bal: number | null = null;
+    for (const e of expenses) {
+      if (e.date <= date) bal = e.balance;
+      else break;
+    }
+    return bal;
+  };
+  const resets = expenses.filter((e) => /time lapse/i.test(e.description)).map((e) => e.date);
+  const nextStart = nextCycleStartFor(referenceDate, budgetRecurringDay);
+  const [ny, nm] = nextStart.split('-').map(Number);
+  const cycleStart = (offset: number) => {
+    const t = new Date(ny, nm - 2 + offset, budgetRecurringDay); // offset 0 = current cycle
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  };
+  const cycleAt = (offset: number): SavingsCycle | null => {
+    const start = cycleStart(offset);
+    const end = cycleStart(offset + 1);
+    const from = asOf(addDays(start, -1));
+    const to = asOf(addDays(end, -1));
+    if (from === null || to === null) return null;
+    if (resets.some((d) => d >= addDays(start, -1) && d < end)) return null;
+    return { start, end, saving: Math.round(to - from), kind: offset < 0 ? 'past' : offset === 0 ? 'current' : 'projected' };
+  };
+
+  const pastCycles: SavingsCycle[] = [];
+  for (let k = -1; k >= -24 && pastCycles.length < past; k--) {
+    const c = cycleAt(k);
+    if (c) pastCycles.unshift(c);
+  }
+  const rest: SavingsCycle[] = [];
+  for (let k = 0; k <= future; k++) {
+    const c = cycleAt(k);
+    if (c) rest.push(c);
+  }
+  return [...pastCycles, ...rest];
+}
+
 export function computeKPIs(
   expenses: ExpenseEntry[],
   referenceDate: string = '2026-11-10',
-  rentRecurringDay: number = 15
+  budgetRecurringDay: number = 7
 ): KPIs {
   if (expenses.length === 0) {
     return {
       currentBalance: 0,
       upcomingBills: 0,
       postNovBalance: 0,
+      cushionUntil: nextCycleStartFor(referenceDate, budgetRecurringDay),
       projectedEndBalance: 0,
       totalCredit: 0,
       totalDebit: 0,
@@ -99,17 +166,14 @@ export function computeKPIs(
     }
   }
 
-  // 3. Post-rent cushion: running balance right after the next rent payment clears.
-  // Falls back to the balance as of the rent date when no rent row is logged that day.
-  const rentDate = nextRentDateFor(referenceDate, rentRecurringDay);
-  const rentRow = expenses.find(e => e.date === rentDate && e.description.toLowerCase().includes('rent'));
-  let postNovBalance = 0;
-  if (rentRow) {
-    postNovBalance = rentRow.balance;
-  } else {
-    for (const entry of expenses) {
-      if (isBeforeOrEqual(entry.date, rentDate)) postNovBalance = entry.balance;
-      else break;
+  // 3. Cycle cushion (owner rule, 12 Nov 2026): the lowest the running balance gets from
+  // today until the day before the next salary, after every bill dated in between.
+  // (Was the balance right after rent, which ignored bills dated after the 15th.)
+  const cushionUntil = nextCycleStartFor(referenceDate, budgetRecurringDay);
+  let postNovBalance = currentBalance;
+  for (const entry of expenses) {
+    if (entry.date > referenceDate && entry.date < cushionUntil && entry.balance < postNovBalance) {
+      postNovBalance = entry.balance;
     }
   }
 
@@ -129,6 +193,7 @@ export function computeKPIs(
     currentBalance: Math.round(currentBalance),
     upcomingBills: Math.round(upcomingBills),
     postNovBalance: Math.round(postNovBalance),
+    cushionUntil,
     projectedEndBalance: Math.round(projectedEndBalance),
     totalCredit: Math.round(totalCredit),
     totalDebit: Math.round(totalDebit),
@@ -524,7 +589,7 @@ export function computeBudgetPacing(
   const rentAmount = customRentAmount !== undefined && customRentAmount > 0
     ? customRentAmount
     : rentRow ? rentRow.amount : 15000;
-  const postRentBuffer = postNovBuffer; // Cushion after the next rent payment clears (from computeKPIs)
+  const postRentBuffer = postNovBuffer; // Cycle cushion from computeKPIs: lowest balance before the next salary
 
   // 3. General Expenses Tracking for this Recurring Cycle
 

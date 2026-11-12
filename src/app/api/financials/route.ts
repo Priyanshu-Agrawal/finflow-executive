@@ -10,6 +10,7 @@ import {
   computeBudgetPacing,
   computeKPIs,
   computeLoanPortfolio,
+  computeSavingsTrend,
   computeSpendingCategories,
   detectDuplicates,
 } from '@/lib/computations';
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       getMeteorDataFromSheet(),
     ]);
 
-    const kpis = computeKPIs(expenses, refDate, rentRecurringDay);
+    const kpis = computeKPIs(expenses, refDate, budgetRecurringDay);
     const loans = computeLoanPortfolio(loansData.rows, loansData.b2RawValue, refDate, expenses);
     const bcaCycle = computeBcaCycle(loansData.b2RawValue, expenses, refDate);
     const spendingCategories = computeSpendingCategories(expenses);
@@ -53,8 +54,11 @@ export async function GET(request: NextRequest) {
       electricityRemainingParam
     );
 
+    const savingsTrend = computeSavingsTrend(expenses, refDate, budgetRecurringDay);
+
     const responseData: FinancialsResponse = {
       kpis,
+      savingsTrend,
       expenses,
       loans,
       bcaCycle,

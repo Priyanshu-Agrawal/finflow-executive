@@ -78,13 +78,13 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
           </div>
         </div>
 
-        {/* Card 3: Net Balance Post-November */}
+        {/* Card 3: Cycle cushion — lowest balance before the next salary */}
         <div className="relative overflow-hidden rounded-2xl border border-blue-500/25 bg-gradient-to-br from-blue-950/40 via-slate-900 to-slate-950 p-3.5 sm:p-5 shadow-lg shadow-blue-950/20 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-1">
               <span className="text-[11px] sm:text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-400 shrink-0" />
-                <span className="truncate">Post-Nov Buffer</span>
+                <span className="truncate">Cycle Cushion</span>
               </span>
               <span className="rounded-full bg-blue-500/10 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-blue-300 border border-blue-500/20">
                 Cushion
@@ -95,7 +95,7 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
                 {formatINR(kpis.postNovBalance)}
               </div>
               <p className="mt-1 text-[10px] sm:text-xs text-slate-400 line-clamp-1">
-                Real buffer after Nov 15
+                Lowest before {formatDisplayDate(kpis.cushionUntil).split(' ').slice(0, 2).join(' ')} salary
               </p>
             </div>
           </div>

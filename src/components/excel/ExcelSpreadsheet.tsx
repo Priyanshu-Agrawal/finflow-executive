@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { placeRowInView } from '@/lib/scroll-anchor';
 import {
   ExpenseEntry,
@@ -14,6 +15,7 @@ import { useUpdateExpense, useToggleType, useSortExpenses, useRestoreExpensesOrd
 import { useUndo } from '@/context/UndoContext';
 import {
   ArrowUpDown,
+  LocateFixed,
   Check,
   ChevronDown,
   Download,
@@ -107,6 +109,54 @@ export function ExcelSpreadsheet({
       anchorPlacedRef.current = true;
     }
   }, [anchorRow]);
+
+  // Floating "Today" button: shown when the anchor row is scrolled out of the grid's view
+  // (or another sheet tab is open); tapping it brings the anchor back to the 30% position.
+  const [anchorInView, setAnchorInView] = useState(true);
+  const updateAnchorInView = useCallback(() => {
+    const container = tableContainerRef.current;
+    const rowElem = anchorRow ? document.getElementById(`excel-row-${anchorRow}`) : null;
+    if (!container || !rowElem) {
+      setAnchorInView(false);
+      return;
+    }
+    const c = container.getBoundingClientRect();
+    const r = rowElem.getBoundingClientRect();
+    const inGrid = r.bottom > c.top + 36 && r.top < c.bottom - 8; // 36px ≈ sticky header
+    const onScreen = r.bottom > 0 && r.top < window.innerHeight;
+    setAnchorInView(inGrid && onScreen);
+  }, [anchorRow]);
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    updateAnchorInView();
+    if (!container) return;
+    container.addEventListener('scroll', updateAnchorInView, { passive: true });
+    window.addEventListener('scroll', updateAnchorInView, { passive: true });
+    window.addEventListener('resize', updateAnchorInView);
+    return () => {
+      container.removeEventListener('scroll', updateAnchorInView);
+      window.removeEventListener('scroll', updateAnchorInView);
+      window.removeEventListener('resize', updateAnchorInView);
+    };
+  }, [updateAnchorInView, activeTab, expenses]);
+  const goToToday = () => {
+    if (!anchorRow) return;
+    setActiveTab('expenses');
+    skipSelectScrollRef.current = true;
+    setSelectedCell((prev) => ({ ...prev, row: anchorRow }));
+    window.setTimeout(() => {
+      // Bring the grid on screen first (the page may be scrolled away), then the row to 30%.
+      const container = tableContainerRef.current;
+      if (container) {
+        const top = container.getBoundingClientRect().top;
+        if (top < 0 || top > window.innerHeight * 0.4) {
+          window.scrollTo({ top: window.scrollY + top - 72, behavior: 'smooth' });
+        }
+      }
+      const rowElem = document.getElementById(`excel-row-${anchorRow}`);
+      if (rowElem) placeRowInView(rowElem);
+    }, activeTab === 'expenses' ? 0 : 60);
+  };
 
   // Handle Drag-and-Drop Row Movement with full Undo
   const handleDropRow = async (sourceRow: number, targetRow: number) => {
@@ -383,7 +433,21 @@ export function ExcelSpreadsheet({
   }, [currentExpenseRow, selectedCell]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8.5rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
+    <div className="relative flex flex-col h-[calc(100vh-8.5rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
+      {anchorRow && (!anchorInView || activeTab !== 'expenses') && typeof document !== 'undefined' &&
+        createPortal(
+        <button
+          type="button"
+          onClick={goToToday}
+          aria-label="Go to today's row"
+          title={`Go to today's row (#${anchorRow})`}
+          className="fixed right-4 lg:right-8 bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] lg:bottom-8 z-40 flex items-center gap-1.5 min-h-11 min-w-11 justify-center rounded-full bg-amber-500 px-4 text-sm font-semibold text-black shadow-lg shadow-black/50 ring-1 ring-amber-300/40 hover:bg-amber-400 active:scale-95 transition"
+        >
+          <LocateFixed className="h-4 w-4" />
+          <span>Today</span>
+        </button>,
+          document.body
+        )}
       {/* Top Excel Ribbon Toolbar */}
       <div className="border-b border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2.5">
         {/* Left: Mode Title & Sheet Tabs */}

@@ -463,7 +463,7 @@ export function ModernBudgetPacing({
                 </span>
               </div>
               <div className="flex justify-between text-zinc-400">
-                <span>Post-Rent Net Buffer:</span>
+                <span>Lowest Balance Before Salary:</span>
                 <span className="font-mono font-bold text-white">
                   {formatINR(pacing.postRentBuffer)}
                 </span>
@@ -523,7 +523,9 @@ export function ModernBudgetPacing({
               </div>
               <span className="text-[10px] text-zinc-500 block mt-1">
                 {hardMonth
-                  ? `Most you can spend without touching savings: budget left + this cycle's projected saving (${formatINR(pacing.projectedCycleSavings)}). Normal: ${formatINR(pacing.safeTotalDailyBurn)}/day.`
+                  ? pacing.projectedCycleSavings <= 0
+                    ? `No extra room this cycle: projected saving is ${formatINR(pacing.projectedCycleSavings)}, so the ceiling is the normal budget.`
+                    : `Most you can spend without touching savings: budget left + this cycle's projected saving (${formatINR(pacing.projectedCycleSavings)}). Normal: ${formatINR(pacing.safeTotalDailyBurn)}/day.`
                   : `From the expenses budget (${formatINR(pacing.generalRemaining)} left), never from savings`}
               </span>
             </div>
@@ -537,7 +539,7 @@ export function ModernBudgetPacing({
                 </span>
               </div>
               <div className="flex justify-between text-zinc-400">
-                <span>Post-Rent Cushion:</span>
+                <span>Cycle Cushion (before salary):</span>
                 <span className="font-mono font-bold text-white">
                   {formatINR(pacing.postFixedObligationsBuffer)}
                 </span>

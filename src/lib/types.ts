@@ -18,6 +18,13 @@ export interface ExpenseEntry {
   formula?: string;
 }
 
+export interface SavingsCycle {
+  start: string;  // salary / cycle start (YYYY-MM-DD)
+  end: string;    // next cycle start
+  saving: number; // balance the day before `end` minus the day before `start`
+  kind: 'past' | 'current' | 'projected';
+}
+
 export interface RawLoanRow {
   date: string;
   bcaDue?: number;
@@ -67,7 +74,8 @@ export interface BcaCycle {
 export interface KPIs {
   currentBalance: number;
   upcomingBills: number;
-  postNovBalance: number;
+  postNovBalance: number;  // cycle cushion: lowest balance from today until the day before the next salary
+  cushionUntil: string;    // next salary date (YYYY-MM-DD); the cushion covers the days before it
   projectedEndBalance: number;
   totalCredit: number;
   totalDebit: number;
@@ -110,7 +118,7 @@ export interface BudgetPacing {
   nextRentDate: string;       // e.g. "2026-11-15"
   daysUntilRent: number;      // e.g. 5
   rentAmount: number;         // e.g. 15000
-  postRentBuffer: number;     // e.g. 53392
+  postRentBuffer: number;     // cycle cushion (same as kpis.postNovBalance): lowest balance before the next salary
 
   // General Expenses Budget (15k)
   generalBudget: number;      // e.g. 15000
@@ -171,6 +179,7 @@ export interface MeteorCapitalCost {
 export interface FinancialsResponse {
   kpis: KPIs;
   expenses: ExpenseEntry[];
+  savingsTrend: SavingsCycle[];
   loans: LoanStatus[];
   bcaCycle: BcaCycle;
   spendingCategories: SpendingCategorySummary[];

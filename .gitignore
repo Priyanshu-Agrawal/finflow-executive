@@ -42,3 +42,5 @@ next-env.d.ts
 
 # local sheet backups (personal financial data)
 /backups/
+.superpowers/
+.next-v2

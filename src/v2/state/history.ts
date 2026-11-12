@@ -20,6 +20,13 @@ export function createHistory(opts: { limit?: number } = {}) {
   let state: HistoryState = { entries: [], cursor: 0, busy: false, error: null };
   let seq = 0;
   const listeners = new Set<() => void>();
+  // push/clear called while an undo or redo is running wait for it, so the cursor stays right.
+  let deferred: Array<() => void> = [];
+  const flush = () => {
+    const run = deferred;
+    deferred = [];
+    run.forEach((fn) => fn());
+  };
 
   const set = (next: Partial<HistoryState>) => {
     state = { ...state, ...next };
@@ -34,9 +41,11 @@ export function createHistory(opts: { limit?: number } = {}) {
     try {
       await run(e);
       set({ cursor: state.cursor + delta, busy: false, error: null });
+      flush();
       return true;
     } catch (err) {
       set({ busy: false, error: err instanceof Error ? err.message : String(err) });
+      flush();
       return false;
     }
   }
@@ -52,9 +61,13 @@ export function createHistory(opts: { limit?: number } = {}) {
     },
     /** Records a change that has already been applied. */
     push(e: { label: string; forward: () => Promise<void>; inverse: () => Promise<void> }) {
-      const entry: HistoryEntry = { ...e, id: `h${++seq}`, at: Date.now() };
-      const entries = [...state.entries.slice(0, state.cursor), entry].slice(-limit);
-      set({ entries, cursor: entries.length, error: null });
+      const add = () => {
+        const entry: HistoryEntry = { ...e, id: `h${++seq}`, at: Date.now() };
+        const entries = [...state.entries.slice(0, state.cursor), entry].slice(-limit);
+        set({ entries, cursor: entries.length, error: null });
+      };
+      if (state.busy) deferred.push(add);
+      else add();
     },
     undo,
     redo,
@@ -64,7 +77,9 @@ export function createHistory(opts: { limit?: number } = {}) {
       return true;
     },
     clear() {
-      set({ entries: [], cursor: 0, error: null });
+      const wipe = () => set({ entries: [], cursor: 0, error: null });
+      if (state.busy) deferred.push(wipe);
+      else wipe();
     },
   };
 }

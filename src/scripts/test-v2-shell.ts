@@ -53,6 +53,15 @@ function check(ok: boolean, msg: string) {
     await ctx.close();
   }
 
+  // Regression: the old UI at / must be unaffected by the v2 providers change.
+  const old = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await old.request.post(`${BASE}/api/auth/login`, { data: { username: process.env.AUTH_USERNAME, password: process.env.AUTH_PASSWORD } });
+  const op = await old.newPage();
+  await op.goto(`${BASE}/`);
+  await op.getByText('Current Liquid Operating Balance').waitFor({ timeout: 30000 }).catch(() => {});
+  check(await op.getByText('Current Liquid Operating Balance').isVisible(), 'old UI at / still renders');
+  await old.close();
+
   const wide = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await wide.request.post(`${BASE}/api/auth/login`, { data: { username: process.env.AUTH_USERNAME, password: process.env.AUTH_PASSWORD } });
   const wp = await wide.newPage();

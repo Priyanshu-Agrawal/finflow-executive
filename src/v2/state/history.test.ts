@@ -73,3 +73,19 @@ test('a second undo while one is running is refused', async () => {
   assert.deepEqual([first, second], [true, false]);
   assert.equal(h.getState().cursor, 1);
 });
+
+test('a change recorded while an undo is running is not lost or double-applied', async () => {
+  const log: string[] = [];
+  const h = createHistory();
+  h.push(entry(log, 'A'));
+  h.push(entry(log, 'B', { delay: true }));
+  const undoing = h.undo();
+  h.push(entry(log, 'C')); // recorded while B's inverse is still running
+  assert.equal(await undoing, true);
+  // B is undone, C sits on top of A, and nothing is left to redo.
+  assert.deepEqual(h.getState().entries.map((e) => e.label), ['A', 'C']);
+  assert.equal(h.getState().cursor, 2);
+  assert.equal(await h.redo(), false);
+  assert.equal(await h.undo(), true);
+  assert.deepEqual(log, ['inverse B', 'inverse C']);
+});

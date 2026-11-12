@@ -2,6 +2,7 @@ import { google, sheets_v4 } from 'googleapis';
 import { ExpenseEntry, RawLoanRow, RowMove, RowOrderUndo, TransactionType } from './types';
 import { GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN } from './computations';
 import { normalizeDate } from './date-utils';
+import { buildBalanceFormula } from './row-move';
 
 function getAuthClient() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -159,24 +160,8 @@ export async function getLoansFromSheet(): Promise<{
   return { rows, b2RawValue };
 }
 
-/**
- * Generates the continuation formula for Column E.
- * The Time Lapse boundary rows (currently Rows 38 & 39) are recognised by their
- * description, not their row number, so the rule follows them if rows shift and can
- * never be applied to an unrelated transaction that lands on Row 38 or 39.
- * Always pass the row's description.
- */
-export function buildBalanceFormula(row: number, description?: string): string {
-  const desc = (description || '').toLowerCase();
-  if (desc.includes('time lapse clear balance')) {
-    return '=0';
-  }
-  if (desc.includes('time lapse start balance')) {
-    return `=C${row}`;
-  }
-  const prev = row - 1;
-  return `=IF(OR(D${row}="", D${row}="ADJUSTMENT", D${row}="SETTLEMENT", D${row}="OTHER", D${row}="DIRECT"), E${prev}, IF(D${row}="DEBIT", E${prev}-C${row}, IF(D${row}="CREDIT", E${prev}+C${row}, "")))`;
-}
+// Column E formula builder lives in row-move.ts (client-safe); re-exported for existing callers.
+export { buildBalanceFormula };
 
 /**
  * Returns the 1-based row where a transaction dated `newDate` (YYYY-MM-DD) belongs:

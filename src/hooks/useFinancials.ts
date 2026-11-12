@@ -2,6 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FinancialsResponse, LogExpenseInput, RowOrderUndo, ScheduleEmiInput, TransactionType } from '@/lib/types';
+import { previewRowMove } from '@/lib/row-move';
+
+// Row-order changes (drag reorder, sort, undo of either) run one at a time, in order:
+// each uses row numbers that assume the previous change has been applied.
+const ROW_ORDER_MUTATION = { mutationKey: ['expenses-row-order'], scope: { id: 'expenses-row-order' } };
 
 export function useFinancials(
   refDate: string = '2026-11-10',
@@ -252,6 +257,7 @@ export function useSortExpenses() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    ...ROW_ORDER_MUTATION,
     mutationFn: async () => {
       const res = await fetch('/api/expenses/sort', {
         method: 'POST',
@@ -309,6 +315,7 @@ export function useRestoreExpensesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    ...ROW_ORDER_MUTATION,
     mutationFn: async (previousOrder: RowOrderUndo) => {
       const res = await fetch('/api/expenses/restore', {
         method: 'POST',
@@ -334,6 +341,27 @@ export function useReorderExpenses() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    ...ROW_ORDER_MUTATION,
+    // Show the move at once: renumber rows and recompute running balances in the cache,
+    // then let Google Sheets catch up. Rolled back if the server refuses the move.
+    onMutate: async ({ sourceIndex, targetIndex }: { sourceIndex: number; targetIndex: number }) => {
+      await queryClient.cancelQueries({ queryKey: ['financials'] });
+      const snapshot = queryClient.getQueriesData<FinancialsResponse>({ queryKey: ['financials'] });
+      queryClient.setQueriesData<FinancialsResponse>({ queryKey: ['financials'] }, (old) =>
+        old ? { ...old, expenses: previewRowMove(old.expenses, sourceIndex, targetIndex) } : old
+      );
+      return { snapshot };
+    },
+    onError: (_err, _vars, context) => {
+      context?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => {
+      // Refetch once the last queued row-order change has finished, so a refetch
+      // never overwrites a move that is still waiting its turn.
+      if (queryClient.isMutating({ mutationKey: ROW_ORDER_MUTATION.mutationKey }) <= 1) {
+        queryClient.invalidateQueries({ queryKey: ['financials'] });
+      }
+    },
     mutationFn: async ({ sourceIndex, targetIndex }: { sourceIndex: number; targetIndex: number }) => {
       const res = await fetch('/api/expenses/reorder', {
         method: 'POST',
@@ -349,9 +377,6 @@ export function useReorderExpenses() {
         message: string;
         previousOrder: RowOrderUndo;
       }>;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['financials'] });
     },
   });
 }

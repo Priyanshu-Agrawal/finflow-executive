@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { placeRowInView } from '@/lib/scroll-anchor';
 import { ExpenseEntry, TransactionType } from '@/lib/types';
 import { formatDisplayDate, formatINR } from '@/lib/date-utils';
 import {
@@ -200,7 +201,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       const targetPage = Math.floor(idx / pageSize) + 1;
       setCurrentPage(targetPage);
       setTimeout(() => {
-        nearestRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (nearestRowRef.current) placeRowInView(nearestRowRef.current);
       }, 100);
     } else {
       setIsWindowFilterActive(false);
@@ -212,7 +213,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         setCurrentPage(targetPage);
       }
       setTimeout(() => {
-        nearestRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (nearestRowRef.current) placeRowInView(nearestRowRef.current);
       }, 150);
     }
   };
@@ -625,13 +626,15 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     onDragLeave={() => {
                       if (dragOverRowIndex === entry.rowIndex) setDragOverRowIndex(null);
                     }}
-                    onDrop={async (ev) => {
+                    onDrop={(ev) => {
                       ev.preventDefault();
-                      if (draggedRowIndex && draggedRowIndex !== entry.rowIndex) {
-                        await handleDropRow(draggedRowIndex, entry.rowIndex);
-                      }
+                      const source = draggedRowIndex;
+                      // Clear the drag state now; the move shows instantly (optimistic) and syncs in the background
                       setDraggedRowIndex(null);
                       setDragOverRowIndex(null);
+                      if (source && source !== entry.rowIndex) {
+                        void handleDropRow(source, entry.rowIndex);
+                      }
                     }}
                     className={`transition-colors group ${
                       isNearest

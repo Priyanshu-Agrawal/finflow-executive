@@ -6,6 +6,7 @@
 // Run: npm run test:sim
 import { google } from 'googleapis';
 import * as S from '../lib/sheets';
+import { previewRowMove } from '../lib/row-move';
 import { BIKE_LOAN_PRINCIPAL, computeKPIs, GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN, trackEmiLoan } from '../lib/computations';
 
 type Raw = string | number;
@@ -319,6 +320,19 @@ const isSorted = () => { let prev = ''; for (let r = 3; r <= lastDataRow(); r++)
   check('T16 projected end balance down by one EMI', Math.abs(endBal() - (end16 - BIKE_EMI)) < 1e-6, `₹${Math.round(end16)} → ₹${Math.round(endBal())}`);
   check('T16 Loans refs, F note targets and values unchanged, no #REF!',
     JSON.stringify(externalTargets()) === JSON.stringify(ext16) && JSON.stringify(fTargets()) === ft16 && JSON.stringify(fValues()) === fv16 && refErrors() === 0);
+
+  // T17 the instant (optimistic) drag preview matches what the server produces
+  restore(live0);
+  const last17 = lastDataRow();
+  for (const [from, to] of [[239, 245], [245, 239], [40, 30], [30, 45], [last17, 3], [3, last17]]) {
+    const before17 = await S.getExpensesFromSheet();
+    const preview = previewRowMove(before17, from, to);
+    await S.reorderExpenseRows(from, to);
+    const actual = await S.getExpensesFromSheet();
+    const pick = (l: typeof actual) => l.map(e => [e.rowIndex, e.description, e.date, e.type, Math.round(e.balance * 1e6) / 1e6, e.formula]);
+    check(`T17 drag preview ${from}→${to} equals the server result`, JSON.stringify(pick(preview)) === JSON.stringify(pick(actual)));
+    restore(live0);
+  }
 
   restore(live0);
   S.__setSheetsClientForTests(null);

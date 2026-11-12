@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import { placeRowInView } from '@/lib/scroll-anchor';
 import {
   ExpenseEntry,
   LoanStatus,
@@ -63,10 +64,13 @@ export function ExcelSpreadsheet({
     return expenses[0];
   }, [expenses, effectiveRefDate]);
 
-  const [selectedCell, setSelectedCell] = useState<{ row: number; col: string }>({
-    row: 240,
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: string }>(() => ({
+    row: anchorEntry?.rowIndex ?? 240,
     col: 'B',
-  });
+  }));
+  // The anchor placement does its own scrolling; the selection scroll skips its first run
+  // and the run right after an anchor placement, so nothing animates on first load.
+  const skipSelectScrollRef = useRef(true);
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,14 +93,20 @@ export function ExcelSpreadsheet({
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Focus and select active cell on dynamic anchor change
-  useEffect(() => {
-    if (anchorEntry) {
-      setSelectedCell((prev) => ({
-        ...prev,
-        row: anchorEntry.rowIndex,
-      }));
+  // Keyed on the row number, so a data refresh (e.g. after a drag) does not reset the selection.
+  // First placement jumps without animation; later anchor changes scroll smoothly.
+  const anchorRow = anchorEntry?.rowIndex;
+  const anchorPlacedRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!anchorRow) return;
+    skipSelectScrollRef.current = true;
+    setSelectedCell((prev) => ({ ...prev, row: anchorRow }));
+    const rowElem = document.getElementById(`excel-row-${anchorRow}`);
+    if (rowElem) {
+      placeRowInView(rowElem, { smooth: anchorPlacedRef.current });
+      anchorPlacedRef.current = true;
     }
-  }, [anchorEntry]);
+  }, [anchorRow]);
 
   // Handle Drag-and-Drop Row Movement with full Undo
   const handleDropRow = async (sourceRow: number, targetRow: number) => {
@@ -193,6 +203,10 @@ export function ExcelSpreadsheet({
 
   // Scroll to selected cell
   useEffect(() => {
+    if (skipSelectScrollRef.current) {
+      skipSelectScrollRef.current = false;
+      return;
+    }
     if (activeTab === 'expenses') {
       const rowElem = document.getElementById(`excel-row-${selectedCell.row}`);
       if (rowElem) {
@@ -613,13 +627,15 @@ export function ExcelSpreadsheet({
                     onDragLeave={() => {
                       if (dragOverRowIndex === rowNum) setDragOverRowIndex(null);
                     }}
-                    onDrop={async (ev) => {
+                    onDrop={(ev) => {
                       ev.preventDefault();
-                      if (draggedRowIndex && draggedRowIndex !== rowNum) {
-                        await handleDropRow(draggedRowIndex, rowNum);
-                      }
+                      const source = draggedRowIndex;
+                      // Clear the drag state now; the move shows instantly (optimistic) and syncs in the background
                       setDraggedRowIndex(null);
                       setDragOverRowIndex(null);
+                      if (source && source !== rowNum) {
+                        void handleDropRow(source, rowNum);
+                      }
                     }}
                     className={`hover:bg-[#18181B]/50 transition-all ${
                       isAnchorRow ? 'bg-amber-500/10' : ''

@@ -6,7 +6,7 @@
 // Run: npm run test:sim
 import { google } from 'googleapis';
 import * as S from '../lib/sheets';
-import { computeKPIs, GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN } from '../lib/computations';
+import { BIKE_LOAN_PRINCIPAL, computeKPIs, GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN, trackEmiLoan } from '../lib/computations';
 
 type Raw = string | number;
 const COLS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -301,6 +301,24 @@ const isSorted = () => { let prev = ''; for (let r = 3; r <= lastDataRow(); r++)
   check('T15 reorder: Loans refs follow, no #REF!', JSON.stringify(externalTargets()) === JSON.stringify(baseExt) && refErrors() === 0);
   await S.restoreExpensesOrder(re.previousOrder);
   check('T15 undo reorder restores the sheet exactly', same(base));
+
+  // T16 logging a future-dated EMI (the 13th Bike EMI on 2027-08-06 was added live this way on 12 Nov 2026)
+  restore(live0);
+  const bikeLive = trackEmiLoan(await S.getExpensesFromSheet(), 'Bike EMI', BIKE_LOAN_PRINCIPAL, '2027-12-31');
+  check('T16 live sheet: bike loan fully scheduled, payoff 2027-08-06', bikeLive.unscheduled === 0 && bikeLive.payoffDate === '2027-08-06', `unscheduled ₹${bikeLive.unscheduled}, payoff ${bikeLive.payoffDate}`);
+  const BIKE_EMI = 11770.923076923076;
+  const ev16a = evaluateAll(), ext16 = externalTargets(), ft16 = JSON.stringify(fTargets()), fv16 = JSON.stringify(fValues()), end16 = endBal();
+  const r16 = await S.appendExpenseRow({ date: '2027-08-06', description: 'Bike EMI', amount: BIKE_EMI, type: 'DEBIT' });
+  const ev16b = evaluateAll();
+  const n16 = r16.newRow;
+  check('T16 bike EMI inserted in date order', isSorted() && serialToISO(Number(grid[n16 - 1][0])) === '2027-08-06' && serialToISO(Number(grid[n16][0])) >= '2027-08-06', `row ${n16} (above that day's cycle summary rows)`);
+  check('T16 today balance unchanged', (await todayBal()) === 114021, `₹${await todayBal()}`);
+  const before16 = ev16a.slice(0, n16 - 1).every((r, i) => r[4] === ev16b[i][4]);
+  const after16 = ev16a.slice(n16 - 1, lastDataRow() - 1).every((r, i) => Math.abs(Number(r[4]) - BIKE_EMI - Number(ev16b[n16 + i][4])) < 1e-6);
+  check('T16 balances above unchanged, every later balance down by exactly one EMI', before16 && after16 && Math.abs(Number(ev16b[n16 - 1][4]) - (Number(ev16a[n16 - 2][4]) - BIKE_EMI)) < 1e-6);
+  check('T16 projected end balance down by one EMI', Math.abs(endBal() - (end16 - BIKE_EMI)) < 1e-6, `₹${Math.round(end16)} → ₹${Math.round(endBal())}`);
+  check('T16 Loans refs, F note targets and values unchanged, no #REF!',
+    JSON.stringify(externalTargets()) === JSON.stringify(ext16) && JSON.stringify(fTargets()) === ft16 && JSON.stringify(fValues()) === fv16 && refErrors() === 0);
 
   restore(live0);
   S.__setSheetsClientForTests(null);

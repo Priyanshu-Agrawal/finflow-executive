@@ -27,7 +27,7 @@
   - Liquid Operating Balance: **₹1,14,021** (11 Nov 2026)
   - 5-Day Immediate Obligations: **₹75,865** (Phone EMI ₹58,465 + Electricity ₹2,400 + Rent ₹15,000; today's entries are already paid)
   - Post-Rent Cushion: **₹38,156**
-  - Late-2027 terminal sovereign wealth projection: **₹2,70,760**
+  - Late-2027 terminal sovereign wealth projection: **₹2,58,989** (includes the 13th bike EMI on 6 Aug 2027, added 12 Nov 2026)
 - ⚡ **4-Pillar Budget Burn & Runway Engine**
   - **General Expenses** — ₹15,000 monthly target anchored to the 7th (salary cycle). Daily allowance = $\frac{\text{Remaining Expenses Budget}}{\text{Remaining Days}}$ (**₹423/day**).
   - **Electricity Recharge Budget** — ₹3,200 total pool (₹3,000 base + ₹200 surplus carryover); ₹800 recharged, ₹2,400 remaining.

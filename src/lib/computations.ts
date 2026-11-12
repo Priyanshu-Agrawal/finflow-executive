@@ -31,7 +31,30 @@ function addDays(date: string, days: number): string {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
 }
 
-export function computeKPIs(expenses: ExpenseEntry[], referenceDate: string = '2026-11-10'): KPIs {
+/**
+ * Next rent date on or after referenceDate (rent falls on rentRecurringDay each month;
+ * on the rent day itself it is still that day). Returns 'YYYY-MM-DD'.
+ */
+export function nextRentDateFor(referenceDate: string, rentRecurringDay: number = 15): string {
+  const [year, month, day] = referenceDate.split('-').map(Number);
+  let rentYear = year;
+  let rentMonth = month;
+  if (day > rentRecurringDay) {
+    if (month === 12) {
+      rentYear = year + 1;
+      rentMonth = 1;
+    } else {
+      rentMonth = month + 1;
+    }
+  }
+  return `${rentYear}-${String(rentMonth).padStart(2, '0')}-${String(rentRecurringDay).padStart(2, '0')}`;
+}
+
+export function computeKPIs(
+  expenses: ExpenseEntry[],
+  referenceDate: string = '2026-11-10',
+  rentRecurringDay: number = 15
+): KPIs {
   if (expenses.length === 0) {
     return {
       currentBalance: 0,
@@ -76,11 +99,18 @@ export function computeKPIs(expenses: ExpenseEntry[], referenceDate: string = '2
     }
   }
 
-  // 3. Net Balance Post-November: Real buffer after November 15 rent clears (₹53,392)
-  let postNovBalance = 53392;
-  const nov15Row = expenses.find(e => e.date === '2026-11-15' && e.description.toLowerCase().includes('rent'));
-  if (nov15Row) {
-    postNovBalance = Math.round(nov15Row.balance);
+  // 3. Post-rent cushion: running balance right after the next rent payment clears.
+  // Falls back to the balance as of the rent date when no rent row is logged that day.
+  const rentDate = nextRentDateFor(referenceDate, rentRecurringDay);
+  const rentRow = expenses.find(e => e.date === rentDate && e.description.toLowerCase().includes('rent'));
+  let postNovBalance = 0;
+  if (rentRow) {
+    postNovBalance = rentRow.balance;
+  } else {
+    for (const entry of expenses) {
+      if (isBeforeOrEqual(entry.date, rentDate)) postNovBalance = entry.balance;
+      else break;
+    }
   }
 
   // 4. Projected End Balance: Balance at conclusion of late-2027 projections (₹2,58,454)
@@ -408,20 +438,9 @@ export function computeBudgetPacing(
   const endMonthShort = monthNames[cycleEndMonth - 1]?.slice(0, 3);
   const cycleLabel = `${budgetRecurringDay} ${startMonthShort} – ${budgetRecurringDay} ${endMonthShort}`;
 
-  // 2. Rent Recurring Milestone (15th of Every Month)
-  let rentYear = year;
-  let rentMonth = month;
-  if (day > rentRecurringDay) {
-    if (month === 12) {
-      rentYear = year + 1;
-      rentMonth = 1;
-    } else {
-      rentYear = year;
-      rentMonth = month + 1;
-    }
-  }
-
-  const nextRentDate = `${rentYear}-${String(rentMonth).padStart(2, '0')}-15`;
+  // 2. Rent Recurring Milestone (rentRecurringDay of every month)
+  const nextRentDate = nextRentDateFor(referenceDate, rentRecurringDay);
+  const [rentYear, rentMonth] = nextRentDate.split('-').map(Number);
   const rentMs = new Date(rentYear, rentMonth - 1, rentRecurringDay).getTime();
   const daysUntilRent = Math.max(0, Math.round((rentMs - refMs) / (86400 * 1000)));
 
@@ -431,7 +450,7 @@ export function computeBudgetPacing(
   const rentAmount = customRentAmount !== undefined && customRentAmount > 0
     ? customRentAmount
     : rentRow ? rentRow.amount : 15000;
-  const postRentBuffer = postNovBuffer; // Net cushion after 15th rent payment clears (₹53,392)
+  const postRentBuffer = postNovBuffer; // Cushion after the next rent payment clears (from computeKPIs)
 
   // 3. General Expenses Tracking for this Recurring Cycle
 

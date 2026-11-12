@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       getMeteorDataFromSheet(),
     ]);
 
-    const kpis = computeKPIs(expenses, refDate);
+    const kpis = computeKPIs(expenses, refDate, rentRecurringDay);
     const loans = computeLoanPortfolio(loansData.rows, loansData.b2RawValue, refDate);
     const bcaCycle = computeBcaCycle(loansData.b2RawValue, expenses, refDate);
     const spendingCategories = computeSpendingCategories(expenses);

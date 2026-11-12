@@ -1,0 +1,76 @@
+/* FinFlow v2 design tokens. The only place colours are defined. Scoped to .v2. */
+.v2 {
+  --bg: #EDF0F4;
+  --surface: #FFFFFF;
+  --sunk: #E3E7ED;
+  --ink: #0E1522;
+  --ink2: #4A5466;
+  --line: #D6DCE5;
+  --blue: #1E4FD8;
+  --blue-soft: #DCE5FB;
+  --orange: #B0500C;
+  --orange-soft: #FBE6D6;
+  --btn: #0E1522;
+  --btn-ink: #FFFFFF;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  .v2 {
+    --bg: #0F1218;
+    --surface: #181C24;
+    --sunk: #12151C;
+    --ink: #ECEFF4;
+    --ink2: #A2ABBA;
+    --line: #2A303B;
+    --blue: #86A9FF;
+    --blue-soft: #1F2A44;
+    --orange: #FFA463;
+    --orange-soft: #3A2618;
+    --btn: #ECEFF4;
+    --btn-ink: #0F1218;
+    color-scheme: dark;
+  }
+}
+/* Page background behind the app and in safe areas; must equal --bg above. */
+body:has(.v2) { background: #EDF0F4; }
+@media (prefers-color-scheme: dark) { body:has(.v2) { background: #0F1218; } }
+
+.v2 {
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100dvh;
+  font-family: var(--font-mona), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.v2 *, .v2 *::before, .v2 *::after { box-sizing: border-box; }
+.v2 h1, .v2 h2, .v2 p { margin: 0; }
+:where(.v2) a { color: inherit; }
+.v2 a:focus-visible, .v2 button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.v2-money { font-stretch: 125%; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.v2-cap { font-size: 13px; line-height: 18px; color: var(--ink2); }
+.v2-title { font-size: 28px; font-weight: 700; font-stretch: 115%; }
+
+.v2-shell { min-height: 100dvh; }
+.v2-top { max-width: 440px; margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) 16px 0; display: flex; justify-content: flex-end; }
+.v2-main { max-width: 440px; margin: 0 auto; padding: 8px 16px calc(100px + env(safe-area-inset-bottom)); }
+
+.v2-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 12px; color: var(--ink2); }
+.v2-chip[data-kind="conflict"], .v2-chip[data-kind="error"] { background: var(--orange-soft); color: var(--orange); border-color: transparent; }
+
+.v2-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(76px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: space-around; align-items: flex-start; }
+.v2-link { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 56px; height: 56px; padding-top: 8px; font-size: 11px; color: var(--ink2); text-decoration: none; }
+.v2-link[aria-current="page"] { color: var(--ink); font-weight: 650; }
+.v2-fab { width: 56px; height: 56px; margin-top: -14px; border-radius: 28px; background: var(--btn); color: var(--btn-ink); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.v2-fab-label { display: none; }
+
+@media (min-width: 900px) {
+  .v2-shell { display: flex; }
+  .v2-nav { position: sticky; top: 0; left: 0; right: auto; bottom: auto; width: 220px; height: 100dvh; flex: none; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 4px; padding: 24px 12px; border-top: 0; border-right: 1px solid var(--line); }
+  .v2-link { flex-direction: row; gap: 12px; height: 44px; min-width: 0; padding: 0 12px; border-radius: 12px; font-size: 15px; }
+  .v2-link[aria-current="page"] { background: var(--sunk); }
+  .v2-fab { order: -1; width: auto; height: 48px; margin: 0 0 12px; border-radius: 14px; gap: 8px; justify-content: center; font-size: 15px; font-weight: 650; }
+  .v2-fab-label { display: inline; }
+  .v2-content { flex: 1; min-width: 0; }
+  .v2-top, .v2-main { max-width: 880px; }
+  .v2-main { padding-bottom: 48px; }
+}

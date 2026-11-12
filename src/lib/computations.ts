@@ -248,6 +248,8 @@ export const BIKE_LOAN_PRINCIPAL = 153022;
 /** Active BCA cycle: 6 × ₹3,000 from Oct 2026 (Loans!B2 baseline). */
 export const BCA_CYCLE_TOTAL = 18000;
 export const BCA_CYCLE_START = '2026-10-01';
+/** Previous SBI card balance reached 0 on 6 Nov 2026 (Loans!D235); payments count from here. */
+export const SBI_CYCLE_START = '2026-11-07';
 
 export interface EmiTrack {
   principal: number;
@@ -309,7 +311,8 @@ export function computeLoanPortfolio(
   loanRows: RawLoanRow[],
   b2RawValue: number,
   refDate: string = '2026-11-10',
-  expenses: ExpenseEntry[] = []
+  expenses: ExpenseEntry[] = [],
+  sbiDue: number = 0
 ): LoanStatus[] {
   // 1. BCA Loan (active cycle from Oct 2026), from the "BCA EMI" rows in Expenses
   const bca = trackEmiLoan(expenses, 'BCA EMI', BCA_CYCLE_TOTAL, refDate, BCA_CYCLE_START);
@@ -324,6 +327,42 @@ export function computeLoanPortfolio(
   const bikePaid = bikeInitial - bikeCurrent;
   const bikeEmi = Math.round(bike.emi * 100) / 100;
   const bikePayoff = bike.payoffDate ?? bike.lastScheduledDate;
+  // 3. Credit Card SBI: due set by the owner in Loans!D2, paid by "SBI Card Payment" rows
+  // dated after the previous SBI balance reached 0 (6 Nov 2026). Empty D2 = settled.
+  const sbi = sbiDue > 0 ? trackEmiLoan(expenses, 'SBI Card Payment', sbiDue, refDate, SBI_CYCLE_START) : null;
+  const sbiCurrent = sbi ? Math.round(sbi.due) : 0;
+  const sbiCard: LoanStatus = sbi
+    ? {
+        id: 'sbi-cc',
+        name: 'Credit Card SBI',
+        columnLetter: 'D',
+        category: 'credit_card',
+        initialPrincipal: Math.round(sbiDue),
+        currentDue: sbiCurrent,
+        paidToDate: Math.round(sbiDue) - sbiCurrent,
+        progressPercent: Math.round(((sbiDue - sbiCurrent) / sbiDue) * 100),
+        isPaidOff: sbiCurrent === 0,
+        targetPayoffDate: sbi.payoffDate ?? sbi.lastScheduledDate,
+        notes:
+          sbiCurrent === 0
+            ? `₹${Math.round(sbiDue).toLocaleString('en-IN')} due (Loans!D2) paid in full${sbi.payoffDate ? ` on ${sbi.payoffDate}` : ''}.`
+            : sbi.payoffDate
+              ? `₹${Math.round(sbiDue).toLocaleString('en-IN')} due (Loans!D2); the SBI Card Payment on ${sbi.payoffDate} clears it.`
+              : `₹${Math.round(sbiDue).toLocaleString('en-IN')} due (Loans!D2); ₹${sbi.unscheduled.toLocaleString('en-IN')} not yet covered by any "SBI Card Payment" row.`,
+      }
+    : {
+        id: 'sbi-cc',
+        name: 'Credit Card SBI',
+        columnLetter: 'D',
+        category: 'credit_card',
+        initialPrincipal: 25000,
+        currentDue: 0,
+        paidToDate: 25000,
+        progressPercent: 100,
+        isPaidOff: true,
+        notes: 'Settled in full in 2026.',
+      };
+
   const bikeNotes =
     `Amortizes at ₹${bikeEmi.toLocaleString('en-IN')}/mo. ${bike.paidCount} EMIs paid, ${bike.remainingCount} scheduled in the sheet.` +
     (bike.unscheduled > 0
@@ -359,18 +398,7 @@ export function computeLoanPortfolio(
       targetPayoffDate: bca.payoffDate ?? bca.lastScheduledDate,
       notes: `${bca.paidCount + bca.remainingCount} monthly EMIs of ₹${Math.round(bca.emi).toLocaleString('en-IN')}. ${bca.paidCount} paid, ${bca.remainingCount} remaining.`,
     },
-    {
-      id: 'sbi-cc',
-      name: 'Credit Card SBI',
-      columnLetter: 'D',
-      category: 'credit_card',
-      initialPrincipal: 25000,
-      currentDue: 0,
-      paidToDate: 25000,
-      progressPercent: 100,
-      isPaidOff: true,
-      notes: 'Settled in full in 2026.',
-    },
+    sbiCard,
     {
       id: 'bhaiya-udhar',
       name: 'Bhaiya Udhar (Family Ledger)',
@@ -480,7 +508,7 @@ export function computeSpendingCategories(expenses: ExpenseEntry[]): SpendingCat
     let cat = 'Other Expenses';
     if (desc.includes('rent') || desc.includes('electricity') || desc.includes('recharge')) {
       cat = 'Housing & Utilities';
-    } else if (desc.includes('emi') || desc.includes('loan') || desc.includes('settlement')) {
+    } else if (desc.includes('emi') || desc.includes('loan') || desc.includes('settlement') || desc.includes('card payment')) {
       cat = 'Loan EMIs';
     } else if (desc.includes('subscription') || desc.includes('cursor') || desc.includes('chatgpt') || desc.includes('claude')) {
       cat = 'Tech & Subscriptions';

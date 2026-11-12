@@ -115,6 +115,7 @@ export async function getExpensesFromSheet(): Promise<ExpenseEntry[]> {
 export async function getLoansFromSheet(): Promise<{
   rows: RawLoanRow[];
   b2RawValue: number;
+  d2RawValue: number; // Loans!D2: current Credit Card SBI due set by the owner (0 if empty)
 }> {
   const sheets = getSheets();
 
@@ -133,6 +134,9 @@ export async function getLoansFromSheet(): Promise<{
     const val = rawRows[1][1];
     b2RawValue = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]+/g, '')) || 18000;
   }
+
+  const d2 = rawRows[1]?.[3];
+  const d2RawValue = typeof d2 === 'number' ? d2 : parseFloat(String(d2 ?? '').replace(/[^0-9.-]+/g, '')) || 0;
 
   for (let i = 1; i < rawRows.length; i++) {
     const r = rawRows[i];
@@ -157,7 +161,7 @@ export async function getLoansFromSheet(): Promise<{
     });
   }
 
-  return { rows, b2RawValue };
+  return { rows, b2RawValue, d2RawValue };
 }
 
 // Column E formula builder lives in row-move.ts (client-safe); re-exported for existing callers.

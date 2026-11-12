@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const kpis = computeKPIs(expenses, refDate, budgetRecurringDay);
-    const loans = computeLoanPortfolio(loansData.rows, loansData.b2RawValue, refDate, expenses);
+    const loans = computeLoanPortfolio(loansData.rows, loansData.b2RawValue, refDate, expenses, loansData.d2RawValue);
     const bcaCycle = computeBcaCycle(loansData.b2RawValue, expenses, refDate);
     const spendingCategories = computeSpendingCategories(expenses);
     const duplicates = detectDuplicates(expenses);

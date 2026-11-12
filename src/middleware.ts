@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
   // API path (e.g. /api/expenses/240.x) cannot skip the session check.
   const isStaticAsset =
     !pathname.startsWith('/api/') &&
-    /\.(?:png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|webmanifest|woff2?|ttf)$/i.test(pathname);
+    /\.(?:png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|html|webmanifest|woff2?|ttf)$/i.test(pathname);
 
   if (
     pathname === '/login' ||

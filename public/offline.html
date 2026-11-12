@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FinFlow, offline</title>
+<style>
+  :root { color-scheme: light dark; --bg:#EDF0F4; --ink:#0E1522; --ink2:#4A5466; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0F1218; --ink:#ECEFF4; --ink2:#A2ABBA; } }
+  body { margin:0; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,sans-serif; }
+  main { max-width:360px; }
+  h1 { margin:0 0 8px; font-size:28px; }
+  p { margin:0 0 20px; font-size:17px; line-height:24px; color:var(--ink2); }
+  button { min-height:48px; padding:0 20px; border:0; border-radius:14px; background:var(--ink); color:var(--bg); font:inherit; font-weight:650; }
+</style>
+</head>
+<body>
+<main>
+  <h1>You&rsquo;re offline</h1>
+  <p>FinFlow shows saved data when it can. Reconnect to make changes.</p>
+  <button onclick="location.reload()">Try again</button>
+</main>
+</body>
+</html>

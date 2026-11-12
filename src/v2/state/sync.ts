@@ -5,6 +5,7 @@ export type SyncStatus =
   | { kind: 'synced'; at: number }
   | { kind: 'saving'; pending: number }
   | { kind: 'offline'; reason: string }
+  | { kind: 'busy'; message: string }
   | { kind: 'conflict'; message: string }
   | { kind: 'error'; message: string };
 
@@ -69,9 +70,17 @@ export function createSync(opts: { isOnline: () => boolean; now: () => number })
         void drain();
       });
     },
-    /** Call after a successful refetch of the sheet. */
-    refreshed() {
-      if (queue.length === 0) set({ kind: 'synced', at: opts.now() });
+    /** Call after a successful refetch of the sheet; `at` is when that fetch finished. */
+    refreshed(at?: number) {
+      if (queue.length === 0) set({ kind: 'synced', at: at ?? opts.now() });
+    },
+    /** Browser online/offline events. Going back online waits for the next successful fetch. */
+    setOnline(online: boolean) {
+      if (!online) set({ kind: 'offline', reason: OFFLINE_REASON });
+    },
+    /** Sheets quota hit: tell the user instead of retrying in a loop. */
+    markBusy(message: string) {
+      set({ kind: 'busy', message });
     },
   };
 }

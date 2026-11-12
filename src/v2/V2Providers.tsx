@@ -4,13 +4,14 @@ import React, { createContext, useContext, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createHistory, type History } from './state/history';
 import { createSync, type Sync } from './state/sync';
+import { shouldRetry, retryDelay } from './lib/retry';
 
 const HistoryCtx = createContext<History | null>(null);
 const SyncCtx = createContext<Sync | null>(null);
 
 export function V2Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30 * 1000, refetchOnWindowFocus: true, retry: 2 } } })
+    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30 * 1000, refetchOnWindowFocus: true, retry: shouldRetry, retryDelay } } })
   );
   const [history] = useState(() => createHistory());
   const [sync] = useState(() =>

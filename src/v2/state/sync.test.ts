@@ -63,3 +63,21 @@ test('refreshed() marks the data synced again', async () => {
   s.refreshed();
   assert.deepEqual(s.getState(), { kind: 'synced', at: 5 });
 });
+
+test('setOnline(false) shows the offline status', () => {
+  const s = createSync({ isOnline: online, now: () => 1 });
+  s.setOnline(false);
+  assert.deepEqual(s.getState(), { kind: 'offline', reason: "You're offline. Changes can't be saved until you're back online." });
+});
+
+test('markBusy shows a busy status with the message', () => {
+  const s = createSync({ isOnline: online, now: () => 1 });
+  s.markBusy('Sheets is busy, retrying in a moment');
+  assert.deepEqual(s.getState(), { kind: 'busy', message: 'Sheets is busy, retrying in a moment' });
+});
+
+test('refreshed(at) records the time of the fetch, not the time of the call', () => {
+  const s = createSync({ isOnline: online, now: () => 9000 });
+  s.refreshed(1234);
+  assert.deepEqual(s.getState(), { kind: 'synced', at: 1234 });
+});

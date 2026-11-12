@@ -22,6 +22,7 @@ export function SyncChip() {
     status.kind === 'synced' ? ago(status.at, now)
     : status.kind === 'saving' ? `Saving ${status.pending}…`
     : status.kind === 'offline' ? 'Offline, showing saved copy'
+    : status.kind === 'busy' ? status.message
     : status.kind === 'conflict' ? 'Sheet changed, refresh'
     : "Couldn't save";
   return (

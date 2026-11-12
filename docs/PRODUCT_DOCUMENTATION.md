@@ -29,7 +29,7 @@ A **Next.js 16 App Router** frontend talks to the sheet through the Google Sheet
 
 - **Two-way live sync** — edits made in the app are written straight to the sheet; TanStack Query keeps the UI responsive with optimistic updates and background revalidation.
 - **Formula Lineage Defense** — dynamic sheet formulas (the `=IF(...)` running balance, the cycle budget formulas on Rows 247–248) and every cross-tab reference survive logging, deletes, drag-and-drop reorders and date sorts.
-- **4-Pillar Budget Pacing Engine** — real-time pacing for General Expenses (anchored to the salary cycle), the Electricity Recharge Budget (with prior-month surplus carryover), Room Rent, and Safe Total Daily Liquid Burn.
+- **4-Pillar Budget Pacing Engine** — real-time pacing for General Expenses (anchored to the salary cycle), the Electricity Recharge Budget (with prior-month surplus carryover), Room Rent, and the Safe Daily Spend (budget only, with an opt-in Hard month ceiling).
 - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) — reverts cell edits, drag-and-drop moves and date sorts in both the UI and the sheet.
 - **Unified Debt Amortization Hub** — deleveraging tracking across active and retired loans toward a debt-free milestone in August 2027 (+₹14,771/month unlocked cash flow).
 
@@ -144,7 +144,7 @@ flowchart TD
         P1["Pillar 1: General Expenses<br/>Cycle: 7th to 7th<br/>Budget: ₹15,000<br/>Daily burn: Remaining / Days"]
         P2["Pillar 2: Electricity Budget<br/>Base ₹3,000 + Surplus ₹200 = ₹3,200<br/>Recharged ₹800 · Remaining ₹2,400"]
         P3["Pillar 3: Room Rent<br/>Due: 15th of every month<br/>Amount ₹15,000 · Cushion ₹38,156"]
-        P4["Pillar 4: Liquid Operating Buffer<br/>Available balance ₹1,14,021<br/>Total safe runway ₹1,468/day"]
+        P4["Pillar 4: Liquid Operating Buffer<br/>Available balance ₹1,14,021<br/>Safe daily spend ₹423/day (budget only)"]
     end
 ```
 
@@ -175,10 +175,14 @@ The defaults (₹15,000 general budget, ₹3,200 electricity budget, 7th budget 
 - **Anchor day**: 15th of every month (**₹15,000** fixed obligation).
 - **Post-rent buffer**: tracks net liquidity after rent (**₹38,156**) so housing is fully funded before any discretionary spend.
 
-#### Pillar 4: Available Liquid Buffer & Total Daily Runway
+#### Pillar 4: Safe Daily Spend & Hard Month Ceiling
 
-- Total permissible daily burn across the whole liquid cushion:
-  $$\text{Total Safe Daily Runway} = \frac{\text{Post-Rent Liquid Cushion}}{\text{Days Remaining in Cycle}} = \frac{₹38,156}{26} = ₹1,468\text{/day}$$
+- Owner rule (12 Nov 2026): daily spending comes from the expenses budget, never from savings.
+  $$\text{Safe Daily Spend} = \frac{\text{Remaining Expenses Budget}}{\text{Days Remaining in Cycle}} = \frac{₹11,000}{26} = ₹423\text{/day}$$
+- **Hard month** (toggle on the card, off by default) shows the worst case: the most you can spend without touching savings.
+  $$\text{Hard Month Ceiling} = \frac{\text{Remaining Expenses Budget} + \max(0, \text{Projected Cycle Saving})}{\text{Days Remaining in Cycle}}$$
+  Projected Cycle Saving = balance the day before the next salary − balance the day before this cycle's salary. For 7 Nov–6 Dec: ₹21,156 − ₹56,021 = −₹34,865 (Phone EMI settlement and gifts), so the ceiling equals the safe spend.
+- The post-rent cushion (Pillar 3) is still shown, but no daily figure is derived from it.
 
 ---
 

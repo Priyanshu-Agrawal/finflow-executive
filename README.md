@@ -32,7 +32,7 @@
   - **General Expenses** — ₹15,000 monthly target anchored to the 7th (salary cycle). Daily allowance = $\frac{\text{Remaining Expenses Budget}}{\text{Remaining Days}}$ (**₹423/day**).
   - **Electricity Recharge Budget** — ₹3,200 total pool (₹3,000 base + ₹200 surplus carryover); ₹800 recharged, ₹2,400 remaining.
   - **Room Rent Commitment** — ₹15,000 due on the 15th, with a tracked post-rent liquidity buffer.
-  - **Safe Total Daily Runway** — safe daily burn across the total liquid cushion (**₹1,468/day**).
+  - **Safe Daily Spend** — comes from the expenses budget only, never from savings: Remaining Expenses Budget ÷ days left (**₹423/day**). A **Hard month** toggle shows the worst-case ceiling: budget left + this cycle's projected saving (if positive) ÷ days left. The 7 Nov–6 Dec cycle projects −₹34,865, so its ceiling is also ₹423/day.
 - 📑 **Excel Grid Engine**
   - Dynamic Date Anchor highlights today's active baseline (Row 240).
   - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) for cell edits, drag-and-drop row moves and date sorts.

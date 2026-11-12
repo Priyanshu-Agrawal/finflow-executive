@@ -604,8 +604,25 @@ export function computeBudgetPacing(
   const electricitySpentPercent =
     electricityTotalBudget > 0 ? Math.round((electricityRechargedSoFar / electricityTotalBudget) * 100) : 0;
 
-  // 5. Safe Total Daily Burn from Available Liquid Buffer
-  const safeTotalDailyBurn = Math.round(postRentBuffer / daysRemainingInCycle);
+  // 5. Safe daily spend (owner rule, 12 Nov 2026): it comes from the expenses budget,
+  // never from savings. Worst case it may also use this cycle's projected saving
+  // (balance the day before the next salary minus the balance the day before this
+  // cycle's salary), but only when that saving is positive.
+  const balanceAsOf = (date: string): number => {
+    let bal = 0;
+    for (const e of expenses) {
+      if (isBeforeOrEqual(e.date, date)) bal = e.balance;
+      else break;
+    }
+    return bal;
+  };
+  const projectedCycleSavings = Math.round(
+    balanceAsOf(addDays(cycleEndDate, -1)) - balanceAsOf(addDays(cycleStartDate, -1))
+  );
+  const safeTotalDailyBurn = generalPerDayLimit;
+  const worstCaseDailyBurn = Math.round(
+    (generalRemaining + Math.max(0, projectedCycleSavings)) / daysRemainingInCycle
+  );
 
   return {
     monthKey,
@@ -656,5 +673,7 @@ export function computeBudgetPacing(
     availableBalance,
     postFixedObligationsBuffer: postRentBuffer,
     safeTotalDailyBurn,
+    projectedCycleSavings,
+    worstCaseDailyBurn,
   };
 }

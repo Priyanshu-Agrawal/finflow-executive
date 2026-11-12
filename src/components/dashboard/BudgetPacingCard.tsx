@@ -317,22 +317,16 @@ export function BudgetPacingCard({
                 </span>
               </div>
               <span className="text-[10px] text-emerald-400/90 font-medium block mt-1">
-                Post-Nov 15 Net Cushion: <strong className="font-mono">{formatINR(pacing.postFixedObligationsBuffer)}</strong>
+                Post-Rent Cushion:<strong className="font-mono">{formatINR(pacing.postFixedObligationsBuffer)}</strong>
               </span>
             </div>
 
             {/* Daily Overall Burn Allowance */}
             <div className="space-y-2 text-xs">
               <div className="flex justify-between text-slate-400">
-                <span>Safe Total Daily Burn:</span>
+                <span>Safe Daily Spend:</span>
                 <span className="font-mono font-bold text-emerald-400">
                   {formatINR(pacing.safeTotalDailyBurn)} / day
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>General Allowance Share:</span>
-                <span className="font-mono font-bold text-slate-300">
-                  {Math.round((pacing.generalPerDayLimit / Math.max(1, pacing.safeTotalDailyBurn)) * 100)}% of daily burn
                 </span>
               </div>
             </div>

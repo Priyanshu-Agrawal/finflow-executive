@@ -142,7 +142,9 @@ export interface BudgetPacing {
   // Liquid Reserves / Available Balance Factor
   availableBalance: number;       // ₹1,28,792
   postFixedObligationsBuffer: number; // ₹53,392
-  safeTotalDailyBurn: number;     // Post-Rent buffer / daysRemainingInCycle
+  safeTotalDailyBurn: number;     // generalRemaining / daysRemainingInCycle (never from savings)
+  projectedCycleSavings: number;  // projected balance at cycle end - balance before the cycle's salary
+  worstCaseDailyBurn: number;     // (generalRemaining + max(0, projectedCycleSavings)) / daysRemainingInCycle
 }
 
 export interface PeerLedgerEntry {

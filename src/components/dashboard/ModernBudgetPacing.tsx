@@ -48,6 +48,9 @@ export function ModernBudgetPacing({
   const [tempRentAmt, setTempRentAmt] = useState(pacing.rentAmount || 15000);
 
   const [showTxList, setShowTxList] = useState(false);
+  // Hard month: shows the worst-case ceiling (budget + this cycle's projected saving)
+  // instead of the normal budget-only figure. Off on every load.
+  const [hardMonth, setHardMonth] = useState(false);
 
   const handleApply = () => {
     onUpdateGeneralBudget(tempGeneral);
@@ -495,17 +498,33 @@ export function ModernBudgetPacing({
 
             {/* Total Safe Daily Spend Card */}
             <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
-              <span className="text-[11px] text-zinc-400 font-medium block">
-                Total Safe Daily Runway:
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] text-zinc-400 font-medium">
+                  {hardMonth ? 'Hard Month Ceiling:' : 'Safe Daily Spend:'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setHardMonth((v) => !v)}
+                  aria-pressed={hardMonth}
+                  className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-semibold border transition-colors ${
+                    hardMonth
+                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                      : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
+                  }`}
+                >
+                  {hardMonth ? 'Hard month: on' : 'Hard month'}
+                </button>
+              </div>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="font-serif text-3xl font-bold text-white">
-                  {formatINR(pacing.safeTotalDailyBurn)}
+                <span className={`font-serif text-3xl font-bold ${hardMonth ? 'text-rose-300' : 'text-white'}`}>
+                  {formatINR(hardMonth ? pacing.worstCaseDailyBurn : pacing.safeTotalDailyBurn)}
                 </span>
                 <span className="text-xs font-mono text-zinc-400">/ day</span>
               </div>
               <span className="text-[10px] text-zinc-500 block mt-1">
-                Spend without eroding savings cushion
+                {hardMonth
+                  ? `Most you can spend without touching savings: budget left + this cycle's projected saving (${formatINR(pacing.projectedCycleSavings)}). Normal: ${formatINR(pacing.safeTotalDailyBurn)}/day.`
+                  : `From the expenses budget (${formatINR(pacing.generalRemaining)} left), never from savings`}
               </span>
             </div>
 
@@ -523,12 +542,14 @@ export function ModernBudgetPacing({
                   {formatINR(pacing.postFixedObligationsBuffer)}
                 </span>
               </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>General Allowance Share:</span>
-                <span className="font-mono font-semibold text-zinc-300">
-                  {Math.round((pacing.generalPerDayLimit / Math.max(1, pacing.safeTotalDailyBurn)) * 100)}% of daily burn
-                </span>
-              </div>
+              {hardMonth && (
+                <div className="flex justify-between text-zinc-400">
+                  <span>Projected Saving This Cycle:</span>
+                  <span className={`font-mono font-semibold ${pacing.projectedCycleSavings < 0 ? 'text-rose-400' : 'text-zinc-300'}`}>
+                    {formatINR(pacing.projectedCycleSavings)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

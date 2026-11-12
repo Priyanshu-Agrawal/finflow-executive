@@ -16,6 +16,16 @@
   --accent: #F59E0B;
   --accent-muted: rgba(245, 158, 11, 0.12);
   --accent-border: rgba(245, 158, 11, 0.25);
+  /* Layout tokens: sticky layers stack as top bar, then page control bar, then table header. */
+  --topbar-h: 3.5rem;
+  --sticky-bar-h: 0px;
+  --today-fab-bottom: 6rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --topbar-h: 4rem;
+  }
 }
 
 body {

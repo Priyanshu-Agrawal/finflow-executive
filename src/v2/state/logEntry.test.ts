@@ -17,12 +17,13 @@ const req = (f: LogForm) => {
 
 function setup(opts: { online?: boolean; postImpl?: (url: string, body: unknown) => Promise<Record<string, number>> } = {}) {
   let rows: ExpenseEntry[] = FX_ORDERED.map((r) => ({ ...r }));
-  const calls = { post: [] as Array<[string, unknown]>, del: [] as number[], refetch: 0 };
+  const calls = { post: [] as Array<[string, unknown]>, del: [] as number[], refetch: 0, setRows: 0, order: [] as string[] };
   const sync = createSync({ isOnline: () => opts.online !== false, now: () => 1 });
   const history = createHistory();
   const deps = {
     rows: () => rows,
-    setRows: (r: ExpenseEntry[]) => { rows = r; },
+    setRows: (r: ExpenseEntry[]) => { rows = r; calls.setRows++; calls.order.push('setRows'); },
+    cancel: async () => { calls.order.push('cancel'); },
     sync, history,
     post: async (url: string, body: unknown) => {
       calls.post.push([url, body]);
@@ -99,4 +100,58 @@ test('offline refuses the write and leaves the rows as they were', async () => {
   assert.equal(t.calls.post.length, 0);
   assert.deepEqual(t.getRows().map((r) => r.rowIndex), FX_ORDERED.map((r) => r.rowIndex));
   assert.equal(t.history.getState().entries.length, 0);
+});
+
+test('in-flight fetches are cancelled before the optimistic row is added', async () => {
+  const t = setup();
+  await performLog(t.deps, req(form()), 'x');
+  assert.deepEqual(t.calls.order.slice(0, 2), ['cancel', 'setRows']);
+});
+
+test('a failed save keeps fresher server data and refreshes from the sheet', async () => {
+  const extra: ExpenseEntry = { ...FX_ORDERED[4], rowIndex: 8, description: 'Added elsewhere', date: '2026-11-20', balance: 1 };
+  const t = setup({ postImpl: async () => { t.setRowsDirect([...t.getRows(), extra]); throw new Error('Sheets said no'); } });
+  assert.equal(await performLog(t.deps, req(form()), 'x'), false);
+  const names = t.getRows().map((r) => r.description);
+  assert.ok(names.includes('Added elsewhere'), 'fresher data from a refetch is kept');
+  assert.ok(!names.includes('Tea'), 'the optimistic row is gone');
+  assert.ok(t.calls.refetch >= 1, 'refreshes after a failure');
+});
+
+test('with no data loaded nothing optimistic is shown and a failure does not empty the cache', async () => {
+  const t = setup({ postImpl: async () => { throw new Error('nope'); } });
+  t.setRowsDirect([]);
+  assert.equal(await performLog(t.deps, req(form()), 'x'), false);
+  assert.equal(t.calls.setRows, 0);
+  assert.deepEqual(t.getRows(), []);
+});
+
+test('undo re-reads the sheet first and refuses when the entry has moved', async () => {
+  const t = setup();
+  await performLog(t.deps, req(form()), 'Logged Tea');
+  const refetchesBefore = t.calls.refetch;
+  // The sheet gained a row above ours elsewhere: Tea is now at row 6.
+  t.deps.refetch = async () => {
+    t.calls.refetch++;
+    t.setRowsDirect(t.getRows().map((r) => (r.rowIndex >= 5 ? { ...r, rowIndex: r.rowIndex + 1 } : r)));
+  };
+  assert.equal(await t.history.undo(), false);
+  assert.ok(t.calls.refetch > refetchesBefore, 'refetched before checking');
+  assert.deepEqual(t.calls.del, []);
+  assert.match(t.history.getState().error ?? '', /sheet changed/i);
+});
+
+test('undo refuses when the type of the row at that number is different', async () => {
+  const t = setup();
+  await performLog(t.deps, req(form()), 'Logged Tea');
+  t.setRowsDirect(t.getRows().map((r) => (r.rowIndex === 5 ? { ...r, type: 'CREDIT' as const } : r)));
+  assert.equal(await t.history.undo(), false);
+  assert.deepEqual(t.calls.del, []);
+});
+
+test('offline never touches the screen at all', async () => {
+  const t = setup({ online: false });
+  assert.equal(await performLog(t.deps, req(form()), 'x'), false);
+  assert.equal(t.calls.setRows, 0);
+  assert.equal(t.calls.order.length, 0);
 });

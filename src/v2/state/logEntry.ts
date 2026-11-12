@@ -1,7 +1,7 @@
 // Logging a spend: optimistic insert, serial save, undoable. Pure apart from the injected deps.
 import type { ExpenseEntry, TransactionType } from '../../lib/types';
 import type { LogRequest } from '../lib/log';
-import { insertByDate } from '../lib/order';
+import { insertByDate, removeRowNumber } from '../lib/order';
 import { ConflictError, type Sync } from './sync';
 import type { History } from './history';
 
@@ -15,6 +15,8 @@ export interface LogDeps {
   post: (url: string, body: unknown) => Promise<PostResult>;
   del: (row: number) => Promise<void>;
   refetch: () => Promise<void>;
+  /** Cancels in-flight reads so a stale response cannot overwrite the optimistic row. */
+  cancel: () => Promise<void>;
 }
 
 const CHANGED = 'The sheet changed since this was logged. Refresh, then delete it from the Passbook.';
@@ -38,14 +40,31 @@ function runQueued(deps: LogDeps, label: string, run: () => Promise<void>): Prom
 }
 
 export async function performLog(deps: LogDeps, req: Extract<LogRequest, { ok: true }>, label: string): Promise<boolean> {
-  const before = deps.rows();
+  // Offline: do not touch the screen at all.
+  if (!deps.sync.canWrite()) {
+    deps.sync.setOnline(false);
+    return false;
+  }
   const url = req.kind === 'single' ? '/api/expenses/log' : '/api/expenses/schedule-emi';
   let result: PostResult = {};
 
-  // Repeat monthly lands at the end of the sheet on the server, so it has no optimistic rows.
-  if (req.kind === 'single') {
-    deps.setRows(insertByDate(before, { ...req.body, type: req.body.type as TransactionType }).rows);
+  // Show the new row at once (single entries only; Repeat monthly lands at the end of the sheet on the
+  // server, so it has no optimistic rows). Nothing is shown before the sheet's rows have loaded.
+  let optimisticRow: number | null = null;
+  if (req.kind === 'single' && deps.rows().length > 0) {
+    await deps.cancel();
+    const ins = insertByDate(deps.rows(), { ...req.body, type: req.body.type as TransactionType });
+    deps.setRows(ins.rows);
+    optimisticRow = ins.rowNumber;
   }
+  // Remove only our own optimistic row from whatever the cache holds now, so fresher data survives.
+  const dropOptimistic = () => {
+    if (optimisticRow === null || req.kind !== 'single') return;
+    const { date, description, amount } = req.body;
+    const cur = deps.rows();
+    const mine = cur.find((r) => r.rowIndex === optimisticRow && r.date === date && r.description === description && r.amount === amount);
+    if (mine) deps.setRows(removeRowNumber(cur, optimisticRow));
+  };
 
   const ok = await deps.sync.enqueue({
     label,
@@ -53,10 +72,11 @@ export async function performLog(deps: LogDeps, req: Extract<LogRequest, { ok: t
       result = await deps.post(url, req.body);
       await deps.refetch();
     },
-    rollback: () => deps.setRows(before),
+    rollback: dropOptimistic,
   });
   if (!ok) {
-    deps.setRows(before);
+    dropOptimistic();
+    void deps.refetch().catch(() => {}); // the write may have half-happened: show what the sheet really holds
     return false;
   }
 
@@ -73,8 +93,9 @@ export async function performLog(deps: LogDeps, req: Extract<LogRequest, { ok: t
         });
       },
       inverse: async () => {
+        await deps.refetch(); // compare with the sheet as it is now, not with our own prediction
         const held = deps.rows().find((r) => r.rowIndex === row);
-        if (!held || held.description !== description || held.amount !== amount || held.date !== date) {
+        if (!held || held.description !== description || held.amount !== amount || held.date !== date || held.type !== req.body.type) {
           throw new ConflictError(CHANGED);
         }
         await runQueued(deps, `Delete ${description}`, async () => {
@@ -98,6 +119,7 @@ export async function performLog(deps: LogDeps, req: Extract<LogRequest, { ok: t
         });
       },
       inverse: async () => {
+        await deps.refetch();
         for (let i = 0; i < count; i++) {
           const held = deps.rows().find((r) => r.rowIndex === startRow + i);
           if (!held || held.description !== `${title} (EMI ${i + 1}/${months})`) throw new ConflictError(CHANGED);

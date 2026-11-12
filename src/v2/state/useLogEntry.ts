@@ -24,13 +24,19 @@ export function useLogEntry() {
       performLog(
         {
           rows: () => client.getQueriesData<FinancialsResponse>({ queryKey: ['financials'] })[0]?.[1]?.expenses ?? [],
-          setRows: (rows) =>
-            client.setQueriesData<FinancialsResponse>({ queryKey: ['financials'] }, (old) => (old ? { ...old, expenses: rows } : old)),
+          // Keep each entry's own fetch time: an optimistic edit is not a fetch, so the chip must not say "Synced".
+          setRows: (rows) => {
+            for (const q of client.getQueryCache().findAll({ queryKey: ['financials'] })) {
+              const old = q.state.data as FinancialsResponse | undefined;
+              if (old) client.setQueryData(q.queryKey, { ...old, expenses: rows }, { updatedAt: q.state.dataUpdatedAt });
+            }
+          },
+          cancel: () => client.cancelQueries({ queryKey: ['financials'] }),
           sync,
           history,
           post: (url, body) => api(url, { method: 'POST', body: JSON.stringify(body) }),
           del: async (row) => { await api(`/api/expenses/${row}`, { method: 'DELETE' }); },
-          refetch: async () => { await client.invalidateQueries({ queryKey: ['financials'] }); },
+          refetch: async () => { await client.refetchQueries({ queryKey: ['financials'], type: 'all' }); },
         },
         req,
         label,

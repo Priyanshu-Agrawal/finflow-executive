@@ -70,9 +70,12 @@ export function createSync(opts: { isOnline: () => boolean; now: () => number })
         void drain();
       });
     },
+    /** False while the browser is offline: callers must not touch the screen for a write. */
+    canWrite: () => opts.isOnline(),
     /** Call after a successful refetch of the sheet; `at` is when that fetch finished. */
     refreshed(at?: number) {
-      if (queue.length === 0) set({ kind: 'synced', at: at ?? opts.now() });
+      // A failed save stays visible until the next write succeeds; a refetch alone must not hide it.
+      if (queue.length === 0 && state.kind !== 'error') set({ kind: 'synced', at: at ?? opts.now() });
     },
     /** Browser online/offline events. Going back online waits for the next successful fetch. */
     setOnline(online: boolean) {

@@ -57,10 +57,19 @@ test('any other failure is an error, not a conflict', async () => {
   assert.deepEqual(s.getState(), { kind: 'error', message: 'Sheets said no' });
 });
 
-test('refreshed() marks the data synced again', async () => {
+test('refreshed() resolves a conflict: the data is synced again', async () => {
   const s = createSync({ isOnline: online, now: () => 5 });
-  await s.enqueue(job([], 'A', new Error('x')));
+  await s.enqueue(job([], 'A', new ConflictError('Row changed')));
   s.refreshed();
+  assert.deepEqual(s.getState(), { kind: 'synced', at: 5 });
+});
+
+test('a failed save stays visible after a refetch, until the next write succeeds', async () => {
+  const s = createSync({ isOnline: online, now: () => 5 });
+  await s.enqueue(job([], 'A', new Error('Sheets said no')));
+  s.refreshed(9);
+  assert.deepEqual(s.getState(), { kind: 'error', message: 'Sheets said no' });
+  assert.equal(await s.enqueue(job([], 'B')), true);
   assert.deepEqual(s.getState(), { kind: 'synced', at: 5 });
 });
 

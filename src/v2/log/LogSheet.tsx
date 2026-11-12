@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useFinancials } from '@/hooks/useFinancials';
+import { useQueryClient } from '@tanstack/react-query';
+import type { FinancialsResponse } from '@/lib/types';
 import { useLogEntry } from '../state/useLogEntry';
 import { buildLogRequest, pressKey, usualDescriptions, type LogForm } from '../lib/log';
 import { localToday } from '../lib/dates';
@@ -16,9 +17,20 @@ export function LogSheet({ onClose, onSaved }: { onClose: () => void; onSaved: (
   const [form, setForm] = useState<LogForm>(EMPTY);
   const [pickDate, setPickDate] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { data } = useFinancials(today, 15000, 3200, 7, 15);
+  // Read the cache only: opening the sheet must not start a fetch (it could land over the optimistic row).
+  const client = useQueryClient();
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  useEffect(() => {
+    const up = () => setOnline(true), down = () => setOnline(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); };
+  }, []);
   const logEntry = useLogEntry();
-  const chips = useMemo(() => usualDescriptions(data?.expenses ?? [], today), [data, today]);
+  const chips = useMemo(
+    () => usualDescriptions(client.getQueriesData<FinancialsResponse>({ queryKey: ['financials'] })[0]?.[1]?.expenses ?? [], today),
+    [client, today],
+  );
 
   // Dialog behaviour: focus in, trap Tab, Escape closes, page behind does not scroll, focus returns.
   useEffect(() => {
@@ -45,7 +57,8 @@ export function LogSheet({ onClose, onSaved }: { onClose: () => void; onSaved: (
 
   const req = buildLogRequest(form, today);
   const amount = Number(form.amount) || 0;
-  const saveText = !req.ok ? req.reason.replace(/\.$/, '')
+  const saveText = !online ? "You're offline"
+    : !req.ok ? req.reason.replace(/\.$/, '')
     : form.repeatMonthly ? `Schedule 6 × ${rupees(amount)}`
     : form.type === 'Received' ? `Log ${rupees(amount)} received`
     : `Log ${rupees(amount)}`;
@@ -98,8 +111,9 @@ export function LogSheet({ onClose, onSaved }: { onClose: () => void; onSaved: (
         {form.repeatMonthly && (
           <p className="v2-cap">Adds 6 monthly rows from this date, named &quot;{form.description.trim() || 'General Expenses'} (EMI 1/6)&quot; and so on.</p>
         )}
+        {!online && <p className="v2-cap">You&apos;re offline. Changes can&apos;t be saved until you&apos;re back online.</p>}
         <Keypad onKey={(k) => set({ amount: pressKey(form.amount, k) })} />
-        <button type="button" className="l-save" disabled={!req.ok} onClick={save}>{saveText}</button>
+        <button type="button" className="l-save" disabled={!req.ok || !online} onClick={save}>{saveText}</button>
       </div>
     </div>
   );

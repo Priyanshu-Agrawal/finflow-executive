@@ -53,7 +53,7 @@ export function LogSheetProvider({ children }: { children: React.ReactNode }) {
           onClose={close}
           onSaved={(label, ok) => {
             if (ok) afterChange(label);
-            else show({ text: sync.getState().kind === 'offline' ? "You're offline. Nothing was saved." : "Couldn't save. Nothing was changed." });
+            else show({ text: sync.getState().kind === 'offline' ? "You're offline. Nothing was saved." : "Couldn't save. Refreshing from the sheet." });
           }}
         />
       )}

@@ -101,8 +101,9 @@ function check(ok: boolean, msg: string) {
     await dialog.getByLabel('What for').fill('Tea');
     await save().click();
     await page.getByTestId('logged-today').getByText('Tea').waitFor({ timeout: 700 }).catch(() => {});
-    await page.getByRole('status').getByText(/Couldn.t save/).waitFor({ timeout: 8000 }).catch(() => {});
-    check(await page.getByRole('status').getByText(/Couldn.t save/).isVisible().catch(() => false), `[${scheme}] a failed save says "Couldn't save"`);
+    const chip = page.locator('.v2-chip');
+    await chip.getByText(/Couldn.t save/).waitFor({ timeout: 8000 }).catch(() => {});
+    check(await chip.getByText(/Couldn.t save/).isVisible().catch(() => false), `[${scheme}] after a failed save the sync chip says "Couldn't save" (not Synced)`);
     check((await page.getByText('Tea', { exact: true }).count()) === 0, `[${scheme}] the failed row is removed again`);
 
     // --- date and type choices --------------------------------------------------------------
@@ -131,6 +132,16 @@ function check(ok: boolean, msg: string) {
     await save().click(); await page.waitForTimeout(800);
     const emi = writes.at(-1);
     check(emi?.url === '/api/expenses/schedule-emi' && emi.body.months === 6 && emi.body.monthlyAmount === 250, `[${scheme}] Repeat monthly posts the schedule`);
+
+    // --- offline: logging is disabled and nothing is shown optimistically ---------------------------
+    await ctx.setOffline(true);
+    await open();
+    const offlineSave = dialog.getByRole('button', { name: "You're offline" });
+    check(await offlineSave.isVisible() && (await offlineSave.isDisabled()), `[${scheme}] offline: save is disabled and says so`);
+    check(await dialog.getByText(/You.re offline\. Changes can.t be saved/).isVisible(), `[${scheme}] offline: the sheet explains why`);
+    await ctx.setOffline(false);
+    await page.waitForFunction(() => navigator.onLine);
+    await page.keyboard.press('Escape');
 
     await open();
     check((await page.evaluate(() => document.documentElement.scrollWidth)) <= 390, `[${scheme}] no sideways scroll with the sheet open`);

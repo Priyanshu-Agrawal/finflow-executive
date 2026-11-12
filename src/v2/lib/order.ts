@@ -1,5 +1,6 @@
 // Pure date-order logic for the Expenses sheet. No server imports.
 import type { ExpenseEntry } from '../../lib/types';
+import { nextBalance, buildBalanceFormula } from '../../lib/row-move';
 
 export interface OutOfPlace {
   rowIndex: number;
@@ -93,4 +94,52 @@ export function dateSlot(rows: ExpenseEntry[], date: string): { position: number
   }
   const last = rows[rows.length - 1];
   return { position: rows.length, rowNumber: last ? last.rowIndex + 1 : 3 };
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** The sheet's own date text, e.g. 2026-Nov-12. */
+function rawDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${y}-${MONTHS[Number(m) - 1]}-${d}`;
+}
+
+function recalcFrom(rows: ExpenseEntry[], start: number): void {
+  for (let i = start; i < rows.length; i++) {
+    const prev = i > 0 ? rows[i - 1].balance : 0;
+    rows[i].balance = nextBalance(prev, rows[i]);
+    rows[i].formula = buildBalanceFormula(rows[i].rowIndex, rows[i].description);
+    rows[i].isFormulaBacked = true;
+  }
+}
+
+/** Optimistic preview of logging a row: placed by date, later rows shifted and recalculated. */
+export function insertByDate(
+  rows: ExpenseEntry[],
+  entry: Pick<ExpenseEntry, 'date' | 'description' | 'amount' | 'type'>,
+): { rows: ExpenseEntry[]; rowNumber: number } {
+  const { position, rowNumber } = dateSlot(rows, entry.date);
+  const next = rows.map((r) => ({ ...r }));
+  for (let i = position; i < next.length; i++) next[i].rowIndex += 1;
+  next.splice(position, 0, {
+    rowIndex: rowNumber,
+    date: entry.date,
+    rawDate: rawDate(entry.date),
+    description: entry.description,
+    amount: entry.amount,
+    type: entry.type,
+    balance: 0,
+    isFormulaBacked: true,
+  });
+  recalcFrom(next, position);
+  return { rows: next, rowNumber };
+}
+
+/** Rolls back insertByDate: drops the row, shifts later rows up and recalculates. */
+export function removeRowNumber(rows: ExpenseEntry[], rowNumber: number): ExpenseEntry[] {
+  const idx = rows.findIndex((r) => r.rowIndex === rowNumber);
+  if (idx < 0) return rows;
+  const next = rows.filter((_, i) => i !== idx).map((r) => ({ ...r }));
+  for (let i = idx; i < next.length; i++) next[i].rowIndex -= 1;
+  recalcFrom(next, idx);
+  return next;
 }

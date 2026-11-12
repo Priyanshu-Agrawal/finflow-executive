@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeRows, type RowSpec } from './testing';
-import { findOutOfOrder, balanceBoundary, dateSlot } from './order';
+import { findOutOfOrder, balanceBoundary, dateSlot, insertByDate, removeRowNumber } from './order';
 import { FX_ORDERED } from './testing';
 import { findChronologicalInsertRow } from '../../lib/sheets';
 import { computeKPIs } from '../../lib/computations';
@@ -101,4 +101,36 @@ test('dateSlot matches the server rule (findChronologicalInsertRow)', () => {
   for (const date of ['2026-10-01', '2026-11-05', '2026-11-06', '2026-11-13', '2026-12-01']) {
     assert.equal(dateSlot(rows, date).rowNumber, findChronologicalInsertRow(colAB, date), date);
   }
+});
+
+test('insertByDate places the row among its date and shifts and recalculates what follows', () => {
+  const before = JSON.parse(JSON.stringify(FX_ORDERED));
+  const r = insertByDate(FX_ORDERED, { date: '2026-11-06', description: 'Tea', amount: 20, type: 'DEBIT' });
+  assert.equal(r.rowNumber, 5);
+  assert.deepEqual(r.rows.map((x) => x.rowIndex), [2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(r.rows.map((x) => x.balance), [75000, 76000, 75900, 75880, 75680, 75180]);
+  assert.equal(r.rows[3].rawDate, '2026-Nov-06');
+  assert.deepEqual(FX_ORDERED, before, 'input is not mutated');
+});
+
+test('insertByDate with a later date appends at the end', () => {
+  const r = insertByDate(FX_ORDERED, { date: '2026-11-14', description: 'Late', amount: 20, type: 'DEBIT' });
+  assert.equal(r.rowNumber, 7);
+  assert.equal(r.rows[5].balance, 75180);
+});
+
+test('insertByDate adds a credit to the balance', () => {
+  const r = insertByDate(FX_ORDERED, { date: '2026-11-06', description: 'From Harsh', amount: 500, type: 'CREDIT' });
+  assert.equal(r.rows[3].balance, 76400);
+});
+
+test('inserting by date never creates an out-of-order row', () => {
+  const r = insertByDate(FX_ORDERED, { date: '2026-11-06', description: 'Tea', amount: 20, type: 'DEBIT' });
+  assert.deepEqual(findOutOfOrder(r.rows), []);
+});
+
+test('removeRowNumber undoes an insert', () => {
+  const r = insertByDate(FX_ORDERED, { date: '2026-11-06', description: 'Tea', amount: 20, type: 'DEBIT' });
+  const back = removeRowNumber(r.rows, 5);
+  assert.deepEqual(back.map((x) => [x.rowIndex, x.balance]), FX_ORDERED.map((x) => [x.rowIndex, x.balance]));
 });

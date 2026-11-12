@@ -225,7 +225,10 @@ async function openMore(page) {
   if (!(await btn.count())) return null;
   await btn.click();
   await page.waitForTimeout(300);
-  return page.evaluate(() => [...document.querySelectorAll('header a')].filter((a) => a.getBoundingClientRect().width > 0).map((a) => a.textContent.replace(/\s+/g, ' ').trim()));
+  const links = await page.evaluate(() => [...document.querySelectorAll('header a')].filter((a) => a.getBoundingClientRect().width > 0).map((a) => a.textContent.replace(/\s+/g, ' ').trim()));
+  await btn.click(); // close it again so it does not push the page down for the other rules
+  await page.waitForTimeout(200);
+  return links;
 }
 
 function lum([r, g, b]) {
@@ -388,7 +391,6 @@ async function checkToday(page, route, vpName) {
             const more = await openMore(page);
             if (!more) { ok = false; detail = 'no labelled "More" button for Splits and Budget'; }
             else if (!['Splits', 'Budget'].every((l) => more.includes(l))) { ok = false; detail = `More menu has [${more.join(', ')}]`; }
-            await page.keyboard.press('Escape');
           }
         }
         if (ok && scan.h1[0] !== route.label) { ok = false; detail = `h1 is "${scan.h1[0] || '(none)'}", want "${route.label}"`; }

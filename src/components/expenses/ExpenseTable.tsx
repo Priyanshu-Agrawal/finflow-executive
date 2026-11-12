@@ -24,7 +24,6 @@ import {
   RotateCcw,
   Search,
   Sparkles,
-  Target,
   Trash2,
   Zap,
 } from 'lucide-react';
@@ -39,6 +38,11 @@ import {
 } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
 import { EditExpenseModal } from './EditExpenseModal';
+import { StickyBar } from '@/components/ui/StickyBar';
+import { TableScroller } from '@/components/ui/TableScroller';
+import { TodayFab } from '@/components/ui/TodayFab';
+import { useAnchorInView } from '@/hooks/useAnchorInView';
+import { formatDate } from '@/lib/format';
 
 interface ExpenseTableProps {
   expenses: ExpenseEntry[];
@@ -76,6 +80,9 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const [showFuture, setShowFuture] = useState<boolean>(false);
 
   const nearestRowRef = useRef<HTMLTableRowElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // On a phone the view, scope and sort controls and the window notes sit behind "Options".
+  const [optionsOpen, setOptionsOpen] = useState(false);
 
   const toggleTypeMutation = useToggleType();
   const deleteMutation = useDeleteExpense();
@@ -361,220 +368,197 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
     }
   };
 
+  const anchorInView = useAnchorInView(scrollerRef, paginatedExpenses);
+  const segment = (active: boolean) =>
+    `min-h-11 lg:min-h-8 px-3 lg:px-2.5 rounded-lg text-xs font-medium transition-colors ${
+      active ? 'bg-amber-500 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-white'
+    }`;
+
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-4 sm:p-6 shadow-xl space-y-4">
-      {/* Top Controls & Rolling Scope Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.07]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-mono font-medium text-amber-400 border border-amber-500/20 uppercase tracking-wider">
-              LEDGER MASTER
-            </span>
-            <span className="text-xs font-mono text-zinc-500">Google Sheets Tab 'Expenses' (A1:E314+)</span>
-          </div>
-          <h2 className="text-xl font-medium text-white mt-1.5 flex items-center gap-2">
-            Transactions & Formula Lineage Ledger
-          </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Default focus anchored to <strong className="text-amber-400 font-mono">{formatDisplayDate(referenceDate)}</strong>.
-            Showing 1 month prior ({formatDisplayDate(pastCutoff)}) to 2 months future ({formatDisplayDate(futureCutoff)}).
-          </p>
-        </div>
+    <div className="space-y-3">
+      <TodayFab visible={!!nearestEntry && !anchorInView} onClick={handleJumpToNearest} />
 
-        {/* Action Pills & Focus Button */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Focus Today */}
-          <button
-            onClick={handleJumpToNearest}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium border border-amber-500/20 transition-all shadow-sm active:scale-95"
-            title="Focus row nearest to today's date"
-          >
-            <Target className="h-3.5 w-3.5 text-amber-500" />
-            <span>Focus Today / Nearest</span>
-          </button>
-
-          {/* Auto-Sort Sheet Button */}
-          <button
-            onClick={handleAutoSort}
-            disabled={sortExpensesMutation.isPending || reorderMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium border border-amber-500/20 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-            title="Sort rows chronologically by date in Google Sheets (re-indexing Column E continuation formulas)"
-          >
-            {sortExpensesMutation.isPending ? (
-              <RefreshCw className="h-3.5 w-3.5 text-amber-500 animate-spin" />
-            ) : (
-              <ArrowUpDown className="h-3.5 w-3.5 text-amber-500" />
-            )}
-            <span>{sortExpensesMutation.isPending ? 'Sorting...' : 'Auto-Sort by Date'}</span>
-          </button>
-
-          {/* Row Reordering Active Indicator */}
-          {reorderMutation.isPending && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono animate-pulse">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              <span>Reordering in Sheets...</span>
-            </div>
-          )}
-
-          {/* Rolling Window Scope Switcher */}
-          <div className="flex items-center rounded-xl bg-[#18181B] p-1 border border-white/[0.07] text-xs">
-            <button
-              onClick={() => {
-                setIsWindowFilterActive(true);
-                setCurrentPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                isWindowFilterActive
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Rolling Focus
-            </button>
-            <button
-              onClick={() => {
-                setIsWindowFilterActive(false);
-                setCurrentPage(1);
-              }}
-              className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                !isWindowFilterActive
-                  ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              All ({expenses.length})
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-2 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+      {/* Control bar: sticks under the top bar */}
+      <StickyBar>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full lg:w-auto lg:flex-1 lg:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-3.5 lg:top-2.5 h-4 w-4 text-zinc-500" aria-hidden="true" />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search description, date, or row #..."
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
+              aria-label="Search the ledger"
+              placeholder="Search description, date or row"
+              className="w-full min-h-11 lg:min-h-9 rounded-xl border border-white/[0.07] bg-[#18181B] pl-9 pr-4 text-sm lg:text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
             />
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* View Sort Selector */}
-          <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
-            <span className="text-[10px] font-mono text-zinc-500 px-1.5 flex items-center gap-1">
-              <ArrowUpDown className="h-3 w-3" />
-              <span>View:</span>
-            </span>
-            {[
-              { id: 'asc', label: 'Date Asc' },
-              { id: 'desc', label: 'Date Desc' },
-              { id: 'sheet', label: 'Sheet' },
-            ].map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSortOrder(s.id as any)}
-                className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  sortOrder === s.id
-                    ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title={`Sort table view by ${s.label}`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+          {/* Type filter */}
+          <div role="group" aria-label="Filter by type" className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1 max-w-full overflow-x-auto no-scrollbar">
             {['ALL', 'DEBIT', 'CREDIT', 'SETTLEMENT'].map((t) => (
               <button
                 key={t}
+                type="button"
+                aria-pressed={selectedType === t}
                 onClick={() => {
                   setSelectedType(t);
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  selectedType === t
-                    ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
+                className={segment(selectedType === t)}
               >
-                {t}
+                {t === 'ALL' ? 'All' : t.charAt(0) + t.slice(1).toLowerCase()}
               </button>
             ))}
           </div>
 
-          {/* Bulk Delete Button */}
+          <button
+            type="button"
+            onClick={() => setOptionsOpen((o) => !o)}
+            aria-expanded={optionsOpen}
+            className="lg:hidden min-h-11 rounded-xl border border-white/[0.07] bg-[#18181B] px-3 text-xs font-medium text-zinc-300 hover:text-white"
+          >
+            Options
+          </button>
+
+          {/* View, scope and sort: always shown on a laptop, behind Options on a phone */}
+          <div className={`${optionsOpen ? 'flex' : 'hidden'} lg:flex w-full lg:w-auto flex-wrap items-center gap-2`}>
+            <div role="group" aria-label="Sort the view" className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+              {[
+                { id: 'asc', label: 'Oldest first' },
+                { id: 'desc', label: 'Newest first' },
+                { id: 'sheet', label: 'Sheet order' },
+              ].map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  aria-pressed={sortOrder === o.id}
+                  onClick={() => setSortOrder(o.id as 'sheet' | 'asc' | 'desc')}
+                  className={segment(sortOrder === o.id)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
+            <div role="group" aria-label="How much to show" className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+              <button
+                type="button"
+                aria-pressed={isWindowFilterActive}
+                onClick={() => {
+                  setIsWindowFilterActive(true);
+                  setCurrentPage(1);
+                }}
+                className={segment(isWindowFilterActive)}
+              >
+                Around today
+              </button>
+              <button
+                type="button"
+                aria-pressed={!isWindowFilterActive}
+                onClick={() => {
+                  setIsWindowFilterActive(false);
+                  setCurrentPage(1);
+                }}
+                className={segment(!isWindowFilterActive)}
+              >
+                All ({expenses.length})
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAutoSort}
+              disabled={sortExpensesMutation.isPending || reorderMutation.isPending}
+              className="flex min-h-11 lg:min-h-9 items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 text-xs font-medium text-amber-400 transition-all hover:bg-amber-500/20 active:scale-95 disabled:opacity-50"
+              title="Sort the rows in Google Sheets by date. You can undo it."
+            >
+              {sortExpensesMutation.isPending ? (
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              <span>{sortExpensesMutation.isPending ? 'Sorting…' : 'Sort sheet by date'}</span>
+            </button>
+
+            {reorderMutation.isPending && (
+              <div role="status" className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400 animate-pulse">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <span>Moving the row in Sheets…</span>
+              </div>
+            )}
+          </div>
+
           {selectedRows.length > 0 && (
             <button
+              type="button"
               onClick={handleBulkDelete}
               disabled={deleteMutation.isPending}
-              className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-500/20 transition-colors"
+              className="flex min-h-11 lg:min-h-9 items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 text-xs font-medium text-orange-400 hover:bg-orange-500/20 transition-colors"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Delete ({selectedRows.length})</span>
             </button>
           )}
         </div>
+      </StickyBar>
+
+      {/* What is shown, and the earlier-transactions banner (phone: behind Options) */}
+      <div className={`${optionsOpen ? 'block' : 'hidden'} lg:block space-y-3`}>
+        {isWindowFilterActive && (
+          <p className="text-xs text-zinc-400">
+            Showing {formatDate(pastCutoff)} to {formatDate(futureCutoff)}, around <strong className="font-semibold text-amber-400">{formatDate(referenceDate)}</strong>.
+          </p>
+        )}
+        {isWindowFilterActive && earlierCount > 0 && (
+          <div>
+            {!showEarlier ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-white/[0.07] bg-[#18181B] text-xs">
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <History className="h-4 w-4 text-amber-500 shrink-0" aria-hidden="true" />
+                  <span>
+                    <strong className="text-white">{earlierCount}</strong> earlier transactions before{' '}
+                    <strong className="text-amber-400">{formatDate(pastCutoff)}</strong> are hidden
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEarlier(true)}
+                  className="px-3 min-h-11 lg:min-h-9 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-medium text-xs border border-amber-500/20 transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                >
+                  <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Show earlier ({earlierCount})</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 text-xs text-amber-400">
+                <span className="flex items-center gap-1.5">
+                  <History className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+                  Showing {earlierCount} earlier transactions before {formatDate(pastCutoff)}
+                </span>
+                <button type="button" onClick={() => setShowEarlier(false)} className="min-h-11 lg:min-h-9 px-2 text-xs text-amber-400 hover:underline font-medium">
+                  Hide earlier
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Earlier Transactions Collapsible Banner */}
-      {isWindowFilterActive && earlierCount > 0 && (
-        <div>
-          {!showEarlier ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-white/[0.07] bg-[#18181B] text-xs">
-              <div className="flex items-center gap-2 text-zinc-400">
-                <History className="h-4 w-4 text-amber-500 shrink-0" />
-                <span>
-                  <strong className="text-white font-mono">{earlierCount}</strong> earlier transactions before{' '}
-                  <strong className="text-amber-400">{formatDisplayDate(pastCutoff)}</strong> hidden to maintain immediate focus
-                </span>
-              </div>
-              <button
-                onClick={() => setShowEarlier(true)}
-                className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-medium text-xs border border-amber-500/20 transition-colors flex items-center justify-center gap-1.5 shrink-0"
-              >
-                <ChevronUp className="h-3.5 w-3.5" />
-                <span>Load Earlier ({earlierCount})</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 text-xs text-amber-400">
-              <span className="flex items-center gap-1.5">
-                <History className="h-3.5 w-3.5 text-amber-500" />
-                Showing {earlierCount} earlier transactions before {formatDisplayDate(pastCutoff)}
-              </span>
-              <button
-                onClick={() => setShowEarlier(false)}
-                className="text-xs text-amber-400 hover:underline font-medium"
-              >
-                Collapse Earlier
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Table Container */}
-      <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#121214]">
+      {/* The table scrolls inside its own area so its header always stays in view */}
+      <TableScroller ref={scrollerRef}>
         <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-white/[0.07] bg-[#18181B] text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider">
-              <th className="py-3 px-1.5 w-8 text-center" title="Drag row handle to reorder in Google Sheets">
+          <thead className="sticky top-0 z-10">
+            <tr className="text-xs font-medium text-zinc-400 [&>th]:bg-[#18181B] [&>th]:shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)]">
+              <th className="py-3 px-1.5 w-8 text-center">
                 <span className="sr-only">Reorder</span>
               </th>
               <th className="py-3 px-2 w-10 text-center">
                 <input
                   type="checkbox"
+                  aria-label="Select all rows on this page"
                   checked={
                     paginatedExpenses.length > 0 &&
                     selectedRows.length === paginatedExpenses.length
@@ -583,15 +567,15 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                   className="rounded border-white/20 bg-[#18181B] text-amber-500 focus:ring-0"
                 />
               </th>
-              <th className="py-3 px-2 w-14 font-mono text-zinc-500"># Row</th>
-              <th className="py-3 px-3 w-32 font-mono">Date</th>
+              <th className="py-3 px-2 w-14 text-zinc-500">Row</th>
+              <th className="py-3 px-3 w-32">Date</th>
               <th className="py-3 px-4">Description</th>
               <th className="py-3 px-4 text-right">Amount</th>
-              <th className="py-3 px-3 text-center">Type (Click)</th>
+              <th className="py-3 px-3 text-center">Type</th>
               <th className="py-3 px-4 text-right">
                 <span className="flex items-center justify-end gap-1">
-                  <Lock className="h-3 w-3 text-amber-400" />
-                  Balance (E)
+                  <Lock className="h-3 w-3 text-amber-400" aria-hidden="true" />
+                  Balance
                 </span>
               </th>
               <th className="py-3 px-3 w-28 text-center">Actions</th>
@@ -616,6 +600,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                   <tr
                     key={entry.rowIndex}
                     ref={isNearest ? nearestRowRef : undefined}
+                    data-anchor-row={isNearest ? 'true' : undefined}
                     onDragOver={(ev) => {
                       ev.preventDefault();
                       ev.dataTransfer.dropEffect = 'move';
@@ -768,8 +753,8 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
             )}
           </tbody>
         </table>
-      </div>
 
+        <div className="space-y-3 p-3">
       {/* Further Projections Collapsible Banner */}
       {isWindowFilterActive && futureCount > 0 && (
         <div>
@@ -863,6 +848,8 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
           </div>
         </div>
       </div>
+        </div>
+      </TableScroller>
 
       {/* Edit Modal */}
       {editingEntry && (

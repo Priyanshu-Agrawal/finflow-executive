@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { placeRowInView } from '@/lib/scroll-anchor';
+import { TodayFab } from '@/components/ui/TodayFab';
+import { useAnchorInView } from '@/hooks/useAnchorInView';
 import {
   ExpenseEntry,
   LoanStatus,
@@ -15,7 +16,6 @@ import { useUpdateExpense, useToggleType, useSortExpenses, useRestoreExpensesOrd
 import { useUndo } from '@/context/UndoContext';
 import {
   ArrowUpDown,
-  LocateFixed,
   Check,
   ChevronDown,
   Download,
@@ -110,35 +110,9 @@ export function ExcelSpreadsheet({
     }
   }, [anchorRow]);
 
-  // Floating "Today" button: shown when the anchor row is scrolled out of the grid's view
-  // (or another sheet tab is open); tapping it brings the anchor back to the 30% position.
-  const [anchorInView, setAnchorInView] = useState(true);
-  const updateAnchorInView = useCallback(() => {
-    const container = tableContainerRef.current;
-    const rowElem = anchorRow ? document.getElementById(`excel-row-${anchorRow}`) : null;
-    if (!container || !rowElem) {
-      setAnchorInView(false);
-      return;
-    }
-    const c = container.getBoundingClientRect();
-    const r = rowElem.getBoundingClientRect();
-    const inGrid = r.bottom > c.top + 36 && r.top < c.bottom - 8; // 36px ≈ sticky header
-    const onScreen = r.bottom > 0 && r.top < window.innerHeight;
-    setAnchorInView(inGrid && onScreen);
-  }, [anchorRow]);
-  useEffect(() => {
-    const container = tableContainerRef.current;
-    updateAnchorInView();
-    if (!container) return;
-    container.addEventListener('scroll', updateAnchorInView, { passive: true });
-    window.addEventListener('scroll', updateAnchorInView, { passive: true });
-    window.addEventListener('resize', updateAnchorInView);
-    return () => {
-      container.removeEventListener('scroll', updateAnchorInView);
-      window.removeEventListener('scroll', updateAnchorInView);
-      window.removeEventListener('resize', updateAnchorInView);
-    };
-  }, [updateAnchorInView, activeTab, expenses]);
+  // The one floating Today button: shown when the anchor row is scrolled out of the grid's view
+  // (or another sheet tab is open); it brings the anchor back to the 30% position.
+  const anchorInView = useAnchorInView(tableContainerRef, activeTab);
   const goToToday = () => {
     if (!anchorRow) return;
     setActiveTab('expenses');
@@ -434,20 +408,7 @@ export function ExcelSpreadsheet({
 
   return (
     <div className="relative flex flex-col h-[calc(100vh-12rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
-      {anchorRow && (!anchorInView || activeTab !== 'expenses') && typeof document !== 'undefined' &&
-        createPortal(
-        <button
-          type="button"
-          onClick={goToToday}
-          aria-label="Go to today's row"
-          title={`Go to today's row (#${anchorRow})`}
-          className="fixed right-4 lg:right-8 bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] lg:bottom-8 z-40 flex items-center gap-1.5 min-h-11 min-w-11 justify-center rounded-full bg-amber-500 px-4 text-sm font-semibold text-black shadow-lg shadow-black/50 ring-1 ring-amber-300/40 hover:bg-amber-400 active:scale-95 transition"
-        >
-          <LocateFixed className="h-4 w-4" />
-          <span>Today</span>
-        </button>,
-          document.body
-        )}
+      <TodayFab visible={Boolean(anchorRow) && (!anchorInView || activeTab !== 'expenses')} onClick={goToToday} />
       {/* Top Excel Ribbon Toolbar */}
       <div className="border-b border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2.5">
         {/* Left: Mode Title & Sheet Tabs */}
@@ -683,6 +644,7 @@ export function ExcelSpreadsheet({
                   <tr
                     key={rowNum}
                     id={`excel-row-${rowNum}`}
+                    data-anchor-row={isAnchorRow ? 'true' : undefined}
                     onDragOver={(ev) => {
                       ev.preventDefault();
                       ev.dataTransfer.dropEffect = 'move';

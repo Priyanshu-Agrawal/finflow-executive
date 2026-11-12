@@ -4,7 +4,9 @@ import React, { useState, useMemo } from 'react';
 import { PeerLedgerEntry } from '@/lib/types';
 import { formatINR } from '@/lib/date-utils';
 import { useAddLedgerEntry } from '@/hooks/useFinancials';
-import { Plus, Search, Users, Wallet, Check, Sparkles } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
+import { StickyBar } from '@/components/ui/StickyBar';
+import { TableScroller } from '@/components/ui/TableScroller';
 
 interface PeerLedgerTableProps {
   entries: PeerLedgerEntry[];
@@ -63,7 +65,7 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Overview Metric Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-4 shadow-xl">
@@ -91,74 +93,64 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
         </div>
       </div>
 
-      {/* Main Table Container */}
-      <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-5 shadow-xl space-y-4">
-        {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex flex-1 items-center gap-2 max-w-sm">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search event, description, person..."
-                className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
-              />
-            </div>
+      {/* Control bar: sticks under the top bar */}
+      <StickyBar>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-3.5 sm:top-2.5 h-4 w-4 text-zinc-500" aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search shared spends"
+              placeholder="Search event, description or person"
+              className="w-full min-h-11 sm:min-h-9 rounded-xl border border-white/[0.07] bg-[#18181B] pl-9 pr-4 text-sm sm:text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
+            />
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Person Filter Pills */}
-            <div className="flex items-center gap-1 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+          {/* Person filter: scrolls sideways inside its own box, never the page */}
+          <div role="group" aria-label="Filter by person" className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto no-scrollbar rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
+            {['ALL', ...peopleList].map((p) => (
               <button
-                onClick={() => setSelectedPerson('ALL')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  selectedPerson === 'ALL'
+                key={p}
+                type="button"
+                aria-pressed={selectedPerson === p}
+                onClick={() => setSelectedPerson(p)}
+                className={`min-h-11 sm:min-h-8 shrink-0 px-3 sm:px-2.5 rounded-lg text-xs font-medium transition-colors ${
+                  selectedPerson === p
                     ? 'bg-amber-500 text-black font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                All
+                {p === 'ALL' ? 'All' : p}
               </button>
-              {peopleList.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setSelectedPerson(p)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                    selectedPerson === p
-                      ? 'bg-amber-500 text-black font-semibold shadow-sm'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setIsAddOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Shared Outlay</span>
-            </button>
+            ))}
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#121214]">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-white/[0.07] bg-[#18181B] text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider">
-                <th className="py-3 px-3 w-14 font-mono text-zinc-500"># Row</th>
-                <th className="py-3 px-3 w-28">Date</th>
-                <th className="py-3 px-4">Event / Description</th>
-                <th className="py-3 px-4">Split With (Beneficiaries)</th>
-                <th className="py-3 px-4 text-right">Total Outlay</th>
-                <th className="py-3 px-4 text-right">My Share</th>
-              </tr>
-            </thead>
+          <button
+            type="button"
+            onClick={() => setIsAddOpen(true)}
+            className="flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            <span>Add shared spend</span>
+          </button>
+        </div>
+      </StickyBar>
+
+      {/* The table scrolls inside its own area so its header always stays in view */}
+      <TableScroller>
+        <table className="w-full text-left border-collapse text-xs">
+          <thead className="sticky top-0 z-10">
+            <tr className="text-xs font-medium text-zinc-400 [&>th]:bg-[#18181B] [&>th]:shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)]">
+              <th className="py-3 px-3 w-14 text-zinc-500">Row</th>
+              <th className="py-3 px-3 w-28">Date</th>
+              <th className="py-3 px-4">Event</th>
+              <th className="py-3 px-4">Split with</th>
+              <th className="py-3 px-4 text-right whitespace-nowrap">Total spent</th>
+              <th className="py-3 px-4 text-right whitespace-nowrap">My share</th>
+            </tr>
+          </thead>
             <tbody className="divide-y divide-white/[0.04] bg-[#121214] font-medium">
               {filteredEntries.length === 0 ? (
                 <tr>
@@ -200,9 +192,8 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
-      </div>
+        </table>
+      </TableScroller>
 
       {/* Add Shared Outlay Modal */}
       {isAddOpen && (

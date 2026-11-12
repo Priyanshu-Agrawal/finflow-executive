@@ -30,7 +30,7 @@ export default function QuickLogPage() {
             }`}
           >
             <PlusCircle className="h-4 w-4" />
-            <span>1-Tap Daily Quick Log</span>
+            <span>Log a transaction</span>
           </button>
           <button
             onClick={() => setActiveTab('emi')}
@@ -41,7 +41,7 @@ export default function QuickLogPage() {
             }`}
           >
             <Sliders className="h-4 w-4" />
-            <span>Multi-Month EMI Scheduler</span>
+            <span>Schedule EMI</span>
           </button>
         </div>
 
@@ -55,15 +55,15 @@ export default function QuickLogPage() {
         {/* Recent Ledger Entries Preview */}
         {recentTransactions.length > 0 && (
           <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-5 shadow-lg">
-            <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-mono">
+            <h3 className="text-xs font-medium text-zinc-400 mb-3 flex items-center gap-1.5 tabular-nums">
               <Clock className="h-3.5 w-3.5 text-amber-500" />
-              Latest Sheet Entries
+              Latest entries
             </h3>
             <div className="space-y-2">
               {recentTransactions.map((e) => (
                 <div
                   key={e.rowIndex}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-white/[0.05] bg-[#18181B] text-xs font-mono"
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-white/[0.05] bg-[#18181B] text-xs tabular-nums"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-zinc-500">#{e.rowIndex}</span>
@@ -78,7 +78,7 @@ export default function QuickLogPage() {
                     >
                       {e.type === 'CREDIT' ? '+' : '-'}{formatINR(e.amount)}
                     </span>
-                    <span className="text-zinc-100 font-mono font-medium">{formatINR(e.balance)}</span>
+                    <span className="text-zinc-100 tabular-nums font-medium">{formatINR(e.balance)}</span>
                   </div>
                 </div>
               ))}

@@ -3,6 +3,7 @@
 //   npm run audit:ui                                   (against http://localhost:3000)
 //   npm run audit:ui -- --base=http://localhost:3007   (a test build)
 //   npm run audit:ui -- --report                       (also writes /tmp/audit.json and screenshots to /tmp/audit-shots)
+//   npm run audit:ui -- --verbose                      (list more offenders for the type-system rule)
 //
 // Signs in once, reads /api/financials ONCE (Sheets allows ~60 reads a minute) and serves that
 // same response to every page through the browser context. Write routes are intercepted: this
@@ -22,6 +23,7 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const BASE = (args.find((a) => a.startsWith('--base=')) || '--base=http://localhost:3000').slice(7).replace(/\/$/, '');
 const REPORT = args.includes('--report');
+const VERBOSE = args.includes('--verbose'); // list more offenders per failing check
 
 const ROUTES = [
   { path: '/', label: 'Home' },
@@ -241,6 +243,46 @@ function contrast(a, b) {
 }
 const near = (rgb, want, tol) => rgb.every((v, i) => Math.abs(v - want[i]) <= tol);
 
+function ruleR5R6(scan, phone, path, vpName) {
+  // R5 one type system
+  {
+    const small = scan.items.filter((i) => i.fs < 12 && !(i.th && !phone && i.fs >= 11));
+    const tracked = scan.items.filter((i) => i.upper && i.ls > 0.05);
+    const mono = scan.items.filter((i) => /mono|courier|consolas/i.test(i.ff) && !i.mono);
+    const serif = scan.items.filter((i) => /newsreader|georgia|times/i.test(i.ff.replace(/sans-serif/gi, '')) && !i.serif);
+    const parts = [];
+    const show = (label, arr) => {
+      if (!arr.length) return;
+      const seen = new Set();
+      const uniq = arr.filter((i) => { const k = i.sel + i.t; return seen.has(k) ? false : (seen.add(k), true); });
+      parts.push(`${arr.length} ${label}: ` + uniq.slice(0, VERBOSE ? 14 : 3).map((i) => `${i.sel} "${i.t.slice(0, 22)}"`).join(' | '));
+    };
+    show('under 12px', small);
+    show('wide-tracked caps', tracked);
+    show('mono outside Excel grid', mono);
+    show('serif outside wordmark/hero', serif);
+    rec('R5', path, vpName, parts.length === 0, parts.join(' ; '));
+  }
+
+  // R6 dates
+  {
+    const iso = scan.items.filter((i) => /\d{4}-\d{2}-\d{2}/.test(i.t) && !i.mono);
+    rec('R6', path, vpName, iso.length === 0, iso.length ? `${iso.length} ISO dates, e.g. ${iso.slice(0, 3).map((i) => `${i.sel} "${i.t.slice(0, 24)}"`).join(' | ')}` : '');
+  }
+
+}
+
+function ruleR9(scan, phone, path, vpName) {
+  // R9 tap targets and labels
+  {
+    const parts = [];
+    if (phone && scan.smallCount) parts.push(`${scan.smallCount} controls under 44px: ${scan.small.slice(0, 4).join(' | ')}`);
+    if (scan.unlabelledCount) parts.push(`${scan.unlabelledCount} unlabelled icon controls: ${scan.unlabelled.slice(0, 3).join(' | ')}`);
+    rec('R9', path, vpName, parts.length === 0, parts.join(' ; '));
+  }
+
+}
+
 async function waitReady(page) {
   await page.waitForLoadState('domcontentloaded');
   await page
@@ -429,26 +471,7 @@ async function checkToday(page, route, vpName) {
       await checkToday(page, route, vp.name);
       await page.evaluate(() => window.scrollTo(0, 0));
 
-      // R5 one type system
-      {
-        const small = scan.items.filter((i) => i.fs < 12 && !(i.th && !phone && i.fs >= 11));
-        const tracked = scan.items.filter((i) => i.upper && i.ls > 0.05);
-        const mono = scan.items.filter((i) => /mono|courier|consolas/i.test(i.ff) && !i.mono);
-        const serif = scan.items.filter((i) => /newsreader|georgia|times/i.test(i.ff.replace(/sans-serif/gi, '')) && !i.serif);
-        const parts = [];
-        const show = (label, arr) => arr.length && parts.push(`${arr.length} ${label}: ` + arr.slice(0, 3).map((i) => `${i.sel} "${i.t.slice(0, 22)}"`).join(' | '));
-        show('under 12px', small);
-        show('wide-tracked caps', tracked);
-        show('mono outside Excel grid', mono);
-        show('serif outside wordmark/hero', serif);
-        rec('R5', route.path, vp.name, parts.length === 0, parts.join(' ; '));
-      }
-
-      // R6 dates
-      {
-        const iso = scan.items.filter((i) => /\d{4}-\d{2}-\d{2}/.test(i.t) && !i.mono);
-        rec('R6', route.path, vp.name, iso.length === 0, iso.length ? `${iso.length} ISO dates, e.g. ${iso.slice(0, 3).map((i) => `${i.sel} "${i.t.slice(0, 24)}"`).join(' | ')}` : '');
-      }
+      ruleR5R6(scan, phone, route.path, vp.name);
 
       // R7 credits
       {
@@ -465,13 +488,7 @@ async function checkToday(page, route, vpName) {
       // R8 no sideways scroll
       rec('R8', route.path, vp.name, scan.scrollWidth <= scan.vw, scan.scrollWidth > scan.vw ? `page is ${scan.scrollWidth}px wide in ${scan.vw}px; wide: ${scan.wide.slice(0, 4).join(' | ')}` : '');
 
-      // R9 tap targets and labels
-      {
-        const parts = [];
-        if (phone && scan.smallCount) parts.push(`${scan.smallCount} controls under 44px: ${scan.small.slice(0, 4).join(' | ')}`);
-        if (scan.unlabelledCount) parts.push(`${scan.unlabelledCount} unlabelled icon controls: ${scan.unlabelled.slice(0, 3).join(' | ')}`);
-        rec('R9', route.path, vp.name, parts.length === 0, parts.join(' ; '));
-      }
+      ruleR9(scan, phone, route.path, vp.name);
 
       // R10 no hard-coded money text (open the date popover too: it holds the old preset)
       {
@@ -497,6 +514,32 @@ async function checkToday(page, route, vpName) {
         rec('R10', route.path, vp.name, parts.length === 0, parts.join(' ; '));
       }
       if (errors.length) console.log(`note  page errors on ${route.path} (${vp.name}): ${errors.slice(0, 2).join(' | ')}`);
+      await page.close();
+    }
+  }
+
+
+  // Dialogs: the Log and Schedule EMI sheets follow the same type, date and label rules.
+  for (const vp of VIEWPORTS) {
+    for (const dlg of [
+      { name: '/expenses+Log', open: (page) => page.getByRole('button', { name: 'Log', exact: true }).first().click() },
+      { name: '/expenses+EMI', open: (page) => page.getByRole('button', { name: 'Schedule EMI' }).first().click() },
+    ]) {
+      const page = await ctx.newPage();
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      pageStatus = 200;
+      await page.goto(BASE + '/expenses', { waitUntil: 'domcontentloaded' });
+      await waitReady(page);
+      await dlg.open(page);
+      await page.waitForTimeout(500);
+      const opened = await page.getByRole('dialog').count();
+      if (!opened) {
+        rec('R5', dlg.name, vp.name, false, 'dialog did not open');
+      } else {
+        const scan = await page.evaluate(pageScan, {});
+        ruleR5R6(scan, vp.name === 'phone', dlg.name, vp.name);
+        ruleR9(scan, vp.name === 'phone', dlg.name, vp.name);
+      }
       await page.close();
     }
   }

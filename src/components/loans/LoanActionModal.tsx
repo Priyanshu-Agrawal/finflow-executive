@@ -192,26 +192,26 @@ export function LoanActionModal({
         {/* Loan Header Card */}
         <div className="pb-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-mono font-bold text-zinc-300 border border-white/[0.07] uppercase tracking-wider">
+            <span className="rounded-md bg-white/[0.04] px-2.5 py-0.5 text-xs tabular-nums font-bold text-zinc-300 border border-white/[0.07]">
               Loans Col {loan.columnLetter}
             </span>
-            <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-zinc-400 capitalize border border-white/[0.07]">
+            <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-xs font-semibold text-zinc-400 capitalize border border-white/[0.07]">
               {loan.category.replace('_', ' ')}
             </span>
             {loan.isPaidOff ? (
-              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-mono">
+              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20 flex items-center gap-1 tabular-nums">
                 <CheckCircle2 className="h-3 w-3" />
                 Settled & Clear
               </span>
             ) : (
-              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 font-mono">
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 tabular-nums">
                 <Clock className="h-3 w-3" />
                 Active Liability
               </span>
             )}
           </div>
 
-          <h2 className="text-xl font-serif font-bold text-white mt-2 flex items-center gap-2">
+          <h2 className="text-xl tabular-nums font-bold text-white mt-2 flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-amber-400" />
             <span>{loan.name}</span>
           </h2>
@@ -219,20 +219,20 @@ export function LoanActionModal({
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/[0.06] text-xs">
             <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
-              <span className="text-[11px] text-zinc-400 block font-mono">Current Balance</span>
-              <span className="font-serif text-base font-bold text-white">
+              <span className="text-xs text-zinc-400 block tabular-nums">Current Balance</span>
+              <span className="tabular-nums text-base font-bold text-white">
                 {formatINR(loan.currentDue)}
               </span>
             </div>
             <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
-              <span className="text-[11px] text-zinc-400 block font-mono">Paid to Date</span>
-              <span className="font-serif text-base font-bold text-emerald-400">
+              <span className="text-xs text-zinc-400 block tabular-nums">Paid to Date</span>
+              <span className="tabular-nums text-base font-bold text-emerald-400">
                 {formatINR(loan.paidToDate)}
               </span>
             </div>
             <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
-              <span className="text-[11px] text-zinc-400 block font-mono">Initial Principal</span>
-              <span className="font-serif text-base font-bold text-zinc-200">
+              <span className="text-xs text-zinc-400 block tabular-nums">Initial Principal</span>
+              <span className="tabular-nums text-base font-bold text-zinc-200">
                 {formatINR(loan.initialPrincipal)}
               </span>
             </div>
@@ -248,7 +248,7 @@ export function LoanActionModal({
               <button
                 onClick={handleResetBca}
                 disabled={loanActionMutation.isPending}
-                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[11px] transition-all"
+                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-all"
               >
                 Reset B2
               </button>
@@ -257,7 +257,7 @@ export function LoanActionModal({
         </div>
 
         {/* Action Switcher Tabs (Unified Segmented Control) */}
-        <div className="grid grid-cols-5 gap-1 my-4 p-1 rounded-xl bg-[#18181B] border border-white/[0.08] text-[11px] font-semibold">
+        <div className="grid grid-cols-5 gap-1 my-4 p-1 rounded-xl bg-[#18181B] border border-white/[0.08] text-xs font-semibold">
           {(
             [
               { id: 'pay', label: 'Pay EMI' },
@@ -310,7 +310,7 @@ export function LoanActionModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-mono text-zinc-400 block mb-1">Amount (₹)</label>
+                <label className="text-xs tabular-nums text-zinc-400 block mb-1">Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -318,24 +318,24 @@ export function LoanActionModal({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="3000"
-                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums font-bold focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono text-zinc-400 block mb-1">Payment Date</label>
+                <label className="text-xs tabular-nums text-zinc-400 block mb-1">Payment Date</label>
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1">Notes / Description</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1">Notes / Description</label>
               <input
                 type="text"
                 value={notes}
@@ -368,12 +368,12 @@ export function LoanActionModal({
                 Third-Party Settlement (No Bank Debit!)
               </span>
               Use this when someone else (e.g. Khushboo or Bhaiya) pays this bill directly (like your SBI Credit Card).
-              It is recorded as <strong className="font-mono text-amber-400">SETTLEMENT</strong> in Expenses,
+              It is recorded as <strong className="tabular-nums text-amber-400">SETTLEMENT</strong> in Expenses,
               so your bank balance in Column E is <strong className="text-white">preserved intact</strong>!
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1.5">Who Paid this Bill?</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1.5">Who Paid this Bill?</label>
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 {['Khushboo', 'Bhaiya', 'Papa', 'Friend', 'Company'].map((p) => (
                   <button
@@ -402,7 +402,7 @@ export function LoanActionModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-mono text-zinc-400 block mb-1">Amount Paid (₹)</label>
+                <label className="text-xs tabular-nums text-zinc-400 block mb-1">Amount Paid (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -410,24 +410,24 @@ export function LoanActionModal({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="5000"
-                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums font-bold focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono text-zinc-400 block mb-1">Date Paid</label>
+                <label className="text-xs tabular-nums text-zinc-400 block mb-1">Date Paid</label>
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1">Notes / Transaction Reference</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1">Notes / Transaction Reference</label>
               <input
                 type="text"
                 value={notes}
@@ -458,27 +458,27 @@ export function LoanActionModal({
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">Complete Settlement</span>
               Mark {loan.name} as fully paid off (₹0 remaining). This writes directly to cell{' '}
-              <strong className="font-mono text-amber-400">Loans!{loan.columnLetter}2</strong>.
+              <strong className="tabular-nums text-amber-400">Loans!{loan.columnLetter}2</strong>.
             </div>
 
             <div className="p-4 rounded-xl bg-[#18181B] border border-white/[0.06] space-y-2 text-xs">
               <div className="flex justify-between text-zinc-400">
                 <span>Current Remaining Due:</span>
-                <strong className="font-serif text-white font-bold">{formatINR(loan.currentDue)}</strong>
+                <strong className="tabular-nums text-white font-bold">{formatINR(loan.currentDue)}</strong>
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>New Balance after Settlement:</span>
-                <strong className="font-serif text-emerald-400 font-bold">₹0 (100% Cleared)</strong>
+                <strong className="tabular-nums text-emerald-400 font-bold">₹0 (100% Cleared)</strong>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1">Settlement Date</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1">Settlement Date</label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
@@ -507,7 +507,7 @@ export function LoanActionModal({
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1.5">Select Recent Transaction</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1.5">Select Recent Transaction</label>
               <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-white/[0.07] bg-black/60 p-2">
                 {recentExpenses.length === 0 ? (
                   <p className="text-xs text-zinc-500 p-2 text-center">No recent expenses found.</p>
@@ -524,11 +524,11 @@ export function LoanActionModal({
                       }`}
                     >
                       <div className="truncate pr-2">
-                        <span className="font-mono text-[10px] text-zinc-500 mr-2">#{e.rowIndex}</span>
+                        <span className="tabular-nums text-xs text-zinc-500 mr-2">#{e.rowIndex}</span>
                         <span>{e.description}</span>
-                        <span className="text-[10px] font-mono text-zinc-500 block">{formatDisplayDate(e.date)}</span>
+                        <span className="text-xs tabular-nums text-zinc-500 block">{formatDisplayDate(e.date)}</span>
                       </div>
-                      <span className="font-serif font-bold text-white whitespace-nowrap">
+                      <span className="tabular-nums font-bold text-white whitespace-nowrap">
                         {formatINR(e.amount)}
                       </span>
                     </button>
@@ -538,13 +538,13 @@ export function LoanActionModal({
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1">Or Enter Exact Row Number</label>
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1">Or Enter Exact Row Number</label>
               <input
                 type="number"
                 value={selectedExpenseRow}
                 onChange={(e) => setSelectedExpenseRow(e.target.value ? Number(e.target.value) : '')}
                 placeholder="Row # (e.g. 238)"
-                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white font-mono focus:border-amber-500 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-xs text-white tabular-nums focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 
@@ -569,11 +569,11 @@ export function LoanActionModal({
             <div className="rounded-xl bg-black/40 border border-white/[0.07] p-3 text-xs text-zinc-300">
               <span className="font-semibold block text-white">Direct Sheet Cell Sync</span>
               Modify the exact baseline / due balance stored in{' '}
-              <strong className="font-mono text-amber-400">Loans!{loan.columnLetter}2</strong> in Google Sheets.
+              <strong className="tabular-nums text-amber-400">Loans!{loan.columnLetter}2</strong> in Google Sheets.
             </div>
 
             <div>
-              <label className="text-xs font-mono text-zinc-400 block mb-1">
+              <label className="text-xs tabular-nums text-zinc-400 block mb-1">
                 New Due Value for Column {loan.columnLetter} (₹)
               </label>
               <input
@@ -583,7 +583,7 @@ export function LoanActionModal({
                 value={customBaseline}
                 onChange={(e) => setCustomBaseline(e.target.value)}
                 placeholder="18000"
-                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white font-serif font-bold focus:border-amber-500 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.1] bg-black/60 px-3 py-2 text-sm text-white tabular-nums font-bold focus:border-amber-500 focus:outline-none transition-colors"
               />
             </div>
 

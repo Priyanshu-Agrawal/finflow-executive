@@ -69,27 +69,27 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
       {/* Overview Metric Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-4 shadow-xl">
-          <span className="text-xs font-mono text-zinc-400 block">Total Group Outlays Recorded</span>
-          <span className="font-serif text-2xl font-bold text-white mt-1 block">
+          <span className="text-xs tabular-nums text-zinc-400 block">Total Group Outlays Recorded</span>
+          <span className="tabular-nums text-2xl font-bold text-white mt-1 block">
             {formatINR(totalGroupSpend)}
           </span>
-          <span className="text-[11px] font-mono text-zinc-500">{entries.length} shared events in Ledger</span>
+          <span className="text-xs tabular-nums text-zinc-500">{entries.length} shared events in Ledger</span>
         </div>
 
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 shadow-xl">
-          <span className="text-xs font-mono text-amber-400 block">Priyanshu&apos;s Split Share</span>
-          <span className="font-serif text-2xl font-bold text-white mt-1 block">
+          <span className="text-xs tabular-nums text-amber-400 block">Priyanshu&apos;s Split Share</span>
+          <span className="tabular-nums text-2xl font-bold text-white mt-1 block">
             {formatINR(totalMyShare)}
           </span>
-          <span className="text-[11px] text-zinc-300">Net personal allocation</span>
+          <span className="text-xs text-zinc-300">Net personal allocation</span>
         </div>
 
         <div className="rounded-2xl border border-white/[0.07] bg-[#121214] p-4 shadow-xl">
-          <span className="text-xs font-mono text-zinc-400 block">Peer Group Members</span>
+          <span className="text-xs tabular-nums text-zinc-400 block">Peer Group Members</span>
           <span className="text-sm font-medium text-white mt-1 block">
             Keshav, Bhavishya, Harsh, Yash, Omendra
           </span>
-          <span className="text-[11px] text-zinc-500">Includes recurring Cursor AI split</span>
+          <span className="text-xs text-zinc-500">Includes recurring Cursor AI split</span>
         </div>
       </div>
 
@@ -161,10 +161,10 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
               ) : (
                 filteredEntries.map((e) => (
                   <tr key={e.rowIndex} className="hover:bg-[#18181B]/70 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-zinc-500">
+                    <td data-allow-mono className="py-2.5 px-3 font-mono text-xs text-zinc-500">
                       #{e.rowIndex}
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-zinc-300 whitespace-nowrap">
+                    <td className="py-2.5 px-3 tabular-nums text-zinc-300 whitespace-nowrap">
                       {e.date}
                     </td>
                     <td className="py-2.5 px-4 text-white font-medium">
@@ -175,17 +175,17 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
                         {e.splitWith.split(',').map((p) => (
                           <span
                             key={p.trim()}
-                            className="rounded bg-[#18181B] border border-white/[0.07] px-2 py-0.5 text-[10px] text-amber-400 font-medium"
+                            className="rounded bg-[#18181B] border border-white/[0.07] px-2 py-0.5 text-xs text-amber-400 font-medium"
                           >
                             {p.trim()}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-2.5 px-4 text-right font-serif font-bold text-white whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-right tabular-nums font-bold text-white whitespace-nowrap">
                       {formatINR(e.amount)}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-serif font-bold text-amber-400 whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-right tabular-nums font-bold text-amber-400 whitespace-nowrap">
                       {formatINR(e.perPersonShare)}
                     </td>
                   </tr>
@@ -203,14 +203,14 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
               <h3 className="text-base font-medium text-white">
                 Add Shared Outlay to Ledger
               </h3>
-              <p className="text-xs font-mono text-zinc-400 mt-0.5">
+              <p className="text-xs tabular-nums text-zinc-400 mt-0.5">
                 Directly records split entries into the Ledger tab
               </p>
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="text-zinc-300 font-mono font-medium block mb-1">Date</label>
+                <label className="text-zinc-300 tabular-nums font-medium block mb-1">Date</label>
                 <input
                   type="text"
                   value={date}
@@ -222,19 +222,19 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
               </div>
 
               <div>
-                <label className="text-zinc-300 font-mono font-medium block mb-1">Total Amount (₹)</label>
+                <label className="text-zinc-300 tabular-nums font-medium block mb-1">Total Amount (₹)</label>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   placeholder="e.g. 1200"
-                  className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 font-serif font-bold text-white focus:border-amber-500 focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-mono font-medium block mb-1">Description</label>
+                <label className="text-zinc-300 tabular-nums font-medium block mb-1">Description</label>
                 <input
                   type="text"
                   value={description}
@@ -246,7 +246,7 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
               </div>
 
               <div>
-                <label className="text-zinc-300 font-mono font-medium block mb-1">Split With (People)</label>
+                <label className="text-zinc-300 tabular-nums font-medium block mb-1">Split With (People)</label>
                 <input
                   type="text"
                   value={splitWith}
@@ -258,13 +258,13 @@ export function PeerLedgerTable({ entries }: PeerLedgerTableProps) {
               </div>
 
               <div>
-                <label className="text-zinc-300 font-mono font-medium block mb-1">My Share (₹)</label>
+                <label className="text-zinc-300 tabular-nums font-medium block mb-1">My Share (₹)</label>
                 <input
                   type="number"
                   value={perPersonShare}
                   onChange={(e) => setPerPersonShare(Number(e.target.value))}
                   placeholder="e.g. 400"
-                  className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 font-serif font-bold text-amber-400 focus:border-amber-500 focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 tabular-nums font-bold text-amber-400 focus:border-amber-500 focus:outline-none"
                 />
               </div>
 

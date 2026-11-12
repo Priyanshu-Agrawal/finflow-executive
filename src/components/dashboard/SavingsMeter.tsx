@@ -23,16 +23,16 @@ const kindLabel = { past: 'actual', current: 'this cycle, projected', projected:
 function Stat({ label, value, sub }: { label: string; value: number | null; sub: string }) {
   return (
     <div className="rounded-xl border border-white/[0.06] bg-black/30 p-3 min-w-0">
-      <span className="text-[11px] text-zinc-400 block truncate">{label}</span>
+      <span className="text-xs text-zinc-400 block truncate">{label}</span>
       <div className="mt-1 flex items-center gap-1.5">
         {value !== null && (
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: value < 0 ? OVERSPENT : SAVED }} aria-hidden />
         )}
-        <span className="font-mono text-lg sm:text-xl font-bold text-white truncate">
+        <span className="tabular-nums text-lg sm:text-xl font-bold text-white truncate">
           {value === null ? '—' : signed(value)}
         </span>
       </div>
-      <span className="text-[10px] text-zinc-500 block mt-0.5 truncate">{sub}</span>
+      <span className="text-xs text-zinc-500 block mt-0.5 truncate">{sub}</span>
     </div>
   );
 }
@@ -56,7 +56,7 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
     <div className="rounded-3xl border border-white/[0.07] bg-[#121214] p-4 sm:p-6 shadow-xl">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-base font-serif font-bold text-white flex items-center gap-2">
+          <h3 className="text-base tabular-nums font-bold text-white flex items-center gap-2">
             <PiggyBank className="h-4 w-4 text-amber-400" />
             Savings Meter
           </h3>
@@ -106,7 +106,7 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
       </div>
       <div className="flex gap-0.5 mt-1.5" aria-hidden>
         {trend.map((c, i) => (
-          <span key={c.start} className={`flex-1 min-w-0 text-center text-[10px] font-mono truncate ${i === active ? 'text-white' : 'text-zinc-500'}`}>
+          <span key={c.start} className={`flex-1 min-w-0 text-center text-xs tabular-nums truncate ${i === active ? 'text-white' : 'text-zinc-500'}`}>
             {monthOf(c.start)}
           </span>
         ))}
@@ -117,11 +117,11 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
         <span className="text-xs text-zinc-400">
           {range(sel)} · <span className="text-zinc-300">{kindLabel[sel.kind]}</span>
         </span>
-        <span className="font-mono text-sm font-bold text-white">{signed(sel.saving)}</span>
+        <span className="tabular-nums text-sm font-bold text-white">{signed(sel.saving)}</span>
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-zinc-400">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-400">
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: SAVED }} />Saved</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: OVERSPENT }} />Overspent</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-zinc-400 opacity-45" />Projected</span>

@@ -19,16 +19,16 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.07]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-mono font-medium text-amber-400 border border-amber-500/20">
+            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs tabular-nums font-medium text-amber-400 border border-amber-500/20">
               ACTIVE LIABILITY CYCLE
             </span>
-            <span className="text-xs font-mono text-zinc-400">October 2026 – March 2027</span>
+            <span className="text-xs tabular-nums text-zinc-400">October 2026 – March 2027</span>
           </div>
           <h2 className="text-lg font-medium text-white mt-1">
             BCA Education Loan Amortization Tracker
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Fixed baseline total of <span className="font-mono text-white font-semibold">₹18,000</span> across 6 monthly ₹3,000 installments. Reaches ₹0 on <span className="text-amber-400 font-semibold">2027-03-05</span>.
+            Fixed baseline total of <span className="tabular-nums text-white font-semibold">₹18,000</span> across 6 monthly ₹3,000 installments. Reaches ₹0 on <span className="text-amber-400 font-semibold">2027-03-05</span>.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
               <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                 <span>
-                  Loans!B2 is <strong className="font-mono">{formatINR(bcaCycle.b2Value)}</strong> (Accumulated)
+                  Loans!B2 is <strong className="tabular-nums">{formatINR(bcaCycle.b2Value)}</strong> (Accumulated)
                 </span>
               </div>
               <button
@@ -64,35 +64,35 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
       {/* Metric Breakdown Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
         <div className="p-3.5 rounded-xl border border-white/[0.07] bg-[#18181B]">
-          <span className="text-xs font-mono text-zinc-400 block">Total Cycle Due</span>
-          <span className="font-mono text-xl font-bold text-white block mt-1">
+          <span className="text-xs tabular-nums text-zinc-400 block">Total Cycle Due</span>
+          <span className="tabular-nums text-xl font-bold text-white block mt-1">
             {formatINR(bcaCycle.totalCycleDue)}
           </span>
-          <span className="text-[11px] font-mono text-zinc-500">6 EMIs × ₹3,000</span>
+          <span className="text-xs tabular-nums text-zinc-500">6 EMIs × ₹3,000</span>
         </div>
 
         <div className="p-3.5 rounded-xl border border-white/[0.07] bg-[#18181B]">
-          <span className="text-xs font-mono text-zinc-400 block">Paid to Date</span>
-          <span className="font-mono text-xl font-bold text-emerald-400 block mt-1">
+          <span className="text-xs tabular-nums text-zinc-400 block">Paid to Date</span>
+          <span className="tabular-nums text-xl font-bold text-emerald-400 block mt-1">
             {formatINR(bcaCycle.paidToDate)}
           </span>
-          <span className="text-[11px] text-zinc-400">{bcaCycle.emisPaid} of 6 EMIs Cleared</span>
+          <span className="text-xs text-zinc-400">{bcaCycle.emisPaid} of 6 EMIs Cleared</span>
         </div>
 
         <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5">
-          <span className="text-xs font-mono text-amber-400 block">Remaining Due</span>
-          <span className="font-mono text-xl font-bold text-white block mt-1">
+          <span className="text-xs tabular-nums text-amber-400 block">Remaining Due</span>
+          <span className="tabular-nums text-xl font-bold text-white block mt-1">
             {formatINR(bcaCycle.remainingDue)}
           </span>
-          <span className="text-[11px] text-amber-400/80">{bcaCycle.emisRemaining} of 6 EMIs Remaining</span>
+          <span className="text-xs text-amber-400/80">{bcaCycle.emisRemaining} of 6 EMIs Remaining</span>
         </div>
 
         <div className="p-3.5 rounded-xl border border-white/[0.07] bg-[#18181B]">
-          <span className="text-xs font-mono text-zinc-400 block">Debt Payoff Milestone</span>
-          <span className="font-mono text-xl font-bold text-white block mt-1">
+          <span className="text-xs tabular-nums text-zinc-400 block">Debt Payoff Milestone</span>
+          <span className="tabular-nums text-xl font-bold text-white block mt-1">
             5 Mar 2027
           </span>
-          <span className="text-[11px] text-emerald-400 font-medium">+₹3,000/mo Unlocked</span>
+          <span className="text-xs text-emerald-400 font-medium">+₹3,000/mo Unlocked</span>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
       <div>
         <div className="flex items-center justify-between text-xs text-zinc-400 mb-2">
           <span className="font-medium text-white">Installment Schedule (Oct 2026 – Mar 2027)</span>
-          <span className="font-mono text-amber-400">
+          <span className="tabular-nums text-amber-400">
             {Math.round((bcaCycle.paidToDate / bcaCycle.totalCycleDue) * 100)}% Complete
           </span>
         </div>
@@ -123,10 +123,10 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
                   <Clock className="h-4 w-4 text-zinc-500" />
                 )}
               </div>
-              <div className="font-mono text-xs font-semibold text-white">
+              <div className="tabular-nums text-xs font-semibold text-white">
                 {formatINR(item.amount)}
               </div>
-              <div className="text-[10px] mt-1.5 font-medium">
+              <div className="text-xs mt-1.5 font-medium">
                 {item.isPaid ? (
                   <span className="text-emerald-400">PAID (EMI {idx + 1}/6)</span>
                 ) : (

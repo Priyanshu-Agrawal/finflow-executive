@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useScheduleEmi, useDeleteExpense } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
 import { formatINR } from '@/lib/date-utils';
+import { formatDate } from '@/lib/format';
 import { Calendar, CheckCircle, Clock, Layers, Sliders, X } from 'lucide-react';
 
 interface EmiSchedulerFormProps {
@@ -86,7 +87,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
             <Sliders className="h-4 w-4 text-amber-500" />
             Multi-Month EMI & Obligation Generator
           </h3>
-          <p className="text-xs font-mono text-zinc-400 mt-0.5">
+          <p className="text-xs tabular-nums text-zinc-400 mt-0.5">
             Generates sequential chronological installments with formula lineage defense in Column E
           </p>
         </div>
@@ -103,7 +104,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
       <form onSubmit={handleSubmit} data-modal-form="true" className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               Obligation Title / Equipment
             </label>
             <input
@@ -117,7 +118,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               Monthly Installment Amount (₹)
             </label>
             <input
@@ -125,13 +126,13 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
               value={monthlyAmount}
               onChange={(e) => setMonthlyAmount(Number(e.target.value))}
               placeholder="e.g. 15000"
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-serif font-bold text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               Number of Months (Tenure N)
             </label>
             <input
@@ -140,20 +141,20 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
               max={60}
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               First Installment Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
@@ -162,38 +163,38 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
         {/* Total Cost Summary */}
         <div className="p-4 rounded-xl border border-white/[0.07] bg-[#18181B] flex items-center justify-between text-xs">
           <div>
-            <span className="text-zinc-400 block font-mono">Total Commitment (Principal Outflow)</span>
-            <span className="font-serif text-base font-bold text-white">
+            <span className="text-zinc-400 block tabular-nums">Total Commitment (Principal Outflow)</span>
+            <span className="tabular-nums text-base font-bold text-white">
               {formatINR(monthlyAmount * months)}
             </span>
           </div>
           <div className="text-right">
-            <span className="text-zinc-400 block font-mono">Installments Generated</span>
-            <span className="font-mono font-bold text-amber-400">{months} records</span>
+            <span className="text-zinc-400 block tabular-nums">Installments Generated</span>
+            <span className="tabular-nums font-bold text-amber-400">{months} records</span>
           </div>
         </div>
 
         {/* Live Preview List */}
         <div>
-          <label className="text-xs font-mono font-medium text-zinc-400 uppercase tracking-wider block mb-2">
+          <label className="text-xs tabular-nums font-medium text-zinc-400 block mb-2">
             Chronological Sequence Preview ({previewList.length} of {months} rows shown)
           </label>
           <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-white/[0.07] bg-[#0B0B0C] p-3">
             {previewList.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#18181B] border border-white/[0.05] font-mono"
+                className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#18181B] border border-white/[0.05] tabular-nums"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-zinc-500 w-6">#{idx + 1}</span>
-                  <span className="text-zinc-400">{item.date}</span>
+                  <span className="text-zinc-400">{formatDate(item.date)}</span>
                   <span className="text-white font-sans font-medium">{item.label}</span>
                 </div>
-                <span className="text-zinc-100 font-serif font-bold">-{formatINR(item.amount)}</span>
+                <span className="text-zinc-100 tabular-nums font-bold">-{formatINR(item.amount)}</span>
               </div>
             ))}
             {months > 12 && (
-              <div className="text-center text-[11px] font-mono text-zinc-500 py-1">
+              <div className="text-center text-xs tabular-nums text-zinc-500 py-1">
                 + {months - 12} additional sequential installments will be appended...
               </div>
             )}

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DuplicateGroup, ExpenseEntry } from '@/lib/types';
 import { formatINR } from '@/lib/date-utils';
+import { formatDate } from '@/lib/format';
 import { AlertCircle, ChevronDown, ChevronUp, Copy, Trash2, CheckCircle2 } from 'lucide-react';
 import { useDeleteExpense, useRestoreExpenseRow } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
@@ -34,7 +35,7 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
           <div>
             <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
               Duplicate Detection Engine
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-400 border border-amber-500/30">
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs tabular-nums font-medium text-amber-400 border border-amber-500/30">
                 {duplicates.length} clusters flagged ({totalFlaggedCount} entries)
               </span>
             </h3>
@@ -64,7 +65,7 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-white text-sm">{group.description}</span>
-                  <span className="font-mono font-medium text-amber-400">
+                  <span className="tabular-nums font-medium text-amber-400">
                     {formatINR(group.amount)}
                   </span>
                 </div>
@@ -72,9 +73,9 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
                   {group.rows.map((r) => (
                     <span
                       key={r.rowIndex}
-                      className="rounded bg-[#121214] border border-white/[0.05] px-2 py-0.5 font-mono text-[11px] text-zinc-300"
+                      className="rounded bg-[#121214] border border-white/[0.05] px-2 py-0.5 tabular-nums text-xs text-zinc-300"
                     >
-                      Row {r.rowIndex} ({r.date}) — {r.type}
+                      Row {r.rowIndex} ({formatDate(r.date)}) — {r.type}
                     </span>
                   ))}
                 </div>
@@ -106,7 +107,7 @@ export function DuplicateAlertBanner({ duplicates, onSelectDuplicate }: Duplicat
                       }
                     }}
                     disabled={deleteMutation.isPending}
-                    className="flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-400 hover:bg-rose-500/20 transition-colors"
+                    className="flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-colors"
                     title={`Delete Row ${dupRow.rowIndex} and preserve Row ${group.rows[0].rowIndex}`}
                   >
                     <Trash2 className="h-3 w-3" />

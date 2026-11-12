@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { ExpenseEntry } from '@/lib/types';
 import { formatDisplayDate, formatINR, isBeforeOrEqual } from '@/lib/date-utils';
+import { formatDateShort } from '@/lib/format';
 import { TrendingUp } from 'lucide-react';
 
 interface BalanceTimelineProps {
@@ -86,8 +87,8 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
             <TrendingUp className="h-4 w-4 text-amber-500" />
             Cash Flow & Running Balance Timeline
           </h2>
-          <p className="text-xs font-mono text-zinc-400 mt-0.5">
-            Dynamic Curve: Settled Historical Actuals (≤ {formatDisplayDate(referenceDate)}) vs Future Projections (2026–2027)
+          <p className="text-xs tabular-nums text-zinc-400 mt-0.5">
+            Dynamic Curve: Already happened (≤ {formatDisplayDate(referenceDate)}) vs Future Projections (2026–2027)
           </p>
         </div>
 
@@ -159,21 +160,18 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
             <XAxis
               dataKey="date"
               stroke="#71717A"
-              fontSize={11}
-              fontFamily="monospace"
+              fontSize={12}
+              fontFamily="var(--font-sans), system-ui, sans-serif"
               tickLine={false}
               axisLine={false}
-              tickFormatter={(val) => {
-                if (!val) return '';
-                const parts = val.split('-');
-                return parts.length >= 3 ? `${parts[2]}/${parts[1]}` : val;
-              }}
+              minTickGap={24}
+              tickFormatter={(val) => (val ? formatDateShort(val) : '')}
             />
 
             <YAxis
               stroke="#71717A"
-              fontSize={11}
-              fontFamily="monospace"
+              fontSize={12}
+              fontFamily="var(--font-sans), system-ui, sans-serif"
               tickLine={false}
               axisLine={false}
               tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
@@ -191,7 +189,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
                       <div className="flex items-center justify-between gap-3 text-xs">
                         <span className="font-semibold text-white">{data.displayDate}</span>
                         <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${
+                          className={`rounded px-1.5 py-0.5 text-xs tabular-nums font-medium ${
                             isCredit
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                               : isSettlement
@@ -207,17 +205,17 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
                       </div>
                       <div className="flex items-center justify-between gap-4 text-xs pt-1">
                         <span className="text-zinc-400">Tx Amount:</span>
-                        <span className={`font-mono font-bold ${isCredit ? 'text-emerald-400' : 'text-white'}`}>
+                        <span className={`tabular-nums font-bold ${isCredit ? 'text-emerald-400' : 'text-white'}`}>
                           {isCredit ? '+' : '-'}{formatINR(data.amount)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-4 text-xs pt-1 border-t border-white/[0.07]">
                         <span className="text-zinc-400">Remaining Balance:</span>
-                        <span className="font-mono font-bold text-amber-400">
+                        <span className="tabular-nums font-bold text-amber-400">
                           {formatINR(data.balance)}
                         </span>
                       </div>
-                      <div className="pt-0.5 text-[10px] text-zinc-500">
+                      <div className="pt-0.5 text-xs text-zinc-500">
                         {data.isActual ? '● Settled Actual Record' : '◌ Future Projection'} (Row {data.rowIndex})
                       </div>
                     </div>
@@ -234,11 +232,11 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
               strokeDasharray="4 4"
               strokeWidth={1.5}
               label={{
-                value: `Today (${formatDisplayDate(referenceDate)})`,
+                value: `Today (${formatDateShort(referenceDate)})`,
                 position: 'insideTopLeft',
                 fill: '#F59E0B',
-                fontSize: 11,
-                fontFamily: 'monospace',
+                fontSize: 12,
+                fontFamily: 'var(--font-sans), system-ui, sans-serif',
                 fontWeight: 600,
               }}
             />
@@ -271,7 +269,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
       </div>
 
       {/* Chart Legend & Context Notes */}
-      <div className="mt-4 pt-3 border-t border-white/[0.07] flex flex-wrap items-center justify-between text-xs text-zinc-400 gap-2 font-mono">
+      <div className="mt-4 pt-3 border-t border-white/[0.07] flex flex-wrap items-center justify-between text-xs text-zinc-400 gap-2 tabular-nums">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500 inline-block" />
@@ -279,17 +277,14 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-0.5 w-4 border-t-2 border-dashed border-amber-400/80 inline-block" />
-            <span className="text-zinc-300">Future Projections (Formula Chain)</span>
+            <span className="text-zinc-300">Planned</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-3 w-0.5 bg-amber-500 inline-block" />
-            <span className="text-amber-400">Anchor ({formatDisplayDate(referenceDate)})</span>
+            <span className="text-amber-400">As of {formatDisplayDate(referenceDate)}</span>
           </div>
         </div>
 
-        <div className="text-[11px] text-zinc-500">
-          Formula Lineage: <span className="text-amber-400 font-mono">=IF(OR(D...))</span>
-        </div>
       </div>
     </div>
   );

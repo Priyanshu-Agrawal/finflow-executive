@@ -45,7 +45,7 @@ export function UndoToast() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-white truncate">{undoneNotice}</p>
-              <p className="text-[10px] text-emerald-400/80 font-mono">
+              <p className="text-xs text-emerald-400/80 tabular-nums">
                 {undoStackLength > 0 ? `${undoStackLength} earlier action(s) available • Press Ctrl+Z` : 'All recent actions undone'}
               </p>
             </div>
@@ -66,16 +66,16 @@ export function UndoToast() {
                 <div className="flex items-center gap-1.5">
                   <p className="text-xs font-semibold text-white truncate">{currentUndo.description}</p>
                   {undoStackLength > 1 && (
-                    <span className="rounded bg-white/[0.06] px-1.5 py-0.2 text-[9px] font-mono text-zinc-400 border border-white/[0.08] shrink-0">
+                    <span className="rounded bg-white/[0.06] px-1.5 py-0.2 text-xs tabular-nums text-zinc-400 border border-white/[0.08] shrink-0">
                       1 of {undoStackLength}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                <p className="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
                   <span>Action saved</span>
                   <span className="text-zinc-600">•</span>
-                  <span className="font-mono text-amber-400/90 flex items-center gap-1">
-                    Press <kbd className="rounded bg-black/50 px-1 py-0.2 text-[9px] border border-white/10 font-bold">Ctrl+Z</kbd> or <kbd className="rounded bg-black/50 px-1 py-0.2 text-[9px] border border-white/10 font-bold">⌘Z</kbd> to undo
+                  <span className="tabular-nums text-amber-400/90 flex items-center gap-1">
+                    Press <kbd className="rounded bg-black/50 px-1 py-0.2 text-xs border border-white/10 font-bold">Ctrl+Z</kbd> or <kbd className="rounded bg-black/50 px-1 py-0.2 text-xs border border-white/10 font-bold">⌘Z</kbd> to undo
                   </span>
                 </p>
               </div>

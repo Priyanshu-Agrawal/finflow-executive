@@ -659,17 +659,17 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     </td>
 
                     {/* Row Index */}
-                    <td className="py-2.5 px-2 font-mono text-[11px] text-zinc-500">
+                    <td data-allow-mono className="py-2.5 px-2 font-mono text-xs text-zinc-500">
                       #{entry.rowIndex}
                     </td>
 
                     {/* Date */}
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-zinc-300">{formatDisplayDate(entry.date)}</span>
+                        <span className="tabular-nums text-zinc-300">{formatDisplayDate(entry.date)}</span>
                         {isNearest && (
-                          <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-400 border border-amber-500/30 shrink-0">
-                            ANCHOR
+                          <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-xs font-bold text-amber-400 border border-amber-500/30 shrink-0">
+                            Today
                           </span>
                         )}
                       </div>
@@ -684,7 +684,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
 
                     {/* Amount */}
                     <td
-                      className={`py-2.5 px-4 text-right font-serif text-sm font-bold whitespace-nowrap ${
+                      className={`py-2.5 px-4 text-right tabular-nums text-sm font-bold whitespace-nowrap ${
                         isCredit
                           ? 'text-emerald-400'
                           : isSettlement
@@ -701,7 +701,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                       <button
                         onClick={() => handleCycleType(entry)}
                         disabled={toggleTypeMutation.isPending}
-                        className={`rounded-lg px-2.5 py-0.5 text-[10px] font-mono font-medium border transition-all hover:scale-105 active:scale-95 ${
+                        className={`rounded-lg px-2.5 py-0.5 text-xs tabular-nums font-medium border transition-all hover:scale-105 active:scale-95 ${
                           isCredit
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                             : isSettlement
@@ -715,7 +715,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     </td>
 
                     {/* Balance (Column E) */}
-                    <td className="py-2.5 px-4 text-right font-mono font-medium text-zinc-100 whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-right tabular-nums font-medium text-zinc-100 whitespace-nowrap">
                       {formatINR(entry.balance)}
                     </td>
 
@@ -763,7 +763,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
               <div className="flex items-center gap-2 text-zinc-400">
                 <Calendar className="h-4 w-4 text-amber-500 shrink-0" />
                 <span>
-                  <strong className="text-white font-mono">{futureCount}</strong> long-term projections beyond{' '}
+                  <strong className="text-white tabular-nums">{futureCount}</strong> long-term projections beyond{' '}
                   <strong className="text-amber-400">{formatDisplayDate(futureCutoff)}</strong> hidden
                 </span>
               </div>
@@ -796,14 +796,14 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
       <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-400">
         <div>
           Showing{' '}
-          <strong className="text-white font-mono">
+          <strong className="text-white tabular-nums">
             {visibleExpenses.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
           </strong>{' '}
           to{' '}
-          <strong className="text-white font-mono">
+          <strong className="text-white tabular-nums">
             {Math.min(currentPage * pageSize, visibleExpenses.length)}
           </strong>{' '}
-          of <strong className="text-white font-mono">{visibleExpenses.length}</strong> transactions
+          of <strong className="text-white tabular-nums">{visibleExpenses.length}</strong> transactions
           {isWindowFilterActive && (
             <span className="ml-1 text-zinc-500">
               ({windowCount} in 3-month window • {earlierCount} earlier • {futureCount} future)
@@ -835,7 +835,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="px-2 font-mono text-white">
+            <span className="px-2 tabular-nums text-white">
               {currentPage} / {totalPages}
             </span>
             <button

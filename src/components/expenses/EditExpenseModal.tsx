@@ -62,7 +62,7 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
             <h3 className="text-base font-medium text-white">
               Edit Transaction (Row {entry.rowIndex})
             </h3>
-            <p className="text-xs text-zinc-400 mt-0.5 font-mono">
+            <p className="text-xs text-zinc-400 mt-0.5 tabular-nums">
               Columns A–D are editable. Column E dynamic formula is strictly preserved.
             </p>
           </div>
@@ -76,20 +76,20 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
 
         <form onSubmit={handleSubmit} data-modal-form="true" className="space-y-4">
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               Date (YYYY-MM-DD)
             </label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-sm font-mono text-white focus:border-amber-500 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+            <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
               Description
             </label>
             <input
@@ -104,7 +104,7 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+              <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
                 Amount (₹)
               </label>
               <input
@@ -112,13 +112,13 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-sm font-serif font-bold text-white focus:border-amber-500 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-sm tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+              <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
                 Transaction Type
               </label>
               <select
@@ -139,19 +139,19 @@ export function EditExpenseModal({ entry, onClose }: EditExpenseModalProps) {
           {/* Column E Formula Protection Box */}
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-amber-400 flex items-center gap-1.5 font-mono">
+              <span className="font-medium text-amber-400 flex items-center gap-1.5 tabular-nums">
                 <Lock className="h-3.5 w-3.5 text-amber-500" />
                 Column E (Remaining Balance) — Protected Formula
               </span>
-              <span className="font-serif font-bold text-white">
+              <span className="tabular-nums font-bold text-white">
                 {formatINR(entry.balance)}
               </span>
             </div>
-            <div className="font-mono text-[11px] text-amber-400 bg-black/60 p-2 rounded-lg border border-white/[0.07] break-all">
+            <div className="tabular-nums text-xs text-amber-400 bg-black/60 p-2 rounded-lg border border-white/[0.07] break-all">
               {entry.formula || `=IF(OR(D${entry.rowIndex}="", ...), E${entry.rowIndex-1}, ...)`}
             </div>
-            <p className="text-[10px] text-zinc-400">
-              Formula Lineage Defense: FinFlow automatically preserves continuation formulas. Static numbers are never written.
+            <p className="text-xs text-zinc-400">
+              The balance formula in column E is kept. Only date, description, amount and type are changed.
             </p>
           </div>
 

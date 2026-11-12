@@ -50,17 +50,10 @@ export function Navbar() {
                 <Wallet className="h-4 w-4" />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 leading-none">
-                  <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-zinc-100">
-                    FinFlow
-                  </span>
-                  <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-400 border border-amber-500/20 tracking-wider">
-                    PORTAL
-                  </span>
-                </div>
-                <span className="text-[10px] text-zinc-400 font-mono font-medium hidden sm:block mt-0.5">
-                  scriptingBear • Executive OS
+                <span data-allow-serif className="font-serif text-base sm:text-lg font-bold tracking-tight text-zinc-100 leading-none">
+                  FinFlow
                 </span>
+                <span className="text-xs text-zinc-400 font-medium hidden sm:block mt-0.5">scriptingBear</span>
               </div>
             </Link>
           </div>
@@ -99,7 +92,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#121214] px-2.5 py-1.5 text-xs text-zinc-200 hover:border-amber-500/30 transition-colors"
               >
                 <Calendar className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                <span className="font-mono text-zinc-200 font-semibold text-xs">
+                <span className="tabular-nums text-zinc-200 font-semibold text-xs">
                   {referenceDate === todayStr ? 'Today' : formatDateShort(referenceDate)}
                 </span>
               </button>
@@ -133,12 +126,12 @@ export function Navbar() {
                         }`}
                       >
                         <span>Last logged day ({formatDate(anchor.date)})</span>
-                        <span className="text-[10px] font-mono opacity-80">{formatMoney(anchor.balance)}</span>
+                        <span className="text-xs tabular-nums opacity-80">{formatMoney(anchor.balance)}</span>
                       </button>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="frame-date" className="text-[10px] text-zinc-400 block mb-1">
+                    <label htmlFor="frame-date" className="text-xs text-zinc-400 block mb-1">
                       Pick a date
                     </label>
                     <input
@@ -274,7 +267,7 @@ export function Navbar() {
                   }`}
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="text-[10px] font-medium">{link.label}</span>
+                  <span className="text-xs font-medium">{link.label}</span>
                 </Link>
               </React.Fragment>
             );

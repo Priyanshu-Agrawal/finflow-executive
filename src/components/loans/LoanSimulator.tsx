@@ -73,14 +73,14 @@ export function LoanSimulator() {
       {/* Inputs Form */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl border border-white/[0.07] bg-[#18181B]">
         <div>
-          <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+          <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
             Principal Amount (₹)
           </label>
           <input
             type="number"
             value={principal}
             onChange={(e) => setPrincipal(Math.max(1000, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm font-mono text-white focus:border-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="150000"
           />
           <div className="flex gap-1.5 mt-2">
@@ -88,7 +88,7 @@ export function LoanSimulator() {
               <button
                 key={p}
                 onClick={() => setPrincipal(p)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-[10px] text-zinc-400 hover:text-white transition-colors"
+                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 ₹{(p / 1000).toFixed(0)}k
               </button>
@@ -97,7 +97,7 @@ export function LoanSimulator() {
         </div>
 
         <div>
-          <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+          <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
             Annual Interest Rate (%)
           </label>
           <input
@@ -105,7 +105,7 @@ export function LoanSimulator() {
             step="0.1"
             value={annualRate}
             onChange={(e) => setAnnualRate(Math.max(0.1, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm font-mono text-white focus:border-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="10.5"
           />
           <div className="flex gap-1.5 mt-2">
@@ -113,7 +113,7 @@ export function LoanSimulator() {
               <button
                 key={r}
                 onClick={() => setAnnualRate(r)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-[10px] text-zinc-400 hover:text-white transition-colors"
+                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 {r}%
               </button>
@@ -122,14 +122,14 @@ export function LoanSimulator() {
         </div>
 
         <div>
-          <label className="text-xs font-mono font-medium text-zinc-300 block mb-1">
+          <label className="text-xs tabular-nums font-medium text-zinc-300 block mb-1">
             Tenure (Months)
           </label>
           <input
             type="number"
             value={tenureMonths}
             onChange={(e) => setTenureMonths(Math.max(1, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm font-mono text-white focus:border-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="18"
           />
           <div className="flex gap-1.5 mt-2">
@@ -137,7 +137,7 @@ export function LoanSimulator() {
               <button
                 key={m}
                 onClick={() => setTenureMonths(m)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-[10px] text-zinc-400 hover:text-white transition-colors"
+                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 {m}m
               </button>
@@ -152,24 +152,24 @@ export function LoanSimulator() {
         <div className="rounded-xl border border-white/[0.07] bg-[#18181B] p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-zinc-300">Flat Rate Model</span>
-            <span className="text-[10px] text-zinc-500 uppercase font-mono">Common NBFC Model</span>
+            <span className="text-xs text-zinc-500 tabular-nums">Common NBFC Model</span>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Monthly EMI:</span>
-              <span className="font-mono text-sm font-bold text-white">
+              <span className="tabular-nums text-sm font-bold text-white">
                 {formatINR(simulation.flatMonthlyEmi)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Total Interest Outflow:</span>
-              <span className="font-mono text-sm font-bold text-zinc-200">
+              <span className="tabular-nums text-sm font-bold text-zinc-200">
                 {formatINR(simulation.flatTotalInterest)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs pt-2 border-t border-white/[0.07]">
               <span className="text-zinc-400">Total Repayment:</span>
-              <span className="font-mono text-sm font-bold text-white">
+              <span className="tabular-nums text-sm font-bold text-white">
                 {formatINR(simulation.flatTotalPayment)}
               </span>
             </div>
@@ -183,26 +183,26 @@ export function LoanSimulator() {
               <Sparkles className="h-4 w-4 text-amber-500" />
               Reducing Balance Model
             </span>
-            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400 border border-amber-500/20">
+            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400 border border-amber-500/20">
               Standard Bank Rate
             </span>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Monthly EMI:</span>
-              <span className="font-mono text-sm font-bold text-white">
+              <span className="tabular-nums text-sm font-bold text-white">
                 {formatINR(simulation.reducingMonthlyEmi)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Total Interest Outflow:</span>
-              <span className="font-mono text-sm font-bold text-emerald-400">
+              <span className="tabular-nums text-sm font-bold text-emerald-400">
                 {formatINR(simulation.reducingTotalInterest)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs pt-2 border-t border-white/[0.07]">
               <span className="text-zinc-400">Total Repayment:</span>
-              <span className="font-mono text-sm font-bold text-white">
+              <span className="tabular-nums text-sm font-bold text-white">
                 {formatINR(simulation.reducingTotalPayment)}
               </span>
             </div>
@@ -221,14 +221,14 @@ export function LoanSimulator() {
               Reducing Balance Capital Advantage
             </span>
             <span className="text-xs text-zinc-300">
-              Saves <strong className="font-mono text-white">{formatINR(simulation.savingsInterest)}</strong> in interest ({simulation.savingsPercent.toFixed(1)}% reduction)
+              Saves <strong className="tabular-nums text-white">{formatINR(simulation.savingsInterest)}</strong> in interest ({simulation.savingsPercent.toFixed(1)}% reduction)
             </span>
           </div>
         </div>
 
         <div className="text-right sm:text-right">
-          <span className="text-[11px] text-zinc-400 block font-mono">Monthly Cash Free-Up</span>
-          <span className="font-mono text-sm font-bold text-white">
+          <span className="text-xs text-zinc-400 block tabular-nums">Monthly Cash Free-Up</span>
+          <span className="tabular-nums text-sm font-bold text-white">
             {formatINR(simulation.flatMonthlyEmi - simulation.reducingMonthlyEmi)}/mo
           </span>
         </div>

@@ -196,7 +196,7 @@ export function LoanSimulator() {
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">Total Interest Outflow:</span>
-              <span className="tabular-nums text-sm font-bold text-emerald-400">
+              <span className="tabular-nums text-sm font-bold text-credit">
                 {formatINR(simulation.reducingTotalInterest)}
               </span>
             </div>

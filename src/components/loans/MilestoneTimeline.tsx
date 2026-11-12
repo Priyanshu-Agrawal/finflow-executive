@@ -37,7 +37,7 @@ export function MilestoneTimeline({ loans = [] }: { loans?: LoanStatus[] }) {
       date: `${monthYear(lastPayoff)}+`,
       title: '100% Total Debt-Free Status',
       description: `All ${loans.length || 7} tracked liabilities at zero balance.`,
-      impact: `+${inr(freed)}/mo Total Wealth Capacity`,
+      impact: `Frees +${inr(freed)}/mo in total`,
       status: 'ultimate',
     },
   ];
@@ -83,7 +83,7 @@ export function MilestoneTimeline({ loans = [] }: { loans?: LoanStatus[] }) {
             </div>
 
             <div className="mt-4 pt-3 border-t border-white/[0.06]">
-              <div className="flex items-center gap-1.5 text-xs tabular-nums font-semibold text-amber-400">
+              <div className="flex items-center gap-1.5 text-xs tabular-nums font-semibold text-credit">
                 <Zap className="h-3.5 w-3.5" />
                 <span>{m.impact}</span>
               </div>

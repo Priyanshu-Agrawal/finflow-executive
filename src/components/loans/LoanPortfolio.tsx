@@ -62,7 +62,7 @@ export function LoanPortfolio({
           </div>
           <div className="border-l border-white/[0.08] pl-5">
             <span className="text-zinc-400 block text-xs tabular-nums">Total Retired Debt</span>
-            <span className="tabular-nums text-base font-bold text-emerald-400">
+            <span className="tabular-nums text-base font-bold text-credit">
               {formatINR(totalPaid)}
             </span>
           </div>
@@ -117,7 +117,7 @@ export function LoanPortfolio({
                 </div>
                 <div>
                   <span className="text-xs tabular-nums text-zinc-400 block">Paid</span>
-                  <span className="tabular-nums font-bold text-emerald-400">
+                  <span className="tabular-nums font-bold text-credit">
                     {formatINR(loan.paidToDate)}
                   </span>
                 </div>
@@ -190,7 +190,7 @@ export function LoanPortfolio({
             >
               <div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-credit shrink-0" />
                   <span className="text-xs tabular-nums font-bold text-zinc-200 group-hover:text-amber-300 transition-colors">
                     {loan.name}
                   </span>
@@ -201,7 +201,7 @@ export function LoanPortfolio({
                 </div>
                 <div className="mt-0.5 text-xs tabular-nums text-zinc-500">Col {loan.columnLetter} • {loan.notes || '100% Cleared'}</div>
               </div>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs tabular-nums font-bold text-emerald-400 border border-emerald-500/20 shrink-0">
+              <span className="rounded-full bg-credit/10 px-2 py-0.5 text-xs tabular-nums font-bold text-credit border border-credit/20 shrink-0">
                 100% PAID
               </span>
             </div>

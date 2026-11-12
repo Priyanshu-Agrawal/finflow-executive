@@ -686,7 +686,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                     <td
                       className={`py-2.5 px-4 text-right tabular-nums text-sm font-bold whitespace-nowrap ${
                         isCredit
-                          ? 'text-emerald-400'
+                          ? 'text-credit'
                           : isSettlement
                           ? 'text-amber-400'
                           : 'text-zinc-100'
@@ -703,7 +703,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                         disabled={toggleTypeMutation.isPending}
                         className={`rounded-lg px-2.5 py-0.5 text-xs tabular-nums font-medium border transition-all hover:scale-105 active:scale-95 ${
                           isCredit
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-credit/10 text-credit border-credit/20'
                             : isSettlement
                             ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                             : 'bg-white/[0.05] text-zinc-300 border-white/10'

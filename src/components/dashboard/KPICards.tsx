@@ -25,14 +25,14 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
       {/* 4 Main Executive Metric Cards: 2x2 Grid on Mobile, 4x1 on Desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* Card 1: Current Available Balance */}
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-950 p-3.5 sm:p-5 shadow-lg shadow-emerald-950/20 flex flex-col justify-between">
+        <div className="relative overflow-hidden rounded-2xl border border-credit/25 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-950 p-3.5 sm:p-5 shadow-lg shadow-emerald-950/20 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-1">
-              <span className="text-xs sm:text-xs font-semibold text-emerald-400 flex items-center gap-1">
-                <Wallet className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span className="text-xs sm:text-xs font-semibold text-credit flex items-center gap-1">
+                <Wallet className="h-3.5 w-3.5 text-credit shrink-0" />
                 <span className="truncate">Current Available</span>
               </span>
-              <span className="hidden sm:inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-500/20">
+              <span className="hidden sm:inline-block rounded-full bg-credit/10 px-2 py-0.5 text-xs font-semibold text-credit border border-credit/20">
                 {formatDisplayDate(referenceDate)}
               </span>
             </div>
@@ -45,7 +45,7 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
               </p>
             </div>
           </div>
-          <div className="mt-2.5 sm:mt-4 flex items-center gap-1 text-xs sm:text-xs font-medium text-emerald-400">
+          <div className="mt-2.5 sm:mt-4 flex items-center gap-1 text-xs sm:text-xs font-medium text-credit">
             <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span className="truncate">Formula Chain Verified</span>
           </div>
@@ -136,7 +136,7 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
       {/* Secondary Quick Overview Strip */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 sm:p-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-credit/10 text-credit">
             <ArrowUpRight className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -177,7 +177,7 @@ export function KPICards({ kpis, referenceDate }: KPICardsProps) {
           </div>
           <div className="min-w-0">
             <span className="text-slate-400 block text-xs sm:text-xs truncate">Unlocked Cash</span>
-            <span className="font-semibold text-emerald-400 text-xs sm:text-sm truncate block">
+            <span className="font-semibold text-credit text-xs sm:text-sm truncate block">
               +₹14,771/mo
             </span>
           </div>

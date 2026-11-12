@@ -422,7 +422,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                       ? t === 'DEBIT'
                         ? 'bg-white/10 text-white border-white/30 shadow-sm'
                         : t === 'CREDIT'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-sm'
+                        ? 'bg-credit/10 text-credit border-credit/30 shadow-sm'
                         : 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-sm'
                       : 'bg-[#18181B] text-zinc-400 border-white/[0.07] hover:border-white/20 hover:text-white'
                   }`}

@@ -4,6 +4,8 @@
   --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-serif), Newsreader, Georgia, Cambria, serif;
   --font-mono: var(--font-mono), "JetBrains Mono", "SF Mono", Menlo, monospace;
+  /* Credits, money coming in and "saved" are blue (the same blue as the savings meter). */
+  --color-credit: var(--credit);
 }
 
 :root {
@@ -16,6 +18,8 @@
   --accent: #F59E0B;
   --accent-muted: rgba(245, 158, 11, 0.12);
   --accent-border: rgba(245, 158, 11, 0.25);
+  --credit: #3b82f6;
+  --credit-soft: rgba(59, 130, 246, 0.12);
   /* Layout tokens: sticky layers stack as top bar, then page control bar, then table header. */
   --topbar-h: 3.5rem;
   --sticky-bar-h: 0px;

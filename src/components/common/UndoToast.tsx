@@ -38,14 +38,14 @@ export function UndoToast() {
     <div className="fixed bottom-6 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-bottom-5 duration-200 pointer-events-auto">
       {/* Notice after an undo occurs */}
       {undoneNotice && !currentUndo && (
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-[#18181B] p-3.5 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3">
+        <div className="relative overflow-hidden rounded-2xl border border-credit/30 bg-[#18181B] p-3.5 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-credit/10 text-credit border border-credit/20">
               <CheckCircle2 className="h-4 w-4" />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-white truncate">{undoneNotice}</p>
-              <p className="text-xs text-emerald-400/80 tabular-nums">
+              <p className="text-xs text-credit/80 tabular-nums">
                 {undoStackLength > 0 ? `${undoStackLength} earlier action(s) available • Press Ctrl+Z` : 'All recent actions undone'}
               </p>
             </div>

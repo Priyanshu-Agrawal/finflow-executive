@@ -199,7 +199,7 @@ export function LoanActionModal({
               {loan.category.replace('_', ' ')}
             </span>
             {loan.isPaidOff ? (
-              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20 flex items-center gap-1 tabular-nums">
+              <span className="rounded-md bg-credit/10 px-2 py-0.5 text-xs font-bold text-credit border border-credit/20 flex items-center gap-1 tabular-nums">
                 <CheckCircle2 className="h-3 w-3" />
                 Settled & Clear
               </span>
@@ -226,7 +226,7 @@ export function LoanActionModal({
             </div>
             <div className="rounded-xl bg-[#18181B] p-2.5 border border-white/[0.06]">
               <span className="text-xs text-zinc-400 block tabular-nums">Paid to Date</span>
-              <span className="tabular-nums text-base font-bold text-emerald-400">
+              <span className="tabular-nums text-base font-bold text-credit">
                 {formatINR(loan.paidToDate)}
               </span>
             </div>
@@ -286,8 +286,8 @@ export function LoanActionModal({
 
         {/* Success Alert Banner */}
         {successMessage && (
-          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+          <div className="mb-4 rounded-xl border border-credit/30 bg-credit/10 p-3.5 text-xs text-credit flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="h-4 w-4 text-credit shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
@@ -468,7 +468,7 @@ export function LoanActionModal({
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>New Balance after Settlement:</span>
-                <strong className="tabular-nums text-emerald-400 font-bold">₹0 (100% Cleared)</strong>
+                <strong className="tabular-nums text-credit font-bold">₹0 (100% Cleared)</strong>
               </div>
             </div>
 

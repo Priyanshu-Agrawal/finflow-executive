@@ -73,7 +73,7 @@ export default function QuickLogPage() {
                   <div className="flex items-center gap-4">
                     <span
                       className={`font-bold ${
-                        e.type === 'CREDIT' ? 'text-emerald-400' : 'text-zinc-100'
+                        e.type === 'CREDIT' ? 'text-credit' : 'text-zinc-100'
                       }`}
                     >
                       {e.type === 'CREDIT' ? '+' : '-'}{formatINR(e.amount)}

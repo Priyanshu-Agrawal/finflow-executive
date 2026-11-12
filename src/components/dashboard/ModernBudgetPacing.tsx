@@ -375,7 +375,7 @@ export function ModernBudgetPacing({
                 <span className="tabular-nums text-3xl font-bold text-white">
                   {formatINR(pacing.electricityRemainingBudget ?? pacing.electricityRemaining ?? 2400)}
                 </span>
-                <span className="text-xs tabular-nums text-emerald-400 font-semibold">in reserve</span>
+                <span className="text-xs tabular-nums text-credit font-semibold">in reserve</span>
               </div>
               <span className="text-xs text-zinc-400 block mt-1.5 pt-1.5 border-t border-white/[0.04]">
                 Available capital reserved to perform future meter recharges
@@ -470,7 +470,7 @@ export function ModernBudgetPacing({
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Secured Status:</span>
-                <span className="tabular-nums font-semibold text-emerald-400">
+                <span className="tabular-nums font-semibold text-credit">
                   Funded in Bank Reserve
                 </span>
               </div>
@@ -556,7 +556,7 @@ export function ModernBudgetPacing({
           </div>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400 tabular-nums">
-            <span className="flex items-center gap-1 text-emerald-400">
+            <span className="flex items-center gap-1 text-credit">
               <CheckCircle2 className="h-3 w-3" />
               Capital Safety Secured
             </span>

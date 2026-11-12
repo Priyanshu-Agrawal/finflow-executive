@@ -185,9 +185,9 @@ function pageScan(opts) {
   }).slice(0, 6).map((i) => i.sel + ' "' + i.t + '"');
   out.credits = [];
   for (const el of document.querySelectorAll('body *')) {
-    if (!visible(el) || el.children.length > 0) continue;
+    if (!visible(el) || el.children.length > 0 || el.closest('.sr-only')) continue;
     const t = el.textContent.trim();
-    if (/^credit$/i.test(t) || /^\+\s?₹/.test(t)) out.credits.push({ t: t.slice(0, 20), rgb: rgb(getComputedStyle(el).color), sel: sel(el) });
+    if ((/^CREDIT$/.test(t) && el.closest('td')) || /^\+\s?₹/.test(t)) out.credits.push({ t: t.slice(0, 20), rgb: rgb(getComputedStyle(el).color), sel: sel(el) });
   }
 
   // tap targets and labels

@@ -49,7 +49,7 @@ export function BudgetPacingCard({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
+            <span className="rounded-md bg-credit/10 px-2 py-0.5 text-xs font-bold text-credit border border-credit/20">
               ACTIVE MONTHLY PACING
             </span>
             <span className="text-xs text-slate-400 font-medium">
@@ -198,7 +198,7 @@ export function BudgetPacingCard({
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Remaining Pool:</span>
-                <span className="tabular-nums font-bold text-emerald-400">
+                <span className="tabular-nums font-bold text-credit">
                   {formatINR(pacing.generalRemaining)}
                 </span>
               </div>
@@ -251,7 +251,7 @@ export function BudgetPacingCard({
                 <span className="tabular-nums text-3xl font-extrabold text-white">
                   {formatINR(pacing.electricityRemainingBudget ?? pacing.electricityRemaining ?? 2400)}
                 </span>
-                <span className="text-xs text-emerald-400 font-semibold">in reserve</span>
+                <span className="text-xs text-credit font-semibold">in reserve</span>
               </div>
               <span className="text-xs text-zinc-400 block mt-1">
                 From {formatINR(pacing.electricityTotalBudget || 3200)} allocation ({formatINR(pacing.electricityBaseBudget || 3000)} + {formatINR(pacing.electricitySurplus || 200)} surplus)
@@ -294,21 +294,21 @@ export function BudgetPacingCard({
         </div>
 
         {/* Pillar 3: Available Balance Factor & Net Cushion */}
-        <div className="rounded-2xl border border-emerald-500/20 bg-slate-950/70 p-5 relative overflow-hidden flex flex-col justify-between">
+        <div className="rounded-2xl border border-credit/20 bg-slate-950/70 p-5 relative overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <span className="text-xs font-bold text-credit flex items-center gap-1.5">
                 <Wallet className="h-4 w-4" />
                 Available Balance Factor
               </span>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-300 border border-emerald-500/20">
+              <span className="rounded-full bg-credit/10 px-2 py-0.5 text-xs font-bold text-credit border border-credit/20">
                 Liquid Reserves
               </span>
             </div>
 
             {/* Big Balance Metric */}
-            <div className="my-3 p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20">
-              <span className="text-xs text-emerald-300 font-medium block">
+            <div className="my-3 p-3.5 rounded-xl border border-credit/30 bg-emerald-950/20">
+              <span className="text-xs text-credit font-medium block">
                 Primary Bank Available Balance:
               </span>
               <div className="flex items-baseline gap-2 mt-1">
@@ -316,7 +316,7 @@ export function BudgetPacingCard({
                   {formatINR(pacing.availableBalance)}
                 </span>
               </div>
-              <span className="text-xs text-emerald-400/90 font-medium block mt-1">
+              <span className="text-xs text-credit/90 font-medium block mt-1">
                 Post-Rent Cushion:<strong className="tabular-nums">{formatINR(pacing.postFixedObligationsBuffer)}</strong>
               </span>
             </div>
@@ -325,7 +325,7 @@ export function BudgetPacingCard({
             <div className="space-y-2 text-xs">
               <div className="flex justify-between text-slate-400">
                 <span>Safe Daily Spend:</span>
-                <span className="tabular-nums font-bold text-emerald-400">
+                <span className="tabular-nums font-bold text-credit">
                   {formatINR(pacing.safeTotalDailyBurn)} / day
                 </span>
               </div>
@@ -333,7 +333,7 @@ export function BudgetPacingCard({
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs flex items-center justify-between text-slate-400">
-            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+            <span className="flex items-center gap-1 text-credit font-medium">
               <ShieldCheck className="h-3.5 w-3.5" />
               Capital Safety Secured
             </span>

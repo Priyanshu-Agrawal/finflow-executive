@@ -191,7 +191,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
                         <span
                           className={`rounded px-1.5 py-0.5 text-xs tabular-nums font-medium ${
                             isCredit
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-credit/10 text-credit border border-credit/20'
                               : isSettlement
                               ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                               : 'bg-white/[0.05] text-zinc-300 border border-white/10'
@@ -205,7 +205,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
                       </div>
                       <div className="flex items-center justify-between gap-4 text-xs pt-1">
                         <span className="text-zinc-400">Tx Amount:</span>
-                        <span className={`tabular-nums font-bold ${isCredit ? 'text-emerald-400' : 'text-white'}`}>
+                        <span className={`tabular-nums font-bold ${isCredit ? 'text-credit' : 'text-white'}`}>
                           {isCredit ? '+' : '-'}{formatINR(data.amount)}
                         </span>
                       </div>

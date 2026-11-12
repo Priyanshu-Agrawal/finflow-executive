@@ -28,7 +28,7 @@ function Stat({ label, value, sub }: { label: string; value: number | null; sub:
         {value !== null && (
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: value < 0 ? OVERSPENT : SAVED }} aria-hidden />
         )}
-        <span className="tabular-nums text-lg sm:text-xl font-bold text-white truncate">
+        <span className={`tabular-nums text-lg sm:text-xl font-bold truncate ${value === null ? 'text-white' : value < 0 ? 'text-orange-400' : value > 0 ? 'text-credit' : 'text-white'}`}>
           {value === null ? '—' : signed(value)}
         </span>
       </div>
@@ -117,7 +117,7 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
         <span className="text-xs text-zinc-400">
           {range(sel)} · <span className="text-zinc-300">{kindLabel[sel.kind]}</span>
         </span>
-        <span className="tabular-nums text-sm font-bold text-white">{signed(sel.saving)}</span>
+        <span className={`tabular-nums text-sm font-bold ${sel.saving < 0 ? 'text-orange-400' : sel.saving > 0 ? 'text-credit' : 'text-white'}`}>{signed(sel.saving)}</span>
       </div>
 
       {/* Legend */}

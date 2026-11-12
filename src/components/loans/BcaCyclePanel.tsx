@@ -53,8 +53,8 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-300">
-              <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+            <div className="flex items-center gap-1.5 rounded-lg border border-credit/30 bg-credit/10 px-3 py-1.5 text-xs text-credit">
+              <CheckCircle className="h-4 w-4 text-credit shrink-0" />
               <span>Loans!B2 True Baseline Intact (₹18,000)</span>
             </div>
           )}
@@ -73,7 +73,7 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
 
         <div className="p-3.5 rounded-xl border border-white/[0.07] bg-[#18181B]">
           <span className="text-xs tabular-nums text-zinc-400 block">Paid to Date</span>
-          <span className="tabular-nums text-xl font-bold text-emerald-400 block mt-1">
+          <span className="tabular-nums text-xl font-bold text-credit block mt-1">
             {formatINR(bcaCycle.paidToDate)}
           </span>
           <span className="text-xs text-zinc-400">{bcaCycle.emisPaid} of 6 EMIs Cleared</span>
@@ -92,7 +92,7 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
           <span className="tabular-nums text-xl font-bold text-white block mt-1">
             5 Mar 2027
           </span>
-          <span className="text-xs text-emerald-400 font-medium">+₹3,000/mo Unlocked</span>
+          <span className="text-xs text-credit font-medium">+₹3,000/mo Unlocked</span>
         </div>
       </div>
 
@@ -111,14 +111,14 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
               key={item.month}
               className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
                 item.isPaid
-                  ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-300'
+                  ? 'border-credit/30 bg-credit/5 text-credit'
                   : 'border-white/[0.07] bg-[#18181B] text-zinc-400 hover:border-white/20'
               }`}
             >
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="font-bold">{item.month}</span>
                 {item.isPaid ? (
-                  <CheckCircle className="h-4 w-4 text-emerald-400" />
+                  <CheckCircle className="h-4 w-4 text-credit" />
                 ) : (
                   <Clock className="h-4 w-4 text-zinc-500" />
                 )}
@@ -128,7 +128,7 @@ export function BcaCyclePanel({ bcaCycle }: BcaCyclePanelProps) {
               </div>
               <div className="text-xs mt-1.5 font-medium">
                 {item.isPaid ? (
-                  <span className="text-emerald-400">PAID (EMI {idx + 1}/6)</span>
+                  <span className="text-credit">PAID (EMI {idx + 1}/6)</span>
                 ) : (
                   <span className="text-zinc-500">DUE (EMI {idx + 1}/6)</span>
                 )}

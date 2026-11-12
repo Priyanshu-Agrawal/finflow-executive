@@ -171,7 +171,7 @@ export function ExecutiveHero({
       <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-400" />
+            <ArrowUpRight className="h-3.5 w-3.5 text-credit" />
             <span>Lifetime Inflow:</span>
             <strong className="tabular-nums text-zinc-200">{formatINR(kpis.totalCredit)}</strong>
           </span>

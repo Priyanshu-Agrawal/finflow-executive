@@ -784,7 +784,7 @@ export function ExcelSpreadsheet({
                         isSelectedRow && selectedCell.col === 'C'
                           ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : e.type === 'CREDIT'
-                          ? 'text-emerald-400'
+                          ? 'text-credit'
                           : 'text-zinc-100'
                       }`}
                     >
@@ -811,7 +811,10 @@ export function ExcelSpreadsheet({
                           className="w-full bg-black text-white text-right tabular-nums text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
-                        formatINR(e.amount)
+                        <>
+                          {e.type === 'CREDIT' ? '+' : ''}
+                          {formatINR(e.amount)}
+                        </>
                       )}
                     </td>
 
@@ -839,7 +842,7 @@ export function ExcelSpreadsheet({
                       <span
                         className={`rounded px-1.5 py-0.5 text-xs tabular-nums font-medium ${
                           e.type === 'CREDIT'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-credit/10 text-credit border border-credit/20'
                             : e.type === 'DEBIT'
                             ? 'bg-white/[0.05] text-zinc-300 border border-white/10'
                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
@@ -897,13 +900,13 @@ export function ExcelSpreadsheet({
                       <td className="p-2 text-zinc-500 font-bold">{l.columnLetter}</td>
                       <td className="p-2 text-white font-sans font-medium">{l.name}</td>
                       <td className="p-2 text-right text-zinc-300">{formatINR(l.initialPrincipal)}</td>
-                      <td className="p-2 text-right text-emerald-400 font-medium">{formatINR(l.paidToDate)}</td>
+                      <td className="p-2 text-right text-credit font-medium">{formatINR(l.paidToDate)}</td>
                       <td className="p-2 text-right text-zinc-100 font-medium">{formatINR(l.currentDue)}</td>
                       <td className="p-2 text-center">
                         <span
                           className={`rounded px-2 py-0.5 text-xs font-medium border ${
                             l.currentDue === 0
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              ? 'bg-credit/10 text-credit border-credit/20'
                               : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                           }`}
                         >

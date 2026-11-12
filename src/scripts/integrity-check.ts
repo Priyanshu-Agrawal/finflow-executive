@@ -85,6 +85,8 @@ async function runIntegrityAudit() {
   if (!passedBalance) allPassed = false;
 
   // 6. Verify December 6 Budget Settlement & Projection: Row 247 SETTLEMENT (₹4,000) & Row 248 DEBIT (₹11,000 -> ₹21,621)
+  // The projected balance itself is not pinned: it moves whenever the owner edits a future
+  // row (e.g. 12 Nov: Phone EMI Settlement +3,000 → 18,156). Check the chain instead.
   const resDecBudget = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: 'Expenses!B247:E248',
@@ -99,7 +101,8 @@ async function runIntegrityAudit() {
     row248[0] === 'Remaining Expenses Budget' &&
     Math.round(Number(row248[1])) === 11000 &&
     row248[2] === 'DEBIT' &&
-    (Math.round(Number(row248[3])) === 21156 || Math.round(Number(row248[3])) === 21621);
+    Math.abs(Number(row248[3]) - (Number(row247[3]) - Number(row248[1]))) < 1e-6;
+  console.log(`  Row 248 projected balance: ₹${Math.round(Number(row248[3]))}`);
   console.log(`[CHECK 6] December 6 Cycle Budget & Projection (Rows 247-248): ${passedDecBudget ? 'PASS ✅' : 'FAIL ❌'}`);
   if (!passedDecBudget) allPassed = false;
 

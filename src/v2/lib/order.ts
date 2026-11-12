@@ -53,3 +53,44 @@ export function findOutOfOrder(rows: ExpenseEntry[]): OutOfPlace[] {
   }
   return out;
 }
+
+export interface BalanceBoundary {
+  /** Index of the last row that counts towards today's balance (-1 if none). */
+  lastCountedIndex: number;
+  /** Index of the first row dated after today, where the reading stops (null if none). */
+  firstLaterIndex: number | null;
+  currentBalance: number;
+}
+
+/** Today's balance rule (same as computeKPIs): read down while date <= today, stop at the first later row. */
+export function balanceBoundary(rows: ExpenseEntry[], today: string): BalanceBoundary {
+  let lastCountedIndex = -1;
+  let firstLaterIndex: number | null = null;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].date <= today) lastCountedIndex = i;
+    else {
+      firstLaterIndex = i;
+      break;
+    }
+  }
+  const currentBalance = lastCountedIndex >= 0 ? rows[lastCountedIndex].balance : (rows[0]?.balance ?? 0);
+  return { lastCountedIndex, firstLaterIndex, currentBalance };
+}
+
+const CYCLE_SUMMARY_RE = /total general expenses|remaining expenses budget/i;
+
+/**
+ * Where a new row dated `date` belongs. Mirrors findChronologicalInsertRow in src/lib/sheets.ts:
+ * ignore rows 1-2, the first later-dated row wins, a same-day cycle summary row stays below the
+ * new entry, otherwise after the last row.
+ */
+export function dateSlot(rows: ExpenseEntry[], date: string): { position: number; rowNumber: number } {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.rowIndex < 3 || r.date === '') continue;
+    if (r.date > date) return { position: i, rowNumber: r.rowIndex };
+    if (r.date === date && CYCLE_SUMMARY_RE.test(r.description)) return { position: i, rowNumber: r.rowIndex };
+  }
+  const last = rows[rows.length - 1];
+  return { position: rows.length, rowNumber: last ? last.rowIndex + 1 : 3 };
+}

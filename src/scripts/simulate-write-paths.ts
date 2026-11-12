@@ -4,7 +4,8 @@
 // in-memory copy that mimics Google Sheets' formula evaluation and reference shifting on row insert,
 // delete and move. The live sheet is never written.
 // Run: npm run test:sim
-import { google } from 'googleapis';
+import { sheets as googleSheets } from '@googleapis/sheets';
+import { GoogleAuth } from 'google-auth-library';
 import * as S from '../lib/sheets';
 import { previewRowMove } from '../lib/row-move';
 import { BIKE_LOAN_PRINCIPAL, computeKPIs, GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN, trackEmiLoan } from '../lib/computations';
@@ -176,8 +177,8 @@ const isSorted = () => { let prev = ''; for (let r = 3; r <= lastDataRow(); r++)
 (async () => {
   // ---- snapshot (read-only) ----
   let key = process.env.GOOGLE_PRIVATE_KEY!; if (key.startsWith('"')) key = JSON.parse(key); key = key.replace(/\\n/g, '\n');
-  const auth = new google.auth.GoogleAuth({ credentials: { client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, private_key: key }, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
-  const live = google.sheets({ version: 'v4', auth });
+  const auth = new GoogleAuth({ credentials: { client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, private_key: key }, scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] });
+  const live = googleSheets({ version: 'v4', auth });
   const id = process.env.SPREADSHEET_ID!;
   const [F, U, L] = await Promise.all([
     live.spreadsheets.values.get({ spreadsheetId: id, range: 'Expenses!A1:F1500', valueRenderOption: 'FORMULA' }),

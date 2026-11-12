@@ -1,4 +1,5 @@
-import { google } from 'googleapis';
+import { sheets as googleSheets } from '@googleapis/sheets';
+import { GoogleAuth } from 'google-auth-library';
 import fs from 'fs';
 import path from 'path';
 
@@ -16,7 +17,7 @@ async function runIntegrityAudit() {
     }
   }
 
-  const auth = new google.auth.GoogleAuth({
+  const auth = new GoogleAuth({
     credentials: {
       client_email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       private_key: env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -24,7 +25,7 @@ async function runIntegrityAudit() {
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
-  const sheets = google.sheets({ version: 'v4', auth });
+  const sheets = googleSheets({ version: 'v4', auth });
   const spreadsheetId = env.SPREADSHEET_ID;
 
   let allPassed = true;

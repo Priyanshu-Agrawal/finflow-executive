@@ -1,4 +1,5 @@
-import { google, sheets_v4 } from 'googleapis';
+import { sheets as googleSheets, type sheets_v4 } from '@googleapis/sheets';
+import { GoogleAuth } from 'google-auth-library';
 import { ExpenseEntry, RawLoanRow, RowMove, RowOrderUndo, TransactionType } from './types';
 import { GENERAL_EXCLUDE_PATTERN, GENERAL_EXPENSE_PATTERN } from './computations';
 import { normalizeDate } from './date-utils';
@@ -19,7 +20,7 @@ function getAuthClient() {
   }
   sanitizedKey = sanitizedKey.replace(/\\n/g, '\n');
 
-  return new google.auth.GoogleAuth({
+  return new GoogleAuth({
     credentials: {
       client_email: email,
       private_key: sanitizedKey,
@@ -44,7 +45,7 @@ export function __setSheetsClientForTests(client: sheets_v4.Sheets | null): void
 function getSheets(): sheets_v4.Sheets {
   if (sheetsClientOverride) return sheetsClientOverride;
   const auth = getAuthClient();
-  return google.sheets({ version: 'v4', auth });
+  return googleSheets({ version: 'v4', auth });
 }
 
 export const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '19MdOX_A-Nqw8a6rk77l4sNRQMAFcxudCp0ZmrHuqA_A';

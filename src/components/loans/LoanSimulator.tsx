@@ -80,7 +80,7 @@ export function LoanSimulator() {
             type="number"
             value={principal}
             onChange={(e) => setPrincipal(Math.max(1000, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
+            className="w-full min-h-11 sm:min-h-0 rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="150000"
           />
           <div className="flex gap-1.5 mt-2">
@@ -88,7 +88,7 @@ export function LoanSimulator() {
               <button
                 key={p}
                 onClick={() => setPrincipal(p)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
+                className="min-h-11 sm:min-h-0 rounded-lg bg-white/[0.05] border border-white/[0.07] px-3 sm:px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 ₹{(p / 1000).toFixed(0)}k
               </button>
@@ -105,7 +105,7 @@ export function LoanSimulator() {
             step="0.1"
             value={annualRate}
             onChange={(e) => setAnnualRate(Math.max(0.1, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
+            className="w-full min-h-11 sm:min-h-0 rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="10.5"
           />
           <div className="flex gap-1.5 mt-2">
@@ -113,7 +113,7 @@ export function LoanSimulator() {
               <button
                 key={r}
                 onClick={() => setAnnualRate(r)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
+                className="min-h-11 sm:min-h-0 rounded-lg bg-white/[0.05] border border-white/[0.07] px-3 sm:px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 {r}%
               </button>
@@ -129,7 +129,7 @@ export function LoanSimulator() {
             type="number"
             value={tenureMonths}
             onChange={(e) => setTenureMonths(Math.max(1, Number(e.target.value)))}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
+            className="w-full min-h-11 sm:min-h-0 rounded-xl border border-white/[0.07] bg-[#121214] px-3 py-2 text-sm tabular-nums text-white focus:border-amber-500 focus:outline-none"
             placeholder="18"
           />
           <div className="flex gap-1.5 mt-2">
@@ -137,7 +137,7 @@ export function LoanSimulator() {
               <button
                 key={m}
                 onClick={() => setTenureMonths(m)}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.07] px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
+                className="min-h-11 sm:min-h-0 rounded-lg bg-white/[0.05] border border-white/[0.07] px-3 sm:px-2 py-0.5 text-xs text-zinc-400 hover:text-white transition-colors"
               >
                 {m}m
               </button>

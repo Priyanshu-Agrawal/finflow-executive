@@ -91,7 +91,7 @@ export function ExecutiveHero({
           <button
             type="button"
             onClick={onOpenQuickLog}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-sm transition-all active:scale-95"
+            className="flex-1 sm:flex-none min-h-11 flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-sm transition-all active:scale-95"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Log</span>
@@ -99,7 +99,7 @@ export function ExecutiveHero({
 
           <Link
             href="/excel"
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-white/[0.07] hover:border-white/[0.15] transition-all"
+            className="flex-1 sm:flex-none min-h-11 flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-white/[0.07] hover:border-white/[0.15] transition-all"
           >
             <TableProperties className="h-4 w-4 text-zinc-400" />
             <span>Excel</span>
@@ -107,7 +107,7 @@ export function ExecutiveHero({
 
           <Link
             href="/budget"
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-white/[0.07] hover:border-white/[0.15] transition-all"
+            className="flex-1 sm:flex-none min-h-11 flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-white/[0.07] hover:border-white/[0.15] transition-all"
           >
             <Zap className="h-4 w-4 text-amber-400" />
             <span>Budget</span>

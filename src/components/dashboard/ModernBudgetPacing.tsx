@@ -341,7 +341,7 @@ export function ModernBudgetPacing({
             <span>{pacing.generalExpensesList.length} cycle ad-hocs</span>
             <button
               onClick={() => setShowTxList(!showTxList)}
-              className="text-amber-400 hover:text-amber-300 font-semibold"
+              className="min-h-11 sm:min-h-0 px-2 text-amber-400 hover:text-amber-300 font-semibold"
             >
               {showTxList ? 'Hide entries' : 'View entries'}
             </button>
@@ -412,7 +412,7 @@ export function ModernBudgetPacing({
             {onOpenQuickLog && (
               <button
                 onClick={onOpenQuickLog}
-                className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
+                className="min-h-11 sm:min-h-0 px-2 text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
               >
                 <Plus className="h-3 w-3" />
                 <span>+ Recharge</span>
@@ -431,7 +431,7 @@ export function ModernBudgetPacing({
               </span>
               <button
                 onClick={() => setIsConfiguring(true)}
-                className="rounded-md bg-white/[0.04] px-2 py-0.5 text-xs font-bold text-zinc-300 border border-white/[0.06] tabular-nums hover:bg-white/[0.08] transition-colors"
+                className="min-h-11 sm:min-h-0 rounded-md bg-white/[0.04] px-3 sm:px-2 py-0.5 text-xs font-bold text-zinc-300 border border-white/[0.06] tabular-nums hover:bg-white/[0.08] transition-colors"
                 title="Configure rent recurring date & amount"
               >
                 Set Date
@@ -506,7 +506,7 @@ export function ModernBudgetPacing({
                   type="button"
                   onClick={() => setHardMonth((v) => !v)}
                   aria-pressed={hardMonth}
-                  className={`rounded-md px-2 py-0.5 text-xs tabular-nums font-semibold border transition-colors ${
+                  className={`min-h-11 sm:min-h-0 rounded-md px-3 sm:px-2 py-0.5 text-xs tabular-nums font-semibold border transition-colors ${
                     hardMonth
                       ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                       : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200'

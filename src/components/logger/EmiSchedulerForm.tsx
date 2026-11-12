@@ -85,16 +85,18 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
         <div>
           <h3 className="text-base font-medium text-white flex items-center gap-2">
             <Sliders className="h-4 w-4 text-amber-500" />
-            Multi-Month EMI & Obligation Generator
+            Schedule EMI
           </h3>
           <p className="text-xs tabular-nums text-zinc-400 mt-0.5">
-            Generates sequential chronological installments with formula lineage defense in Column E
+            Adds one row for each month. The balance formulas are kept.
           </p>
         </div>
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-xl p-1 text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+            aria-label="Close"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.05]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -109,10 +111,11 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
             </label>
             <input
               type="text"
+              aria-label="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. MacBook Pro M3"
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 min-h-11 sm:min-h-0 text-xs text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
@@ -123,10 +126,11 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
             </label>
             <input
               type="number"
+              aria-label="Monthly installment (₹)"
               value={monthlyAmount}
               onChange={(e) => setMonthlyAmount(Number(e.target.value))}
               placeholder="e.g. 15000"
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 min-h-11 sm:min-h-0 text-xs tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
@@ -137,11 +141,12 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
             </label>
             <input
               type="number"
+              aria-label="Number of months"
               min={1}
               max={60}
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 min-h-11 sm:min-h-0 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>
@@ -152,9 +157,10 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
             </label>
             <input
               type="date"
+              aria-label="First installment date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3 py-2 min-h-11 sm:min-h-0 text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none"
               required
             />
           </div>

@@ -23,7 +23,7 @@ export default function QuickLogPage() {
         <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-[#18181B] p-1">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+            className={`flex-1 flex min-h-11 items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'daily'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -34,7 +34,7 @@ export default function QuickLogPage() {
           </button>
           <button
             onClick={() => setActiveTab('emi')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+            className={`flex-1 flex min-h-11 items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'emi'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'

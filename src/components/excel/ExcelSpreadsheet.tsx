@@ -418,7 +418,7 @@ export function ExcelSpreadsheet({
           <div className="flex items-center gap-1 rounded-xl bg-[#18181B] p-1 border border-white/[0.07]">
             <button
               onClick={() => setActiveTab('expenses')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'expenses'
                   ? 'bg-amber-500 text-black font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-white'
@@ -428,7 +428,7 @@ export function ExcelSpreadsheet({
             </button>
             <button
               onClick={() => setActiveTab('loans')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'loans'
                   ? 'bg-amber-500 text-black font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-white'
@@ -438,7 +438,7 @@ export function ExcelSpreadsheet({
             </button>
             <button
               onClick={() => setActiveTab('ledger')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'ledger'
                   ? 'bg-amber-500 text-black font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-white'
@@ -455,13 +455,14 @@ export function ExcelSpreadsheet({
             <>
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-500" />
+                <Search className="absolute left-2.5 top-3.5 sm:top-2 h-3.5 w-3.5 text-zinc-500" aria-hidden="true" />
                 <input
                   type="text"
+                  aria-label="Filter rows"
                   placeholder="Filter rows..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-2.5 py-1 text-xs text-white placeholder-zinc-500 w-28 sm:w-40 focus:border-amber-500 focus:outline-none transition-colors"
+                  className="min-h-11 sm:min-h-0 rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-2.5 py-1 text-xs text-white placeholder-zinc-500 w-28 sm:w-40 focus:border-amber-500 focus:outline-none transition-colors"
                 />
               </div>
 
@@ -502,8 +503,9 @@ export function ExcelSpreadsheet({
                 }
               }}
               disabled={sortExpensesMutation.isPending}
-              className="flex items-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
-              title="Permanently sort expenses chronologically by date in Google Sheets"
+              aria-label="Sort sheet by date"
+              className="flex min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 items-center justify-center gap-1.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
+              title="Sort the rows in Google Sheets by date. You can undo it."
             >
               {sortExpensesMutation.isPending ? (
                 <RefreshCw className="h-3.5 w-3.5 text-amber-500 animate-spin" />
@@ -511,7 +513,7 @@ export function ExcelSpreadsheet({
                 <ArrowUpDown className="h-3.5 w-3.5 text-amber-500" />
               )}
               <span className="hidden sm:inline">
-                {sortExpensesMutation.isPending ? 'Sorting...' : 'Auto-Sort Date'}
+                {sortExpensesMutation.isPending ? 'Sorting…' : 'Sort sheet by date'}
               </span>
             </button>
           )}
@@ -519,7 +521,8 @@ export function ExcelSpreadsheet({
           {/* Export CSV */}
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-colors"
+            aria-label="Export CSV"
+            className="flex min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-colors"
             title="Download CSV file of current active sheet"
           >
             <Download className="h-3.5 w-3.5 text-amber-500" />
@@ -530,7 +533,7 @@ export function ExcelSpreadsheet({
           {onOpenQuickLog && (
             <button
               onClick={onOpenQuickLog}
-              className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
+              className="flex min-h-11 sm:min-h-0 items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Log</span>
@@ -541,7 +544,7 @@ export function ExcelSpreadsheet({
 
       {/* Classic Excel Formula Bar (fx) */}
       {activeTab === 'expenses' && (
-        <div data-allow-mono className="border-b border-white/[0.07] bg-[#121214] px-3 py-1.5 flex items-center gap-2 text-xs font-mono">
+        <div data-allow-mono className="border-b border-white/[0.07] bg-[#121214] px-3 py-1 sm:py-1.5 flex items-center gap-2 text-xs font-mono">
           {/* Active Cell Reference Pill */}
           <div className="w-16 sm:w-20 rounded-lg bg-[#18181B] border border-amber-500/30 px-2 py-0.5 text-center font-bold text-amber-400">
             {selectedCell.col}

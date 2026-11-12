@@ -653,6 +653,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                       <input
                         type="checkbox"
                         checked={isSelected}
+                        aria-label={`Select row ${entry.rowIndex}`}
                         onChange={() => toggleSelectRow(entry.rowIndex)}
                         className="rounded border-white/20 bg-[#18181B] text-amber-500 focus:ring-0"
                       />
@@ -724,24 +725,27 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => setEditingEntry(entry)}
-                          className="rounded-lg p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-white/[0.05] transition-colors"
+                          className="rounded-lg p-2.5 sm:p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-white/[0.05] transition-colors"
                           title="Edit Transaction (Columns A-D)"
+                          aria-label={`Edit row ${entry.rowIndex}`}
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleClone(entry)}
                           disabled={logMutation.isPending}
-                          className="rounded-lg p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-white/[0.05] transition-colors"
+                          className="rounded-lg p-2.5 sm:p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-white/[0.05] transition-colors"
                           title="Duplicate Transaction"
+                          aria-label={`Duplicate row ${entry.rowIndex}`}
                         >
                           <Copy className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteRow(entry)}
                           disabled={deleteMutation.isPending}
-                          className="rounded-lg p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          className="rounded-lg p-2.5 sm:p-1.5 text-zinc-400 hover:text-orange-400 hover:bg-orange-500/10 transition-colors"
                           title="Delete Row"
+                          aria-label={`Delete row ${entry.rowIndex}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -769,7 +773,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
               </div>
               <button
                 onClick={() => setShowFuture(true)}
-                className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-medium text-xs border border-amber-500/20 transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                className="px-3 py-1.5 min-h-11 sm:min-h-0 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-medium text-xs border border-amber-500/20 transition-colors flex items-center justify-center gap-1.5 shrink-0"
               >
                 <ChevronDown className="h-3.5 w-3.5" />
                 <span>Load Further Projections ({futureCount})</span>
@@ -783,7 +787,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
               </span>
               <button
                 onClick={() => setShowFuture(false)}
-                className="text-xs text-amber-400 hover:underline font-medium"
+                className="min-h-11 sm:min-h-0 px-2 text-xs text-amber-400 hover:underline font-medium"
               >
                 Collapse Future Projections
               </button>
@@ -814,12 +818,13 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* Page Size Selector */}
           <select
+            aria-label="Rows per page"
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-1 text-xs text-zinc-300 focus:border-amber-500 focus:outline-none"
+            className="min-h-11 sm:min-h-0 rounded-xl border border-white/[0.07] bg-[#18181B] px-2.5 py-1 text-xs text-zinc-300 focus:border-amber-500 focus:outline-none"
           >
             <option value={25}>25 / page</option>
             <option value={50}>50 / page</option>
@@ -829,9 +834,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
           {/* Page Navigation */}
           <div className="flex items-center gap-1">
             <button
+              aria-label="Previous page"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#18181B] text-zinc-400 hover:text-white hover:border-amber-500/40 disabled:opacity-30 transition-colors"
+              className="flex h-11 w-11 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#18181B] text-zinc-400 hover:text-white hover:border-amber-500/40 disabled:opacity-30 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -839,9 +845,10 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
               {currentPage} / {totalPages}
             </span>
             <button
+              aria-label="Next page"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#18181B] text-zinc-400 hover:text-white hover:border-amber-500/40 disabled:opacity-30 transition-colors"
+              className="flex h-11 w-11 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#18181B] text-zinc-400 hover:text-white hover:border-amber-500/40 disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

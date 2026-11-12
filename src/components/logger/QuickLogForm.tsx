@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { TransactionType } from '@/lib/types';
 import { useLogExpense, useDeleteExpense } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
+import { useFrame } from '@/components/layout/FrameContext';
+import { anchorRowFor } from '@/lib/anchor';
+import { formatDateShort } from '@/lib/format';
 import {
   Bookmark,
   Check,
@@ -37,8 +40,12 @@ interface QuickLogFormProps {
   defaultDate?: string;
 }
 
-export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLogFormProps) {
-  const [date, setDate] = useState(defaultDate);
+export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
+  const { data } = useFrame();
+  const todayIso = new Date().toLocaleDateString('en-CA');
+  const [date, setDate] = useState(defaultDate ?? todayIso);
+  // The last day that has a logged row, from the sheet (a shortcut next to Today and Yesterday).
+  const lastLogged = data ? anchorRowFor(data.expenses, todayIso)?.date : undefined;
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
   const [type, setType] = useState<TransactionType>('DEBIT');
@@ -121,9 +128,9 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
     setAmount(current + increment);
   };
 
-  const setDatePreset = (preset: 'today' | 'yesterday' | 'nov10') => {
-    if (preset === 'nov10') {
-      setDate('2026-11-10');
+  const setDatePreset = (preset: 'today' | 'yesterday' | 'lastLogged') => {
+    if (preset === 'lastLogged') {
+      if (lastLogged) setDate(lastLogged);
       return;
     }
     const d = new Date();
@@ -208,7 +215,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           <button
             type="button"
             onClick={() => setIsAddingCustomPreset(!isAddingCustomPreset)}
-            className="flex items-center gap-1 text-xs font-medium text-amber-400 hover:underline transition-colors"
+            className="flex min-h-11 sm:min-h-0 items-center gap-1 text-xs font-medium text-amber-400 hover:underline transition-colors"
           >
             <Plus className="h-3 w-3" />
             {isAddingCustomPreset ? 'Cancel' : 'Add Custom Item'}
@@ -299,28 +306,30 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs tabular-nums font-medium text-zinc-300">Transaction Date</label>
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setDatePreset('nov10')}
-                className={`rounded-lg px-2 py-0.5 text-xs font-medium border transition-all ${
-                  date === '2026-11-10'
-                    ? 'bg-amber-500 text-black border-amber-500 font-semibold'
-                    : 'bg-[#18181B] text-zinc-400 border-white/[0.07] hover:text-white'
-                }`}
-              >
-                10 Nov (Anchor)
-              </button>
+              {lastLogged && lastLogged !== todayIso && (
+                <button
+                  type="button"
+                  onClick={() => setDatePreset('lastLogged')}
+                  className={`min-h-11 sm:min-h-0 rounded-lg px-2 py-0.5 text-xs font-medium border transition-all ${
+                    date === lastLogged
+                      ? 'bg-amber-500 text-black border-amber-500 font-semibold'
+                      : 'bg-[#18181B] text-zinc-400 border-white/[0.07] hover:text-white'
+                  }`}
+                >
+                  Last logged ({formatDateShort(lastLogged)})
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setDatePreset('today')}
-                className="rounded-lg px-2 py-0.5 text-xs font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
+                className="min-h-11 sm:min-h-0 rounded-lg px-2 py-0.5 text-xs font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
               >
                 Today
               </button>
               <button
                 type="button"
                 onClick={() => setDatePreset('yesterday')}
-                className="rounded-lg px-2 py-0.5 text-xs font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
+                className="min-h-11 sm:min-h-0 rounded-lg px-2 py-0.5 text-xs font-medium bg-[#18181B] text-zinc-400 border border-white/[0.07] hover:text-white"
               >
                 Yesterday
               </button>
@@ -328,9 +337,10 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           </div>
           <input
             type="date"
+            aria-label="Transaction date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 text-sm sm:text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 min-h-11 text-sm sm:text-xs tabular-nums text-white focus:border-amber-500 focus:outline-none transition-colors"
             required
           />
         </div>
@@ -353,10 +363,11 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           </div>
           <input
             type="text"
+            aria-label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Type any custom item e.g. Swiggy Lunch, Gym Fee, Chai, Petrol..."
-            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 text-sm sm:text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] px-3.5 py-2.5 min-h-11 text-sm sm:text-xs text-white placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
             required
           />
         </div>
@@ -371,10 +382,11 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
             <input
               type="number"
               step="0.01"
+              aria-label="Amount (₹)"
               value={amount}
               onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="0.00"
-              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-3.5 py-2.5 text-sm sm:text-xs tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-white/[0.07] bg-[#18181B] pl-8 pr-3.5 py-2.5 min-h-11 text-sm sm:text-xs tabular-nums font-bold text-white focus:border-amber-500 focus:outline-none transition-colors"
               required
             />
           </div>
@@ -387,7 +399,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                 key={delta}
                 type="button"
                 onClick={() => handleAddAmount(delta)}
-                className="rounded-lg bg-[#18181B] hover:border-amber-500/40 border border-white/[0.07] px-2 py-1 text-xs tabular-nums text-zinc-300 hover:text-white transition-colors"
+                className="rounded-lg bg-[#18181B] hover:border-amber-500/40 border border-white/[0.07] px-2 py-1 min-h-11 sm:min-h-0 text-xs tabular-nums text-zinc-300 hover:text-white transition-colors"
               >
                 +{delta}
               </button>
@@ -396,7 +408,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
               <button
                 type="button"
                 onClick={() => setAmount('')}
-                className="rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2 py-1 text-xs text-rose-400 transition-colors ml-auto"
+                className="rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2 py-1 min-h-11 sm:min-h-0 text-xs text-rose-400 transition-colors ml-auto"
               >
                 Clear
               </button>
@@ -417,7 +429,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`rounded-xl py-2.5 text-xs font-medium border transition-all ${
+                  className={`rounded-xl py-2.5 min-h-11 text-xs font-medium border transition-all ${
                     isSelected
                       ? t === 'DEBIT'
                         ? 'bg-white/10 text-white border-white/30 shadow-sm'
@@ -440,7 +452,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
             type="button"
             onClick={(e) => handleSubmit(e, true)}
             disabled={logMutation.isPending || !description.trim() || !amount}
-            className="rounded-xl border border-white/[0.07] bg-[#18181B] py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-all disabled:opacity-50"
+            className="rounded-xl border border-white/[0.07] bg-[#18181B] py-2.5 min-h-11 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-all disabled:opacity-50"
           >
             Add Another
           </button>
@@ -448,7 +460,7 @@ export function QuickLogForm({ onSuccess, defaultDate = '2026-11-10' }: QuickLog
           <button
             type="submit"
             disabled={logMutation.isPending || !description.trim() || !amount}
-            className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
           >
             <PlusCircle className="h-4 w-4" />
             <span>

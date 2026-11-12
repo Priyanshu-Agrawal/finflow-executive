@@ -214,9 +214,9 @@ function pageScan(opts) {
     if (el.tagName === 'INPUT' && !named && !text && !(el.type === 'checkbox' && el.closest('th'))) out.unlabelled.push(sel(el));
   }
   out.smallCount = out.small.length;
-  out.small = out.small.slice(0, 6);
+  out.small = out.small.slice(0, 40);
   out.unlabelledCount = out.unlabelled.length;
-  out.unlabelled = out.unlabelled.slice(0, 6);
+  out.unlabelled = out.unlabelled.slice(0, 40);
   void bar2;
   out.bodyText = document.body.innerText;
   return out;
@@ -276,8 +276,8 @@ function ruleR9(scan, phone, path, vpName) {
   // R9 tap targets and labels
   {
     const parts = [];
-    if (phone && scan.smallCount) parts.push(`${scan.smallCount} controls under 44px: ${scan.small.slice(0, 4).join(' | ')}`);
-    if (scan.unlabelledCount) parts.push(`${scan.unlabelledCount} unlabelled icon controls: ${scan.unlabelled.slice(0, 3).join(' | ')}`);
+    if (phone && scan.smallCount) parts.push(`${scan.smallCount} controls under 44px: ${scan.small.slice(0, VERBOSE ? 40 : 4).join(' | ')}`);
+    if (scan.unlabelledCount) parts.push(`${scan.unlabelledCount} unlabelled icon controls: ${scan.unlabelled.slice(0, VERBOSE ? 40 : 3).join(' | ')}`);
     rec('R9', path, vpName, parts.length === 0, parts.join(' ; '));
   }
 
@@ -522,15 +522,21 @@ async function checkToday(page, route, vpName) {
   // Dialogs: the Log and Schedule EMI sheets follow the same type, date and label rules.
   for (const vp of VIEWPORTS) {
     for (const dlg of [
-      { name: '/expenses+Log', open: (page) => page.getByRole('button', { name: 'Log', exact: true }).first().click() },
-      { name: '/expenses+EMI', open: (page) => page.getByRole('button', { name: 'Schedule EMI' }).first().click() },
+      { name: '/expenses+Log', open: (page, phone) => page.getByRole('button', { name: 'Log', exact: true }).first().click() },
+      {
+        name: '/expenses+EMI',
+        open: async (page, phone) => {
+          if (phone) await page.getByRole('button', { name: 'More' }).click(); // phone: Schedule EMI lives in the More menu
+          await page.getByRole('button', { name: 'Schedule EMI' }).first().click();
+        },
+      },
     ]) {
       const page = await ctx.newPage();
       await page.setViewportSize({ width: vp.width, height: vp.height });
       pageStatus = 200;
       await page.goto(BASE + '/expenses', { waitUntil: 'domcontentloaded' });
       await waitReady(page);
-      await dlg.open(page);
+      await dlg.open(page, vp.name === 'phone');
       await page.waitForTimeout(500);
       const opened = await page.getByRole('dialog').count();
       if (!opened) {

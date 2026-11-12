@@ -96,7 +96,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
         <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-[#18181B] p-1 self-start sm:self-auto text-xs">
           <button
             onClick={() => setRangeFilter('all')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all ${
+            className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg font-medium transition-all ${
               rangeFilter === 'all'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -106,7 +106,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
           </button>
           <button
             onClick={() => setRangeFilter('near')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all ${
+            className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg font-medium transition-all ${
               rangeFilter === 'near'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -116,7 +116,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
           </button>
           <button
             onClick={() => setRangeFilter('2026')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all ${
+            className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg font-medium transition-all ${
               rangeFilter === '2026'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -126,7 +126,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
           </button>
           <button
             onClick={() => setRangeFilter('2027')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all ${
+            className={`px-3 py-1 min-h-11 sm:min-h-0 rounded-lg font-medium transition-all ${
               rangeFilter === '2027'
                 ? 'bg-amber-500 text-black font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-white'

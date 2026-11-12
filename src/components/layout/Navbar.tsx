@@ -45,7 +45,7 @@ export function Navbar() {
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           {/* Left: Brand Monogram & Title */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link href="/" className="flex min-h-11 items-center gap-2.5 group">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:border-amber-500/40 transition-colors">
                 <Wallet className="h-4 w-4" />
               </div>
@@ -89,7 +89,7 @@ export function Navbar() {
                 onClick={() => setShowDatePicker(!showDatePicker)}
                 aria-label="Change the date the books are shown as of"
                 aria-expanded={showDatePicker}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#121214] px-2.5 py-1.5 text-xs text-zinc-200 hover:border-amber-500/30 transition-colors"
+                className="flex min-h-11 sm:min-h-0 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#121214] px-2.5 py-1.5 text-xs text-zinc-200 hover:border-amber-500/30 transition-colors"
               >
                 <Calendar className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                 <span className="tabular-nums text-zinc-200 font-semibold text-xs">
@@ -107,7 +107,7 @@ export function Navbar() {
                         resetToToday();
                         setShowDatePicker(false);
                       }}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                      className={`flex min-h-11 items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                         referenceDate === todayStr
                           ? 'bg-amber-500 text-zinc-950 font-bold'
                           : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
@@ -141,7 +141,7 @@ export function Navbar() {
                       onChange={(e) => {
                         if (e.target.value) pickDate(e.target.value);
                       }}
-                      className="w-full rounded-xl border border-white/[0.08] bg-black/60 px-3 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                      className="w-full min-h-11 rounded-xl border border-white/[0.08] bg-black/60 px-3 py-1.5 text-sm text-white focus:border-amber-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -154,7 +154,7 @@ export function Navbar() {
               onClick={refetch}
               disabled={isFetching}
               aria-label="Refresh from Google Sheets"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
+              className="flex h-11 w-11 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin text-amber-400' : ''}`} />
             </button>
@@ -185,7 +185,7 @@ export function Navbar() {
               onClick={() => setShowMobileMore(!showMobileMore)}
               aria-label="More"
               aria-expanded={showMobileMore}
-              className="flex lg:hidden h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-white"
+              className="flex lg:hidden h-11 w-11 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-white"
             >
               {showMobileMore ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}
             </button>
@@ -204,7 +204,7 @@ export function Navbar() {
                     href={link.href}
                     onClick={() => setShowMobileMore(false)}
                     aria-current={isActive(link.href) ? 'page' : undefined}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                    className={`flex min-h-11 items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-colors ${
                       isActive(link.href)
                         ? 'bg-amber-500 text-zinc-950 font-bold'
                         : 'bg-white/[0.03] text-zinc-300 hover:bg-white/[0.06]'
@@ -224,7 +224,7 @@ export function Navbar() {
                   setShowMobileMore(false);
                   openEmi();
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08]"
+                className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08]"
               >
                 <CreditCard className="h-3.5 w-3.5 text-amber-400" />
                 <span>Schedule EMI</span>
@@ -232,7 +232,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20"
+                className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>Sign out</span>
@@ -262,7 +262,7 @@ export function Navbar() {
                 <Link
                   href={link.href}
                   aria-current={isActive(link.href) ? 'page' : undefined}
-                  className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+                  className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
                     isActive(link.href) ? 'text-amber-400' : 'text-zinc-400 hover:text-white'
                   }`}
                 >

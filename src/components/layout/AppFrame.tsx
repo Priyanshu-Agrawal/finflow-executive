@@ -98,7 +98,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     <FrameContext.Provider value={value}>
       <div className="min-h-screen bg-[#0B0B0C] text-[#F4F4F5] flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
         <Navbar />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-10 space-y-4 sm:space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-10 space-y-3 sm:space-y-6">
           {children}
         </main>
 
@@ -109,7 +109,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={() => setLogOpen(false)}
                 aria-label="Close"
-                className="absolute right-4 top-4 z-10 rounded-xl p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08]"
+                className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.08]"
               >
                 <X className="h-5 w-5" />
               </button>

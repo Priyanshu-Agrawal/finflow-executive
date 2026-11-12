@@ -3,8 +3,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 
 const svg = (n) => `<svg xmlns="http://www.w3.org/2000/svg" width="${n}" height="${n}" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0E1522"/>
-  <g fill="#EDF0F4"><rect x="170" y="140" width="56" height="232" rx="8"/><rect x="170" y="140" width="180" height="56" rx="8"/><rect x="170" y="236" width="150" height="52" rx="8"/></g>
+  <rect width="512" height="512" fill="#0B0B0C"/>
+  <g fill="#F59E0B"><rect x="170" y="140" width="56" height="232" rx="8"/><rect x="170" y="140" width="180" height="56" rx="8"/><rect x="170" y="236" width="150" height="52" rx="8"/></g>
 </svg>`;
 
 (async () => {

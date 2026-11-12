@@ -15,7 +15,8 @@ function check(ok: boolean, msg: string) {
   check(mf.status() === 200, 'manifest is public (200)');
   const m = mf.ok() ? await mf.json() : {};
   check(m.name === 'FinFlow' && m.short_name === 'FinFlow', 'manifest names');
-  check(m.start_url === '/v2' && m.scope === '/' && m.display === 'standalone', 'manifest start_url, scope, display');
+  check(m.start_url === '/' && m.scope === '/' && m.display === 'standalone', 'manifest opens the real app (/), scope /, standalone');
+  check(m.background_color === '#0B0B0C' && m.theme_color === '#0B0B0C', 'manifest uses the dark app colours');
   const icons: Array<{ sizes: string; purpose?: string }> = m.icons || [];
   check(icons.some((i) => i.sizes === '192x192') && icons.some((i) => i.sizes === '512x512' && (i.purpose || 'any') === 'any'), 'manifest has 192 and 512 icons');
   check(icons.some((i) => i.purpose === 'maskable'), 'manifest has a maskable icon');

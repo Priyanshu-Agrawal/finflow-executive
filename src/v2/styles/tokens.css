@@ -12,6 +12,7 @@
   --orange-soft: #FBE6D6;
   --btn: #0E1522;
   --btn-ink: #FFFFFF;
+  --scrim: rgba(14, 21, 34, 0.45);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -28,6 +29,7 @@
     --orange-soft: #3A2618;
     --btn: #ECEFF4;
     --btn-ink: #0F1218;
+    --scrim: rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
@@ -60,7 +62,7 @@ body:has(.v2) { background: #EDF0F4; }
 .v2-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(76px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: space-around; align-items: flex-start; }
 .v2-link { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 56px; height: 56px; padding-top: 8px; font-size: 11px; color: var(--ink2); text-decoration: none; }
 .v2-link[aria-current="page"] { color: var(--ink); font-weight: 650; }
-.v2-fab { width: 56px; height: 56px; margin-top: -14px; border-radius: 28px; background: var(--btn); color: var(--btn-ink); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.v2-fab { border: 0; width: 56px; height: 56px; margin-top: -14px; border-radius: 28px; background: var(--btn); color: var(--btn-ink); display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .v2-fab-label { display: none; }
 
 @media (min-width: 900px) {

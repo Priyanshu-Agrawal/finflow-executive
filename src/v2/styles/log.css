@@ -1,0 +1,23 @@
+/* Log sheet, keypad and toast. Colours only through tokens. */
+.v2 .l-wrap { position: fixed; inset: 0; z-index: 40; background: var(--scrim); }
+.v2 .l-sheet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 440px; max-height: 94dvh; overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); background: var(--surface); border-radius: 28px 28px 0 0; outline: none; }
+.v2 .l-grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); align-self: center; flex: none; }
+.v2 .l-top { display: flex; justify-content: space-between; align-items: center; }
+.v2 .l-top h2 { font-size: 20px; font-weight: 650; }
+.v2 .l-x { width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--sunk); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+.v2 .l-amount { font-size: 56px; line-height: 64px; text-align: center; }
+.v2 .l-scroll { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+.v2 .l-scroll::-webkit-scrollbar { display: none; }
+.v2 .l-chip { flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; white-space: nowrap; }
+.v2 .l-chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.v2 .l-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.v2 .l-field { display: flex; flex-direction: column; gap: 4px; }
+.v2 .l-input { height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; width: 100%; }
+.v2 .l-keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.v2 .l-key { height: 52px; border: 0; border-radius: 14px; background: var(--sunk); color: var(--ink); font: inherit; font-size: 22px; font-weight: 600; }
+.v2 .l-save { height: 56px; border: 0; border-radius: 16px; background: var(--btn); color: var(--btn-ink); font: inherit; font-size: 17px; font-weight: 650; }
+.v2 .l-save:disabled { opacity: 0.45; }
+.v2 .l-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom)); width: calc(100% - 24px); max-width: 416px; min-height: 52px; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px 4px 16px; border-radius: 16px; background: var(--btn); color: var(--btn-ink); font-size: 14px; }
+.v2 .l-toast button { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; }
+@media (min-width: 900px) { .v2 .l-toast { bottom: 24px; } }
+@media (prefers-reduced-motion: no-preference) { .v2 .l-sheet { animation: l-up 0.2s ease-out; } @keyframes l-up { from { transform: translate(-50%, 24px); opacity: 0.6; } } }

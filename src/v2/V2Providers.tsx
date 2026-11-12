@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createHistory, type History } from './state/history';
 import { createSync, type Sync } from './state/sync';
 import { shouldRetry, retryDelay } from './lib/retry';
+import { LogSheetProvider } from './log/LogSheetContext';
 
 const HistoryCtx = createContext<History | null>(null);
 const SyncCtx = createContext<Sync | null>(null);
@@ -20,7 +21,9 @@ export function V2Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <HistoryCtx.Provider value={history}>
-        <SyncCtx.Provider value={sync}>{children}</SyncCtx.Provider>
+        <SyncCtx.Provider value={sync}>
+          <LogSheetProvider>{children}</LogSheetProvider>
+        </SyncCtx.Provider>
       </HistoryCtx.Provider>
     </QueryClientProvider>
   );

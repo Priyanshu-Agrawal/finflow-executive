@@ -35,12 +35,12 @@ function check(ok: boolean, msg: string) {
     if (today === '2026-11-12' || today === '2026-11-11') check(expected === '₹1,14,021', `[${scheme}] anchor balance is ₹1,14,021`);
 
     const nav = page.getByRole('navigation', { name: 'Main' });
-    for (const [name, path] of [['Passbook', '/v2/passbook'], ['Plan', '/v2/plan'], ['Owe', '/v2/owe'], ['Log a spend', '/v2/log'], ['Today', '/v2']] as const) {
+    for (const [name, path] of [['Passbook', '/v2/passbook'], ['Plan', '/v2/plan'], ['Owe', '/v2/owe'], ['Today', '/v2']] as const) {
       await nav.getByRole('link', { name, exact: true }).click();
       await page.waitForURL(`${BASE}${path}`, { timeout: 60000 });
       check(await page.getByRole('heading', { level: 1 }).first().isVisible(), `[${scheme}] ${path} has a heading`);
     }
-    const colours = await page.getByRole('link', { name: 'Log a spend', exact: true }).evaluate((el) => {
+    const colours = await page.getByRole('button', { name: 'Log a spend', exact: true }).evaluate((el) => {
       const cs = getComputedStyle(el);
       return { fg: cs.color, bg: cs.backgroundColor };
     });

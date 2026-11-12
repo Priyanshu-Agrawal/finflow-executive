@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLogSheet } from '../log/LogSheetContext';
 
 const ICON = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, 'aria-hidden': true } as const;
 
@@ -14,6 +15,7 @@ const ITEMS = [
 
 export function Nav() {
   const path = usePathname();
+  const log = useLogSheet();
   const link = (it: (typeof ITEMS)[number]) => (
     <Link key={it.href} href={it.href} className="v2-link" aria-current={path === it.href ? 'page' : undefined}>
       {it.icon}
@@ -24,10 +26,10 @@ export function Nav() {
     <nav aria-label="Main" className="v2-nav">
       {link(ITEMS[0])}
       {link(ITEMS[1])}
-      <Link href="/v2/log" className="v2-fab" aria-label="Log a spend">
+      <button type="button" className="v2-fab" aria-label="Log a spend" onClick={log.open}>
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         <span className="v2-fab-label" aria-hidden="true">Log a spend</span>
-      </Link>
+      </button>
       {link(ITEMS[2])}
       {link(ITEMS[3])}
     </nav>

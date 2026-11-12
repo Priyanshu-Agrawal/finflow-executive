@@ -27,12 +27,12 @@
   - Liquid Operating Balance: **₹1,14,021** (11 Nov 2026)
   - 5-Day Immediate Obligations: **₹75,865** (Phone EMI ₹58,465 + Electricity ₹2,400 + Rent ₹15,000; today's entries are already paid)
   - Post-Rent Cushion: **₹38,156**
-  - Late-2027 terminal sovereign wealth projection: **₹2,58,989** (includes the 13th bike EMI on 6 Aug 2027, added 12 Nov 2026)
+  - Late-2027 terminal sovereign wealth projection: **₹2,55,989** (12 Nov 2026: includes the 13th bike EMI on 6 Aug 2027 and the Phone EMI Settlement at ₹61,465 on 16 Nov)
 - ⚡ **4-Pillar Budget Burn & Runway Engine**
   - **General Expenses** — ₹15,000 monthly target anchored to the 7th (salary cycle). Daily allowance = $\frac{\text{Remaining Expenses Budget}}{\text{Remaining Days}}$ (**₹423/day**).
   - **Electricity Recharge Budget** — ₹3,200 total pool (₹3,000 base + ₹200 surplus carryover); ₹800 recharged, ₹2,400 remaining.
   - **Room Rent Commitment** — ₹15,000 due on the 15th, with a tracked post-rent liquidity buffer.
-  - **Safe Daily Spend** — comes from the expenses budget only, never from savings: Remaining Expenses Budget ÷ days left (**₹423/day**). A **Hard month** toggle shows the worst-case ceiling: budget left + this cycle's projected saving (if positive) ÷ days left. The 7 Nov–6 Dec cycle projects −₹34,865, so its ceiling is also ₹423/day.
+  - **Safe Daily Spend** — comes from the expenses budget only, never from savings: Remaining Expenses Budget ÷ days left (**₹423/day**). A **Hard month** toggle shows the worst-case ceiling: budget left + this cycle's projected saving (if positive) ÷ days left. The 7 Nov–6 Dec cycle projects −₹37,865, so its ceiling is also ₹423/day.
 - 📑 **Excel Grid Engine**
   - Dynamic Date Anchor highlights today's active baseline (Row 240).
   - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) for cell edits, drag-and-drop row moves and date sorts.

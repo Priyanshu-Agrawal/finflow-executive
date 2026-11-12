@@ -130,7 +130,7 @@ Gives an at-a-glance view of liquid capital, short-term obligations and cash run
 - **Current Liquid Operating Balance** — the settled bank balance as of the dynamic anchor date (e.g. **₹1,14,021** on 11 Nov 2026).
 - **Upcoming Immediate Bills (5-day horizon)** — every `DEBIT` dated tomorrow through 5 days ahead (e.g. Phone EMI ₹58,465 + Remaining Electricity ₹2,400 + Rent ₹15,000 = ₹75,865). Entries dated today are already paid and already inside the balance, so they are not counted again.
 - **Post-Obligation Real Cushion** — liquidity left once all current-cycle obligations settle: the running balance after the 15 Nov rent row (e.g. **₹38,156** = ₹1,14,021 − ₹58,465 − ₹2,400 − ₹15,000).
-- **Sovereign Wealth Projection (late 2027)** — the running balance on the last projected row (Row 315, **₹2,58,989**). The UI labels it **+100.7% growth**; that label is fixed text, not a computed figure.
+- **Sovereign Wealth Projection (late 2027)** — the running balance on the last projected row (Row 315, **₹2,55,989** on 12 Nov 2026). The UI labels it **+100.7% growth**; that label is fixed text, not a computed figure.
 
 ---
 
@@ -181,7 +181,7 @@ The defaults (₹15,000 general budget, ₹3,200 electricity budget, 7th budget 
   $$\text{Safe Daily Spend} = \frac{\text{Remaining Expenses Budget}}{\text{Days Remaining in Cycle}} = \frac{₹11,000}{26} = ₹423\text{/day}$$
 - **Hard month** (toggle on the card, off by default) shows the worst case: the most you can spend without touching savings.
   $$\text{Hard Month Ceiling} = \frac{\text{Remaining Expenses Budget} + \max(0, \text{Projected Cycle Saving})}{\text{Days Remaining in Cycle}}$$
-  Projected Cycle Saving = balance the day before the next salary − balance the day before this cycle's salary. For 7 Nov–6 Dec: ₹21,156 − ₹56,021 = −₹34,865 (Phone EMI settlement and gifts), so the ceiling equals the safe spend.
+  Projected Cycle Saving = balance the day before the next salary − balance the day before this cycle's salary. For 7 Nov–6 Dec (12 Nov 2026): ₹18,156 − ₹56,021 = −₹37,865 (Phone EMI settlement and gifts), so the ceiling equals the safe spend.
 - The post-rent cushion (Pillar 3) is still shown, but no daily figure is derived from it.
 
 ---

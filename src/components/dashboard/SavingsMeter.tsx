@@ -128,7 +128,8 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm ring-[1.5px] ring-zinc-100 ring-offset-1 ring-offset-[#121214]" />This cycle</span>
       </div>
 
-      <table className="sr-only">
+      <div className="sr-only">
+      <table>
         <caption>Saving per salary cycle</caption>
         <thead><tr><th>Cycle</th><th>Saving</th><th>Kind</th></tr></thead>
         <tbody>
@@ -137,6 +138,7 @@ export function SavingsMeter({ trend }: { trend: SavingsCycle[] }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

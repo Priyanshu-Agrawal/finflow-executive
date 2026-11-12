@@ -143,6 +143,26 @@ const check = (ok, msg) => {
       check(!(await page.getByRole('button', { name: "Go to today's row" }).isVisible()), `[${name}] Excel opens on the anchor row without the Today button`);
       const rows = await page.locator('main table tbody tr').count();
       check(rows >= 300, `[${name}] Excel still lists every row (${rows})`);
+      const anchorDate = (await page.locator('[data-anchor-row] td').nth(1).innerText()).trim();
+      const dateRe = name === 'phone' ? /^\d{1,2} [A-Z][a-z]{2}$/ : /^\d{1,2} [A-Z][a-z]{2} \d{4}$/;
+      check(dateRe.test(anchorDate), `[${name}] Excel dates read like "${name === 'phone' ? '12 Nov' : '12 Nov 2026'}" (got "${anchorDate}")`);
+      const rowH = await page.locator('[data-anchor-row]').evaluate((el) => el.getBoundingClientRect().height);
+      check(rowH < 50, `[${name}] a date does not wrap to a second line (row is ${Math.round(rowH)}px)`);
+      if (name === 'phone') {
+        const sc = page.locator('main table >> xpath=ancestor::div[contains(@class,"overflow-auto")][1]').first();
+        await sc.evaluate((el) => { el.scrollLeft = 400; });
+        await page.waitForTimeout(250);
+        const pos = await page.evaluate(() => {
+          const row = document.querySelector('[data-anchor-row]');
+          const rn = row.children[0].getBoundingClientRect();
+          const desc = row.children[2].getBoundingClientRect();
+          const th = document.querySelectorAll('main table thead th')[2].getBoundingClientRect();
+          return { rnRight: rn.right, descLeft: desc.left, thLeft: th.left, descText: row.children[2].innerText.trim() };
+        });
+        check(Math.abs(pos.descLeft - pos.rnRight) <= 1.5, `[phone] Description stays pinned next to the row number while scrolling sideways (${Math.round(pos.descLeft)} vs ${Math.round(pos.rnRight)})`);
+        check(Math.abs(pos.thLeft - pos.descLeft) <= 1.5, `[phone] its header stays aligned with it`);
+        await sc.evaluate((el) => { el.scrollLeft = 0; });
+      }
       await ctx.close();
     }
   }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { placeRowInView } from '@/lib/scroll-anchor';
 import { TodayFab } from '@/components/ui/TodayFab';
+import { formatDate, formatDateShort } from '@/lib/format';
 import { useAnchorInView } from '@/hooks/useAnchorInView';
 import {
   ExpenseEntry,
@@ -410,7 +411,7 @@ export function ExcelSpreadsheet({
     <div className="relative flex flex-col h-[calc(100vh-12rem)] rounded-2xl border border-white/[0.07] bg-[#121214] overflow-hidden shadow-2xl">
       <TodayFab visible={Boolean(anchorRow) && (!anchorInView || activeTab !== 'expenses')} onClick={goToToday} />
       {/* Top Excel Ribbon Toolbar */}
-      <div className="border-b border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <div className="border-b border-white/[0.07] bg-[#121214] px-3 sm:px-4 py-1.5 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-2.5">
         {/* Left: Mode Title & Sheet Tabs */}
         <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto">
           {/* Sheet Tab Switcher */}
@@ -532,7 +533,7 @@ export function ExcelSpreadsheet({
               className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-400 transition-all shadow-sm active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Insert Row</span>
+              <span>Log</span>
             </button>
           )}
         </div>
@@ -598,8 +599,8 @@ export function ExcelSpreadsheet({
                   A <span className="font-sans text-xs opacity-75">(Date)</span>
                 </th>
                 <th
-                  className={`border-r border-b border-white/[0.07] p-1.5 text-left transition-colors ${
-                    selectedCell.col === 'B' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-left transition-colors max-sm:sticky max-sm:left-14 max-sm:z-30 max-sm:min-w-[9rem] max-sm:bg-[#18181B] ${
+                    selectedCell.col === 'B' ? 'bg-amber-500/15 max-sm:bg-[#2A210F] text-amber-400 font-bold' : ''
                   }`}
                 >
                   B <span className="font-sans text-xs opacity-75">(Description)</span>
@@ -616,14 +617,14 @@ export function ExcelSpreadsheet({
                     selectedCell.col === 'D' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
-                  D <span className="font-sans text-xs opacity-75">(Credit/Debit)</span>
+                  D <span className="font-sans text-xs opacity-75">(Type)</span>
                 </th>
                 <th
                   className={`border-b border-white/[0.07] p-1.5 text-right transition-colors ${
                     selectedCell.col === 'E' ? 'bg-amber-500/15 text-amber-400 font-bold' : ''
                   }`}
                 >
-                  E <span className="font-sans text-xs opacity-75">(Remaining Balance fx)</span>
+                  E <span className="font-sans text-xs opacity-75">(Balance)</span>
                 </th>
               </tr>
             </thead>
@@ -693,7 +694,7 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'A' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'A')}
-                      className={`border-r border-b border-white/[0.05] p-1.5 text-zinc-300 cursor-cell transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 text-zinc-300 whitespace-nowrap cursor-cell transition-all ${
                         isSelectedRow && selectedCell.col === 'A'
                           ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
                           : ''
@@ -722,7 +723,10 @@ export function ExcelSpreadsheet({
                           className="w-full bg-black text-white tabular-nums text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
-                        e.date
+                        <>
+                          <span className="sm:hidden">{formatDateShort(e.date)}</span>
+                          <span className="hidden sm:inline">{formatDate(e.date)}</span>
+                        </>
                       )}
                     </td>
 
@@ -730,10 +734,12 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'B' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'B')}
-                      className={`border-r border-b border-white/[0.05] p-1.5 font-medium text-white cursor-cell transition-all ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 font-medium text-white cursor-cell transition-all max-sm:sticky max-sm:left-14 max-sm:z-[5] max-sm:min-w-[9rem] ${
                         isSelectedRow && selectedCell.col === 'B'
-                          ? 'ring-2 ring-amber-500 bg-amber-500/15 font-bold text-white relative z-10'
-                          : ''
+                          ? 'ring-2 ring-amber-500 bg-amber-500/15 max-sm:bg-[#2E210C] font-bold text-white relative z-10'
+                          : isAnchorRow
+                          ? 'max-sm:bg-[#221A0C]'
+                          : 'max-sm:bg-[#0B0B0C]'
                       }`}
                     >
                       {editingCell?.row === rowNum && editingCell?.col === 'B' ? (

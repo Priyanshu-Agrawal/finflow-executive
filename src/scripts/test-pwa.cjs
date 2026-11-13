@@ -142,6 +142,42 @@ async function swActive(page) {
   check(!afterSignOut.cached, 'the cached financials response is cleared on sign-out');
   check(afterSignOut.lastSynced === null, 'the last-synced timestamp is cleared on sign-out');
 
+  // ---- Task 5: the install prompt ----
+  const installCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await installCtx.request.post(`${BASE}/api/auth/login`, { data: { username: process.env.AUTH_USERNAME, password: process.env.AUTH_PASSWORD } });
+  await installCtx.route(/\/api\/financials/, (r) => r.fulfill({ json: api }));
+  const ip = await installCtx.newPage();
+  await ip.goto(`${BASE}/`);
+  await ip.getByText('Balance now').waitFor({ timeout: 20000 });
+  check(!(await ip.getByText('Install FinFlow').isVisible().catch(() => false)), 'no install bar before the browser ever offers to install');
+
+  // Simulate the browser's own beforeinstallprompt offer (real browsers decide when to fire it;
+  // we only control what our own listener does once it does).
+  await ip.evaluate(() => {
+    const evt = new Event('beforeinstallprompt', { cancelable: true });
+    evt.prompt = () => Promise.resolve();
+    evt.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(evt);
+  });
+  check(await ip.getByText('Install FinFlow').isVisible({ timeout: 5000 }).catch(() => false), 'the install bar appears once the browser offers to install');
+
+  await ip.getByRole('button', { name: 'Dismiss' }).click();
+  check(!(await ip.getByText('Install FinFlow').isVisible().catch(() => false)), 'dismissing hides the bar immediately');
+  const dismissedFlag = await ip.evaluate(() => localStorage.getItem('finflow_install_dismissed'));
+  check(dismissedFlag === '1', 'the dismissal is remembered');
+
+  await ip.reload();
+  await ip.getByText('Balance now').waitFor({ timeout: 20000 });
+  await ip.evaluate(() => {
+    const evt = new Event('beforeinstallprompt', { cancelable: true });
+    evt.prompt = () => Promise.resolve();
+    evt.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(evt);
+  });
+  await ip.waitForTimeout(500);
+  check(!(await ip.getByText('Install FinFlow').isVisible().catch(() => false)), 'the bar stays dismissed across a reload, even if offered again');
+  await installCtx.close();
+
   await browser.close();
   console.log(failed ? `\n${failed} FAIL` : '\nALL PASS');
   process.exit(failed ? 1 : 0);

@@ -7,6 +7,7 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { formatSyncedAgo } from '@/lib/sync-status';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
 import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { Navbar } from './Navbar';
 import { FrameContext, type CycleConfig, type FrameValue } from './FrameContext';
 
@@ -145,6 +146,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-10 space-y-3 sm:space-y-6">
+          <InstallPrompt />
           {children}
         </main>
 

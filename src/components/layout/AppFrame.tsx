@@ -1,12 +1,23 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { WifiOff, X } from 'lucide-react';
 import { useFinancials } from '@/hooks/useFinancials';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { formatSyncedAgo } from '@/lib/sync-status';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
 import { EmiSchedulerForm } from '@/components/logger/EmiSchedulerForm';
 import { Navbar } from './Navbar';
 import { FrameContext, type CycleConfig, type FrameValue } from './FrameContext';
+
+const LAST_SYNCED_KEY = 'finflow_last_synced';
+
+function readLastSynced(): number | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(LAST_SYNCED_KEY);
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) ? n : null;
+}
 
 const CONFIG_KEY = 'finflow_cycle_config';
 const DEFAULT_CONFIG: CycleConfig = {
@@ -43,6 +54,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<CycleConfig>(readConfig);
   const [logOpen, setLogOpen] = useState(false);
   const [emiOpen, setEmiOpen] = useState(false);
+  const isOnline = useOnlineStatus();
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(readLastSynced);
 
   const { data, isLoading, error, refetch, isFetching } = useFinancials(
     referenceDate,
@@ -53,6 +66,24 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     config.rentAmount,
     config.electricityRemaining
   );
+
+  // Record "last genuinely synced" only when a fetch actually resolves (not when isOnline flips
+  // on its own, which would otherwise claim "just synced" a tick before the next fetch starts).
+  // navigator.onLine, not the isOnline state, so a stale closure can't record a sync while offline.
+  useEffect(() => {
+    if (!data) return;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    const now = Date.now();
+    setLastSyncedAt(now);
+    try {
+      localStorage.setItem(LAST_SYNCED_KEY, String(now));
+    } catch {
+      // ignore storage errors (private mode, quota)
+    }
+  }, [data]);
+
+  // True once we have data but it can only have come from the offline cache.
+  const isShowingOfflineCopy = !isOnline && !!data;
 
   // The functional updater is required: ModernBudgetPacing's "Apply" calls this once per
   // changed field in the same tick, so each call must build on the one before it, not on
@@ -92,12 +123,27 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     isFetching,
     config,
     updateConfig,
+    isOnline,
+    lastSyncedAt,
+    isShowingOfflineCopy,
   };
 
   return (
     <FrameContext.Provider value={value}>
       <div className="min-h-screen bg-[#0B0B0C] text-[#F4F4F5] flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
         <Navbar />
+        {isShowingOfflineCopy && (
+          <div
+            role="status"
+            className="sticky z-30 flex items-center justify-center gap-2 bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 text-center text-xs font-medium text-amber-300"
+            style={{ top: 'var(--topbar-h)' }}
+          >
+            <WifiOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              Offline — showing a copy saved {formatSyncedAgo(lastSyncedAt, Date.now())}. Reconnect to see the latest, and to log anything.
+            </span>
+          </div>
+        )}
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-10 space-y-3 sm:space-y-6">
           {children}
         </main>

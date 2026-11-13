@@ -41,7 +41,8 @@ interface QuickLogFormProps {
 }
 
 export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
-  const { data } = useFrame();
+  const { data, isOnline } = useFrame();
+  const [submitError, setSubmitError] = useState('');
   const todayIso = new Date().toLocaleDateString('en-CA');
   const [date, setDate] = useState(defaultDate ?? todayIso);
   // The last day that has a logged row, from the sheet (a shortcut next to Today and Yesterday).
@@ -146,16 +147,27 @@ export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
   const handleSubmit = async (e: React.FormEvent, keepOpen = false) => {
     e.preventDefault();
     if (!description.trim() || !amount || Number(amount) <= 0) return;
+    if (!isOnline) {
+      setSubmitError("You're offline — reconnect to log a transaction.");
+      return;
+    }
 
     const loggedDesc = description.trim();
     const loggedAmt = Number(amount);
+    setSubmitError('');
 
-    const res = await logMutation.mutateAsync({
-      date,
-      description: loggedDesc,
-      amount: loggedAmt,
-      type,
-    });
+    let res;
+    try {
+      res = await logMutation.mutateAsync({
+        date,
+        description: loggedDesc,
+        amount: loggedAmt,
+        type,
+      });
+    } catch (err) {
+      setSubmitError(err instanceof Error && err.message ? err.message : 'Could not save this to the sheet. Nothing was logged — try again.');
+      return;
+    }
 
     if (res?.newRow) {
       const createdRow = res.newRow;
@@ -204,6 +216,17 @@ export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
           </span>
         )}
       </div>
+
+      {!isOnline && (
+        <p role="status" className="text-xs font-medium text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-2">
+          You&apos;re offline — reconnect to log a transaction.
+        </p>
+      )}
+      {submitError && (
+        <p role="alert" className="text-xs font-medium text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-2">
+          {submitError}
+        </p>
+      )}
 
       {/* Preset Custom Items Bar */}
       <div className="space-y-2">
@@ -451,7 +474,7 @@ export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
           <button
             type="button"
             onClick={(e) => handleSubmit(e, true)}
-            disabled={logMutation.isPending || !description.trim() || !amount}
+            disabled={logMutation.isPending || !description.trim() || !amount || !isOnline}
             className="rounded-xl border border-white/[0.07] bg-[#18181B] py-2.5 min-h-11 text-xs font-medium text-zinc-300 hover:text-white hover:border-amber-500/40 transition-all disabled:opacity-50"
           >
             Add Another
@@ -459,7 +482,7 @@ export function QuickLogForm({ onSuccess, defaultDate }: QuickLogFormProps) {
 
           <button
             type="submit"
-            disabled={logMutation.isPending || !description.trim() || !amount}
+            disabled={logMutation.isPending || !description.trim() || !amount || !isOnline}
             className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
           >
             <PlusCircle className="h-4 w-4" />

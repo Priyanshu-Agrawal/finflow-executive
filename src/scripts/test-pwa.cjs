@@ -74,6 +74,64 @@ async function swActive(page) {
   check(loginReqs.length >= 1, '/login is requested fresh, not served from a cache');
   await loginCtx.close();
 
+  // ---- Task 3: the read-only offline copy of the balance ----
+  check(!(await page.getByText(/Offline — showing a copy/).isVisible().catch(() => false)), 'no offline banner while online');
+  const syncedAt = await page.evaluate(() => Number(localStorage.getItem('finflow_last_synced')));
+  check(Number.isFinite(syncedAt) && Date.now() - syncedAt < 60000, 'a recent sync timestamp is recorded while online');
+
+  // The SW writes the cache entry via event.waitUntil after responding; give it a moment, and
+  // confirm directly before trusting the UI assertions below (a clearer failure if it's empty).
+  let dataCached = false;
+  for (let i = 0; i < 10 && !dataCached; i++) {
+    dataCached = await page.evaluate(async () => !!(await (await caches.open('finflow-financials-1')).match('/api/financials')));
+    if (!dataCached) await page.waitForTimeout(300);
+  }
+  check(dataCached, 'the financials response is cached while online');
+
+  // NOT a reload: a full navigation while offline hits the SW's generic offline.html fallback
+  // (this service worker does not precache the app shell, only the offline page and this one
+  // API response — see the plan's deferred items). The richer "see your last balance" experience
+  // works while the app is already open and loses its connection, which is what we exercise here.
+  await ctx.setOffline(true);
+  await page.getByRole('button', { name: /Sync now|Refresh/ }).first().click();
+  check(await page.getByText('Balance now').isVisible({ timeout: 15000 }).catch(() => false), 'the balance still shows after losing connection mid-session, from the cached copy');
+  check(await page.getByText(/Offline — showing a copy saved/).isVisible().catch(() => false), 'the offline banner is shown while serving the cached copy');
+
+  // Opening the Log sheet offline: submit is disabled with a visible reason, not silently accepted.
+  await page.getByRole('button', { name: 'Log', exact: true }).first().click();
+  await page.getByRole('dialog', { name: 'Log a transaction' }).waitFor({ timeout: 10000 });
+  check(await page.getByText("You're offline").first().isVisible().catch(() => false), 'the Log sheet shows an offline notice');
+  const submitBtn = page.locator('[data-modal-form] button[type="submit"]');
+  check(await submitBtn.isDisabled(), 'the Log submit button is disabled while offline');
+  await page.keyboard.press('Escape');
+
+  // A write attempt offline must fail, never silently "succeed" against a cache.
+  const writeOutcome = await page.evaluate(async () => {
+    try {
+      const res = await fetch('/api/expenses/log', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ description: 'offline probe', amount: 1 }) });
+      return { reached: true, ok: res.ok };
+    } catch {
+      return { reached: false };
+    }
+  });
+  check(writeOutcome.reached === false || writeOutcome.ok === false, `a write while offline fails rather than appearing to succeed (${JSON.stringify(writeOutcome)})`);
+
+  await ctx.setOffline(false);
+  await page.goto(`${BASE}/`);
+  await page.getByText('Balance now').waitFor({ timeout: 20000 });
+
+  // Sign-out clears this device's cached copy (phone viewport: Sign out lives in the More menu).
+  await page.getByRole('button', { name: 'More' }).click();
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.waitForURL(/\/login/, { timeout: 10000 }).catch(() => {});
+  const afterSignOut = await page.evaluate(async () => {
+    const cache = await caches.open('finflow-financials-1');
+    const hit = await cache.match('/api/financials');
+    return { cached: !!hit, lastSynced: localStorage.getItem('finflow_last_synced') };
+  });
+  check(!afterSignOut.cached, 'the cached financials response is cleared on sign-out');
+  check(afterSignOut.lastSynced === null, 'the last-synced timestamp is cleared on sign-out');
+
   await browser.close();
   console.log(failed ? `\n${failed} FAIL` : '\nALL PASS');
   process.exit(failed ? 1 : 0);

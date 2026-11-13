@@ -28,6 +28,12 @@ export interface FrameValue {
   isFetching: boolean;
   config: CycleConfig;
   updateConfig: (updates: Partial<CycleConfig>) => void;
+  /** True while the browser reports a network connection. */
+  isOnline: boolean;
+  /** When the last fetch genuinely reached the network (ms since epoch), or null if never. */
+  lastSyncedAt: number | null;
+  /** True once we have data but it came from the offline cache (serving a saved copy, not a live read). */
+  isShowingOfflineCopy: boolean;
 }
 
 export const FrameContext = createContext<FrameValue | null>(null);

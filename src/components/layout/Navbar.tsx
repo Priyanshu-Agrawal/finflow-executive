@@ -8,6 +8,7 @@ import { NAV_ITEMS } from './nav-items';
 import { useFrame } from './FrameContext';
 import { anchorRowFor } from '@/lib/anchor';
 import { formatDate, formatDateShort, formatMoney } from '@/lib/format';
+import { clearOfflineFinancialsCache } from '@/lib/offline-cache';
 
 export function Navbar() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export function Navbar() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
+    await clearOfflineFinancialsCache();
     router.push('/login');
     router.refresh();
   };

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useScheduleEmi, useDeleteExpense } from '@/hooks/useFinancials';
 import { useUndo } from '@/context/UndoContext';
+import { useFrame } from '@/components/layout/FrameContext';
 import { formatINR } from '@/lib/date-utils';
 import { formatDate } from '@/lib/format';
 import { Calendar, CheckCircle, Clock, Layers, Sliders, X } from 'lucide-react';
@@ -18,6 +19,8 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
   const [months, setMonths] = useState<number>(6);
   const [startDate, setStartDate] = useState('2026-12-05');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const { isOnline } = useFrame();
 
   const scheduleMutation = useScheduleEmi();
   const deleteMutation = useDeleteExpense();
@@ -50,14 +53,25 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !monthlyAmount || months <= 0) return;
+    if (!isOnline) {
+      setSubmitError("You're offline — reconnect to schedule an EMI.");
+      return;
+    }
+    setSubmitError('');
 
-    const res = await scheduleMutation.mutateAsync({
-      title: title.trim(),
-      monthlyAmount,
-      months,
-      startDate,
-      type: 'DEBIT',
-    });
+    let res;
+    try {
+      res = await scheduleMutation.mutateAsync({
+        title: title.trim(),
+        monthlyAmount,
+        months,
+        startDate,
+        type: 'DEBIT',
+      });
+    } catch (err) {
+      setSubmitError(err instanceof Error && err.message ? err.message : 'Could not save this to the sheet. Nothing was scheduled — try again.');
+      return;
+    }
 
     if (res?.startRow && res?.count) {
       const rows = Array.from({ length: res.count }, (_, i) => res.startRow + i);
@@ -207,6 +221,17 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
           </div>
         </div>
 
+        {!isOnline && (
+          <p role="status" className="text-xs font-medium text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-2">
+            You&apos;re offline — reconnect to schedule an EMI.
+          </p>
+        )}
+        {submitError && (
+          <p role="alert" className="text-xs font-medium text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-2">
+            {submitError}
+          </p>
+        )}
+
         {/* Submit Button */}
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.07]">
           {onClose && (
@@ -221,7 +246,7 @@ export function EmiSchedulerForm({ onSuccess, onClose }: EmiSchedulerFormProps) 
 
           <button
             type="submit"
-            disabled={scheduleMutation.isPending || !title || !monthlyAmount || months <= 0}
+            disabled={scheduleMutation.isPending || !title || !monthlyAmount || months <= 0 || !isOnline}
             className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-semibold text-black shadow-md hover:bg-amber-400 transition-all disabled:opacity-50 active:scale-95"
           >
             {isSuccess ? (

@@ -56,7 +56,8 @@ export function ExcelSpreadsheet({
   const [activeTab, setActiveTab] = useState<SheetTab>('expenses');
 
   // Dynamic Anchor Calculation based on referenceDate (or today's date)
-  const effectiveRefDate = referenceDate || new Date().toLocaleDateString('en-CA');
+  const todayIso = new Date().toLocaleDateString('en-CA');
+  const effectiveRefDate = referenceDate || todayIso;
   const anchorEntry = useMemo(() => {
     if (!expenses || expenses.length === 0) return null;
     const actuals = expenses.filter((e) => e.date <= effectiveRefDate);
@@ -601,7 +602,7 @@ export function ExcelSpreadsheet({
                   A <span className="font-sans text-xs opacity-75">(Date)</span>
                 </th>
                 <th
-                  className={`border-r border-b border-white/[0.07] p-1.5 text-left transition-colors max-sm:sticky max-sm:left-14 max-sm:z-30 max-sm:min-w-[9rem] max-sm:bg-[#18181B] ${
+                  className={`border-r border-b border-white/[0.07] p-1.5 text-left transition-colors max-sm:sticky max-sm:left-14 max-sm:z-30 max-sm:w-28 max-sm:bg-[#18181B] ${
                     selectedCell.col === 'B' ? 'bg-amber-500/15 max-sm:bg-[#2A210F] text-amber-400 font-bold' : ''
                   }`}
                 >
@@ -736,7 +737,7 @@ export function ExcelSpreadsheet({
                     <td
                       onClick={() => setSelectedCell({ row: rowNum, col: 'B' })}
                       onDoubleClick={() => startCellEdit(rowNum, 'B')}
-                      className={`border-r border-b border-white/[0.05] p-1.5 font-medium text-white cursor-cell transition-all max-sm:sticky max-sm:left-14 max-sm:z-[5] max-sm:min-w-[9rem] ${
+                      className={`border-r border-b border-white/[0.05] p-1.5 font-medium text-white cursor-cell transition-all max-sm:sticky max-sm:left-14 max-sm:z-[5] max-sm:w-28 max-sm:overflow-hidden ${
                         isSelectedRow && selectedCell.col === 'B'
                           ? 'ring-2 ring-amber-500 bg-amber-500/15 max-sm:bg-[#2E210C] font-bold text-white relative z-10'
                           : isAnchorRow
@@ -767,11 +768,11 @@ export function ExcelSpreadsheet({
                           className="w-full bg-black text-white text-xs px-1 py-0.5 outline-none ring-2 ring-amber-500 rounded"
                         />
                       ) : (
-                        <div className="flex items-center justify-between">
-                          <span>{e.description}</span>
+                        <div className="flex items-center justify-between gap-1 max-sm:overflow-hidden">
+                          <span className="max-sm:min-w-0 max-sm:max-w-[60px] max-sm:truncate" title={e.description}>{e.description}</span>
                           {isAnchorRow && (
-                            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-xs tabular-nums font-bold text-amber-400 border border-amber-500/30">
-                              Today
+                            <span className="shrink-0 rounded bg-amber-500/20 px-1 py-0.2 text-xs tabular-nums font-bold text-amber-400 border border-amber-500/30">
+                              {effectiveRefDate === todayIso ? 'Today' : `As of ${formatDateShort(effectiveRefDate)}`}
                             </span>
                           )}
                         </div>

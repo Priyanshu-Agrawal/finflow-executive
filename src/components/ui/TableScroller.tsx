@@ -17,10 +17,16 @@ export const TableScroller = forwardRef<HTMLDivElement, { children: ReactNode; c
   const fit = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY; // where it starts with the page scrolled to the top
+    // Size for the room there will be once the top bar and the page's sticky control bar are
+    // actually stuck (their heights, not how far down the unscrolled page this element sits —
+    // those differ whenever other content, like summary cards, sits above the scroller).
+    // Measured straight from the DOM (not StickyBar's published CSS variable), so this does not
+    // depend on that sibling's own effect having already run.
+    const topbar = document.querySelector('header')?.getBoundingClientRect().height ?? 0;
+    const stickyBar = document.querySelector('[data-sticky-bar]')?.getBoundingClientRect().height ?? 0;
     // room kept below: the phone bottom bar, or a little breathing space on a laptop
     const gap = window.matchMedia('(min-width: 1024px)').matches ? 24 : 104;
-    const height = Math.max(240, Math.round(window.innerHeight - top - gap));
+    const height = Math.max(240, Math.round(window.innerHeight - topbar - stickyBar - gap));
     if (el.style.maxHeight !== `${height}px`) el.style.maxHeight = `${height}px`;
   }, []);
 

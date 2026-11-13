@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { QuickLogForm } from '@/components/logger/QuickLogForm';
@@ -41,10 +41,6 @@ const todayIso = () => new Date().toLocaleDateString('en-CA');
 export function AppFrame({ children }: { children: React.ReactNode }) {
   const [referenceDate, setReferenceDate] = useState(todayIso);
   const [config, setConfig] = useState<CycleConfig>(readConfig);
-  const configRef = useRef(config);
-  useEffect(() => {
-    configRef.current = config;
-  }, [config]);
   const [logOpen, setLogOpen] = useState(false);
   const [emiOpen, setEmiOpen] = useState(false);
 
@@ -58,9 +54,11 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     config.electricityRemaining
   );
 
+  // The functional updater is required: ModernBudgetPacing's "Apply" calls this once per
+  // changed field in the same tick, so each call must build on the one before it, not on
+  // whatever `config` was when the render that defined this callback happened.
   const updateConfig = useCallback((updates: Partial<CycleConfig>) => {
-    const next = { ...configRef.current, ...updates };
-    setConfig(next);
+    setConfig((prev) => ({ ...prev, ...updates }));
     try {
       const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
       localStorage.setItem(CONFIG_KEY, JSON.stringify({ ...saved, ...updates }));

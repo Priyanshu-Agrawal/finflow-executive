@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { upcomingBills, upcomingBillsCaption, billsDeadline, growthCaption, debtFreeLine } from './home-text';
+import { upcomingBills, upcomingBillsCaption, billsDeadline, growthCaption, debtFreeLine, homeSpendingCategories } from './home-text';
 import { formatMonthYear } from './format';
 
 const rows = [
@@ -66,4 +66,28 @@ test('debt-free line is empty when nothing is owed', () => {
 test('formatMonthYear gives a short month and the year', () => {
   assert.equal(formatMonthYear('2027-08-06'), 'Aug 2027');
   assert.equal(formatMonthYear('junk'), 'junk');
+});
+
+const SPENDING_BHAIYA = { category: 'Bhaiya Udhar', amount: 83289, percentage: 4, count: 9, color: '#3B82F6' };
+const SPENDING_HOUSING = { category: 'Housing & Utilities', amount: 446450, percentage: 22, count: 45, color: '#F59E0B' };
+const SPENDING_OTHER = { category: 'Other Expenses', amount: 288979, percentage: 14, count: 32, color: '#71717A' };
+
+test('homeSpendingCategories drops Bhaiya Udhar and recomputes percentages against the smaller total', () => {
+  const out = homeSpendingCategories([SPENDING_HOUSING, SPENDING_BHAIYA, SPENDING_OTHER]);
+  assert.equal(out.length, 2);
+  assert.ok(!out.some((c) => c.category === 'Bhaiya Udhar'));
+  const newTotal = SPENDING_HOUSING.amount + SPENDING_OTHER.amount;
+  assert.equal(out.find((c) => c.category === 'Housing & Utilities')?.percentage, Math.round((SPENDING_HOUSING.amount / newTotal) * 100));
+  const pctSum = out.reduce((s, c) => s + c.percentage, 0);
+  assert.ok(pctSum >= 99 && pctSum <= 101, `percentages should sum to ~100 (got ${pctSum})`);
+});
+
+test('homeSpendingCategories passes everything through when there is no Bhaiya Udhar row', () => {
+  const out = homeSpendingCategories([SPENDING_HOUSING, SPENDING_OTHER]);
+  assert.equal(out.length, 2);
+});
+
+test('homeSpendingCategories handles an all-zero list without dividing by zero', () => {
+  const out = homeSpendingCategories([{ category: 'Other Expenses', amount: 0, percentage: 0, count: 0, color: '#71717A' }]);
+  assert.equal(out[0].percentage, 0);
 });

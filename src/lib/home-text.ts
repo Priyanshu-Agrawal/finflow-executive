@@ -1,5 +1,5 @@
 // Sentences on the Home hero, built from the sheet data (polish rule 10: no hard-coded money text).
-import type { ExpenseEntry, LoanStatus } from './types';
+import type { ExpenseEntry, LoanStatus, SpendingCategorySummary } from './types';
 import { formatDateShort, formatMoney, formatMonthYear } from './format';
 
 const BILL_DAYS = 5;
@@ -49,4 +49,17 @@ export function debtFreeLine(loans: readonly LoanRow[]): string | null {
   const last = open.map((l) => l.targetPayoffDate as string).sort().at(-1) as string;
   const emi = Math.round(open.reduce((sum, l) => sum + (l.monthlyEmi ?? 0), 0));
   return `Debt-free by ${formatMonthYear(last)}${emi > 0 ? `, freeing ${formatMoney(emi)} a month` : ''}`;
+}
+
+// Owner decision, 13 Nov 2026: Bhaiya Udhar (a personal IOU, not spending — see
+// computeSpendingCategories) is kept out of the Home "Where the money goes" card; it still
+// exists everywhere else (the Loans page, the Ledger's category filter). Percentages are
+// recomputed against the smaller total so the remaining bars still fill 100%.
+const HOME_HIDDEN_CATEGORIES = new Set(['Bhaiya Udhar']);
+
+/** The spending categories Home's breakdown card shows: everything except HOME_HIDDEN_CATEGORIES. */
+export function homeSpendingCategories(categories: readonly SpendingCategorySummary[]): SpendingCategorySummary[] {
+  const visible = categories.filter((c) => !HOME_HIDDEN_CATEGORIES.has(c.category));
+  const total = visible.reduce((sum, c) => sum + c.amount, 0);
+  return visible.map((c) => ({ ...c, percentage: total > 0 ? Math.round((c.amount / total) * 100) : 0 }));
 }

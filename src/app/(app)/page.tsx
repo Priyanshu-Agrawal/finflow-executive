@@ -10,6 +10,7 @@ import { BudgetSummaryCard } from '@/components/dashboard/BudgetSummaryCard';
 import { DebtSummaryCard } from '@/components/dashboard/DebtSummaryCard';
 import { BalanceTimeline } from '@/components/dashboard/BalanceTimeline';
 import { SpendingBreakdown } from '@/components/dashboard/SpendingBreakdown';
+import { homeSpendingCategories } from '@/lib/home-text';
 
 export default function HomePage() {
   const { data, isLoading, error, refetch, referenceDate, openLog } = useFrame();
@@ -39,7 +40,7 @@ export default function HomePage() {
 
             {data.savingsTrend && <SavingsMeter trend={data.savingsTrend} />}
 
-            <SpendingBreakdown categories={data.spendingCategories} />
+            <SpendingBreakdown categories={homeSpendingCategories(data.spendingCategories)} />
           </div>
         )}
       </DataState>

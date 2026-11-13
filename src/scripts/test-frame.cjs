@@ -112,6 +112,8 @@ const addDays = (iso, n) => {
   check(!/58k|100\.7%|August 2027/.test(body), 'no hard-coded hero text left');
   for (const href of ['/budget', '/loans']) check((await page.locator(`main a[href="${href}"]`).count()) > 0, `Home links to ${href}`);
 
+  check(!body.includes('Bhaiya Udhar'), 'Home\'s breakdown does not show the Bhaiya Udhar category');
+
   // 6b2. Home shows a compact Budget summary and a compact Debt summary, not the full pages
   const count = (hay, needle) => hay.split(needle).length - 1;
   check(count(body, inr(api.budgetPacing.generalPerDayLimit)) === 1, `the safe-to-spend figure appears once on Home (${inr(api.budgetPacing.generalPerDayLimit)}, found ${count(body, inr(api.budgetPacing.generalPerDayLimit))})`);
@@ -141,6 +143,15 @@ const addDays = (iso, n) => {
     check((await page.locator('body').innerText()).includes(`Showing ${targetCategory.category}`) === false, 'Clear removes the banner');
     const afterClear = await page.locator('main table tbody tr').count();
     check(afterClear > targetCategory.count, `clearing shows more than just that category again (${afterClear} rows)`);
+  }
+
+  // Bhaiya Udhar is hidden from Home's card, but still a real category: a direct link still filters.
+  const bhaiyaSummary = (api.spendingCategories || []).find((c) => c.category === 'Bhaiya Udhar');
+  if (bhaiyaSummary) {
+    await page.goto(`${BASE}/expenses?category=${encodeURIComponent('Bhaiya Udhar')}`);
+    await ready();
+    const bhaiyaRows = await page.locator('main table tbody tr').count();
+    check(bhaiyaRows === bhaiyaSummary.count, `a direct link to Bhaiya Udhar still filters the Ledger (got ${bhaiyaRows}, want ${bhaiyaSummary.count})`);
   }
 
   // 6c. Budget is its own page: the full breakdown and Hard month live only here

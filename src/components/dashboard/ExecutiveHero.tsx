@@ -132,7 +132,8 @@ export function ExecutiveHero({
           <p className="mt-1 text-xs text-zinc-400 line-clamp-2">{billsCaption}</p>
         </div>
 
-        {/* Pillar 2: Cycle cushion — lowest balance before the next salary */}
+        {/* Pillar 2: Cycle cushion — lowest balance before the next salary. Shown here only:
+            the Budget page's rent card does not repeat it. */}
         <div className="rounded-2xl border border-white/[0.07] bg-[#18181B] p-4 hover:border-white/[0.15] transition-colors">
           <div className="flex items-center justify-between text-zinc-400 text-xs mb-1.5">
             <span className="font-medium flex items-center gap-1.5 text-zinc-300">
@@ -143,10 +144,10 @@ export function ExecutiveHero({
               Before {cushionDay}
             </span>
           </div>
-          <div className="tabular-nums text-2xl font-bold text-white">
+          <div className={`tabular-nums text-2xl font-bold ${kpis.postNovBalance < 0 ? 'text-orange-400' : 'text-white'}`}>
             {formatINR(kpis.postNovBalance)}
           </div>
-          <p className="mt-1 text-xs text-zinc-400 line-clamp-1">
+          <p className="mt-1 text-xs text-zinc-400 line-clamp-2">
             Lowest balance before the {cushionDay} salary, after every bill
           </p>
         </div>

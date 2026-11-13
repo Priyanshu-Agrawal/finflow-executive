@@ -4,14 +4,12 @@ import React from 'react';
 import { useFrame } from '@/components/layout/FrameContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { DataState } from '@/components/ui/DataState';
-import { SectionLink } from '@/components/ui/SectionLink';
 import { ExecutiveHero } from '@/components/dashboard/ExecutiveHero';
 import { SavingsMeter } from '@/components/dashboard/SavingsMeter';
-import { BudgetPacingPanel } from '@/components/dashboard/BudgetPacingPanel';
+import { BudgetSummaryCard } from '@/components/dashboard/BudgetSummaryCard';
+import { DebtSummaryCard } from '@/components/dashboard/DebtSummaryCard';
 import { BalanceTimeline } from '@/components/dashboard/BalanceTimeline';
 import { SpendingBreakdown } from '@/components/dashboard/SpendingBreakdown';
-import { LoanPortfolio } from '@/components/loans/LoanPortfolio';
-import { MilestoneTimeline } from '@/components/loans/MilestoneTimeline';
 
 export default function HomePage() {
   const { data, isLoading, error, refetch, referenceDate, openLog } = useFrame();
@@ -30,29 +28,18 @@ export default function HomePage() {
               onOpenQuickLog={openLog}
             />
 
+            {/* Two things you act on: what you can spend today, what you still owe.
+                Full detail (and the config drawer) is one tap away, not repeated here. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {data.budgetPacing && <BudgetSummaryCard pacing={data.budgetPacing} />}
+              <DebtSummaryCard loans={data.loans} />
+            </div>
+
             <BalanceTimeline expenses={data.expenses} referenceDate={referenceDate} />
 
             {data.savingsTrend && <SavingsMeter trend={data.savingsTrend} />}
 
-            {data.budgetPacing && (
-              <section className="space-y-1">
-                <BudgetPacingPanel pacing={data.budgetPacing} />
-                <SectionLink href="/budget">Open Budget</SectionLink>
-              </section>
-            )}
-
             <SpendingBreakdown categories={data.spendingCategories} />
-
-            <section className="space-y-5">
-              <LoanPortfolio
-                loans={data.loans}
-                referenceDate={referenceDate}
-                recentExpenses={data.expenses}
-                b2RawValue={data.bcaCycle?.b2Value}
-              />
-              <MilestoneTimeline loans={data.loans} />
-              <SectionLink href="/loans">Open Loans</SectionLink>
-            </section>
           </div>
         )}
       </DataState>

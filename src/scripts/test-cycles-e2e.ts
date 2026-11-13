@@ -33,7 +33,6 @@ async function main() {
     'General Budget': await page.locator('text=General Budget').first().isVisible(),
     'Electricity Budget': await page.locator('text=Electricity Budget').first().isVisible(),
     'Room Rent': await page.locator('text=Room Rent').first().isVisible(),
-    'Available Balance Factor': await page.locator('text=Available Balance Factor').first().isVisible(),
   };
   console.log('Factor cards visible:', cards);
   if (Object.values(cards).some((v) => !v)) throw new Error('One or more factor cards are not visible');

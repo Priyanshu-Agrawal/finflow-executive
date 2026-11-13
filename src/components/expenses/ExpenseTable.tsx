@@ -42,11 +42,15 @@ import { StickyBar } from '@/components/ui/StickyBar';
 import { TableScroller } from '@/components/ui/TableScroller';
 import { TodayFab } from '@/components/ui/TodayFab';
 import { useAnchorInView } from '@/hooks/useAnchorInView';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateShort } from '@/lib/format';
+import { categoryForDescription } from '@/lib/spending-category';
 
 interface ExpenseTableProps {
   expenses: ExpenseEntry[];
   referenceDate: string;
+  /** A "Where the money goes" category to arrive pre-filtered to (from Home), or null for none. */
+  categoryFilter?: string | null;
+  onClearCategoryFilter?: () => void;
 }
 
 function getMonthOffsetDate(baseDateStr: string, offsetMonths: number): string {
@@ -62,7 +66,8 @@ function getMonthOffsetDate(baseDateStr: string, offsetMonths: number): string {
   }
 }
 
-export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
+export function ExpenseTable({ expenses, referenceDate, categoryFilter = null, onClearCategoryFilter }: ExpenseTableProps) {
+  const todayIso = new Date().toLocaleDateString('en-CA');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,6 +83,11 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
   const [isWindowFilterActive, setIsWindowFilterActive] = useState<boolean>(true);
   const [showEarlier, setShowEarlier] = useState<boolean>(false);
   const [showFuture, setShowFuture] = useState<boolean>(false);
+
+  // A category arrived from Home should show every matching row, not just the ones near today.
+  useEffect(() => {
+    if (categoryFilter) setIsWindowFilterActive(false);
+  }, [categoryFilter]);
 
   const nearestRowRef = useRef<HTMLTableRowElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -147,9 +157,12 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
 
       const matchesType = selectedType === 'ALL' || e.type === selectedType;
 
-      return matchesSearch && matchesType;
+      // Same rule "Where the money goes" uses: DEBIT rows only, same keyword categorisation.
+      const matchesCategory = !categoryFilter || (e.type === 'DEBIT' && categoryForDescription(e.description) === categoryFilter);
+
+      return matchesSearch && matchesType && matchesCategory;
     });
-  }, [expenses, searchQuery, selectedType]);
+  }, [expenses, searchQuery, selectedType, categoryFilter]);
 
   // Window segmentation counts
   const earlierCount = useMemo(() => {
@@ -505,6 +518,22 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
         </div>
       </StickyBar>
 
+      {/* A category filter arrived from Home: always visible, not hidden behind Options */}
+      {categoryFilter && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200">
+          <span>
+            Showing <strong className="font-semibold text-amber-400">{categoryFilter}</strong> ({baseFilteredExpenses.length} transaction{baseFilteredExpenses.length === 1 ? '' : 's'})
+          </span>
+          <button
+            type="button"
+            onClick={onClearCategoryFilter}
+            className="min-h-11 lg:min-h-0 px-2 font-semibold text-amber-400 hover:underline"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* What is shown, and the earlier-transactions banner (phone: behind Options) */}
       <div className={`${optionsOpen ? 'block' : 'hidden'} lg:block space-y-3`}>
         {isWindowFilterActive && (
@@ -670,7 +699,7 @@ export function ExpenseTable({ expenses, referenceDate }: ExpenseTableProps) {
                         <span className="tabular-nums text-zinc-300">{formatDisplayDate(entry.date)}</span>
                         {isNearest && (
                           <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-xs font-bold text-amber-400 border border-amber-500/30 shrink-0">
-                            Today
+                            {referenceDate === todayIso ? 'Today' : `As of ${formatDateShort(referenceDate)}`}
                           </span>
                         )}
                       </div>

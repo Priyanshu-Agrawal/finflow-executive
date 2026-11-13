@@ -83,6 +83,10 @@ const check = (ok, msg) => {
         await page.waitForTimeout(200);
       }
       check(await sortBtn.isVisible(), `[${name}] sort, scope and "Sort sheet" controls are reachable`);
+
+      // The Ledger's own Today badge follows the same rule.
+      const ledgerBadge = (await page.locator('[data-anchor-row]').innerText()).includes('Today');
+      check(ledgerBadge, `[${name}] the Ledger's anchor row is labelled Today when the reference date is today`);
       await sortBtn.click();
       await page.waitForTimeout(300);
       const dates = await page.locator('main table tbody tr td:nth-child(4)').allInnerTexts();
@@ -134,6 +138,21 @@ const check = (ok, msg) => {
       const after = await page.locator('main table tbody tr').count();
       check(after > 0 && after <= before, `[${name}] person filter works (${before} -> ${after})`);
       check(await page.getByRole('button', { name: 'Add shared spend' }).isVisible(), `[${name}] "Add shared spend" is reachable`);
+
+      // The table's max-height is worked out from the room there will be once the top bar and
+      // control bar are stuck, not from how far down the unscrolled page it happens to sit
+      // (cards above it must not starve it). The box's own height may be shorter than that cap
+      // when there are too few rows to fill it (as right now, after filtering to one person).
+      const geom = await page.evaluate(() => {
+        const scroller = document.querySelector('main table').closest('[class*="overflow-auto"]');
+        const topbar = document.querySelector('header').getBoundingClientRect().height;
+        const bar = document.querySelector('[data-sticky-bar]').getBoundingClientRect().height;
+        return { maxHeight: parseFloat(scroller.style.maxHeight) || 0, topbar, bar, viewport: window.innerHeight };
+      });
+      const gap = name === 'laptop' ? 24 : 104;
+      const expected = geom.viewport - geom.topbar - geom.bar - gap;
+      check(Math.abs(geom.maxHeight - expected) <= 2, `[${name}] Splits table's max-height is the room below the stuck controls (${Math.round(geom.maxHeight)}px, expected ~${Math.round(expected)}px)`);
+      check(geom.maxHeight > 240, `[${name}] Splits table is not stuck at the fallback minimum height (${Math.round(geom.maxHeight)}px)`);
       await ctx.close();
     }
 
@@ -157,12 +176,19 @@ const check = (ok, msg) => {
           const rn = row.children[0].getBoundingClientRect();
           const desc = row.children[2].getBoundingClientRect();
           const th = document.querySelectorAll('main table thead th')[2].getBoundingClientRect();
-          return { rnRight: rn.right, descLeft: desc.left, thLeft: th.left, descText: row.children[2].innerText.trim() };
+          return { rnLeft: rn.left, rnRight: rn.right, descLeft: desc.left, descRight: desc.right, thLeft: th.left, descText: row.children[2].innerText.trim() };
         });
         check(Math.abs(pos.descLeft - pos.rnRight) <= 1.5, `[phone] Description stays pinned next to the row number while scrolling sideways (${Math.round(pos.descLeft)} vs ${Math.round(pos.rnRight)})`);
         check(Math.abs(pos.thLeft - pos.descLeft) <= 1.5, `[phone] its header stays aligned with it`);
+        // Once actually scrolled (sticky engaged), the two pinned columns together must not eat
+        // the whole phone width: enough should stay visible to still show the next column.
+        const pinned = pos.descRight - pos.rnLeft;
+        check(pinned <= 210, `[phone] the pinned row-number + Description columns leave room for the rest of the sheet while scrolled (pinned width ${Math.round(pinned)}px of ${vp.width}px)`);
         await sc.evaluate((el) => { el.scrollLeft = 0; });
       }
+      // The Today badge only says "Today" when the chosen date actually is today.
+      const anchorBadge = (await page.locator('[data-anchor-row]').innerText()).includes('Today');
+      check(anchorBadge, `[${name}] Excel's anchor row is labelled Today when the reference date is today`);
       await ctx.close();
     }
   }

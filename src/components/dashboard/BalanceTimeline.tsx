@@ -88,7 +88,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
             Cash Flow & Running Balance Timeline
           </h2>
           <p className="text-xs tabular-nums text-zinc-400 mt-0.5">
-            Dynamic Curve: Already happened (≤ {formatDisplayDate(referenceDate)}) vs Future Projections (2026–2027)
+            Solid line: what already happened, up to {formatDisplayDate(referenceDate)}. Dashed: what is planned.
           </p>
         </div>
 
@@ -273,7 +273,7 @@ export function BalanceTimeline({ expenses, referenceDate }: BalanceTimelineProp
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500 inline-block" />
-            <span className="text-zinc-200">Settled Historical Actuals</span>
+            <span className="text-zinc-200">Already happened</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-0.5 w-4 border-t-2 border-dashed border-amber-400/80 inline-block" />

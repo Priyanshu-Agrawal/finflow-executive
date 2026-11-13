@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { SpendingCategorySummary } from '@/lib/types';
 import { formatINR } from '@/lib/date-utils';
-import { PieChart } from 'lucide-react';
+import { ChevronRight, PieChart } from 'lucide-react';
 
 interface SpendingBreakdownProps {
   categories: SpendingCategorySummary[];
@@ -49,20 +50,22 @@ export function SpendingBreakdown({ categories }: SpendingBreakdownProps) {
           ))}
         </div>
 
-        {/* Category List */}
+        {/* Category List: each one opens the Ledger filtered to its transactions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           {categories.map((c) => (
-            <div
+            <Link
               key={c.category}
-              className="flex items-center justify-between p-3 rounded-xl border border-white/[0.07] bg-[#18181B] hover:border-amber-500/30 transition-colors"
+              href={`/expenses?category=${encodeURIComponent(c.category)}`}
+              aria-label={`See the ${c.count} ${c.category} transactions in the Ledger`}
+              className="flex min-h-11 items-center justify-between gap-2 p-3 rounded-xl border border-white/[0.07] bg-[#18181B] hover:border-amber-500/30 hover:bg-[#1c1c1f] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className="h-3 w-3 rounded-md shrink-0 shadow-xs"
                   style={{ backgroundColor: c.color }}
                 />
-                <div>
-                  <span className="text-xs font-medium text-white block">
+                <div className="min-w-0">
+                  <span className="text-xs font-medium text-white block truncate">
                     {c.category}
                   </span>
                   <span className="text-xs tabular-nums text-zinc-400">
@@ -70,15 +73,18 @@ export function SpendingBreakdown({ categories }: SpendingBreakdownProps) {
                   </span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="tabular-nums text-xs font-bold text-white block">
-                  {formatINR(c.amount)}
-                </span>
-                <span className="text-xs tabular-nums text-zinc-400">
-                  {c.percentage}% of total
-                </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="text-right">
+                  <span className="tabular-nums text-xs font-bold text-white block">
+                    {formatINR(c.amount)}
+                  </span>
+                  <span className="text-xs tabular-nums text-zinc-400">
+                    {c.percentage}% of total
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-500" aria-hidden="true" />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

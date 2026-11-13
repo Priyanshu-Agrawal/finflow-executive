@@ -112,11 +112,70 @@ const addDays = (iso, n) => {
   check(!/58k|100\.7%|August 2027/.test(body), 'no hard-coded hero text left');
   for (const href of ['/budget', '/loans']) check((await page.locator(`main a[href="${href}"]`).count()) > 0, `Home links to ${href}`);
 
-  // 6c. Budget is its own page and shows the real safe daily spend
+  // 6b2. Home shows a compact Budget summary and a compact Debt summary, not the full pages
+  const count = (hay, needle) => hay.split(needle).length - 1;
+  check(count(body, inr(api.budgetPacing.generalPerDayLimit)) === 1, `the safe-to-spend figure appears once on Home (${inr(api.budgetPacing.generalPerDayLimit)}, found ${count(body, inr(api.budgetPacing.generalPerDayLimit))})`);
+  check(!body.includes('Available Balance Factor'), 'the duplicate "Available Balance Factor" card is gone from Home');
+  check(count(body, inr(api.kpis.postNovBalance)) === 1, `the cycle cushion ${inr(api.kpis.postNovBalance)} is shown exactly once on Home, in the hero (found ${count(body, inr(api.kpis.postNovBalance))})`);
+  check(!body.includes('Hard month'), 'the Hard month toggle is not on Home (it is a Budget-page control)');
+  check(body.includes('Open Budget') && body.includes('Open Loans'), 'Home links out to the full Budget and Loans pages');
+
+  // 6b3. Clicking a "Where the money goes" category opens the Ledger filtered to it
+  const targetCategory = (api.spendingCategories || []).find((c) => c.count > 0);
+  if (targetCategory) {
+    const categoryLink = page.getByRole('link', { name: new RegExp(`See the ${targetCategory.count} ${targetCategory.category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} transactions`) });
+    check((await categoryLink.count()) === 1, `[Home] a link exists for "${targetCategory.category}" naming its transaction count`);
+    await categoryLink.click();
+    await page.waitForURL(`${BASE}/expenses?category=${encodeURIComponent(targetCategory.category)}`);
+    await ready();
+    check(page.url().includes(`category=${encodeURIComponent(targetCategory.category)}`), 'the Ledger URL carries the category');
+    check((await page.locator('body').innerText()).includes(`Showing ${targetCategory.category}`), `the Ledger shows a "Showing ${targetCategory.category}" banner`);
+    const rows = await page.locator('main table tbody tr').count();
+    check(rows === targetCategory.count, `the Ledger lists exactly the ${targetCategory.count} rows in that category (got ${rows})`);
+    const rowTypes = await page.locator('main table tbody tr td:nth-child(7) button').allInnerTexts();
+    check(rowTypes.every((t) => t.trim() === 'DEBIT' || t.trim() === 'CREDIT' || t.trim() === 'SETTLEMENT'), 'rows still show their real type');
+    // Clearing the filter removes it from both the table and the URL
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await page.waitForTimeout(400);
+    check(!page.url().includes('category='), 'Clear removes the category from the URL');
+    check((await page.locator('body').innerText()).includes(`Showing ${targetCategory.category}`) === false, 'Clear removes the banner');
+    const afterClear = await page.locator('main table tbody tr').count();
+    check(afterClear > targetCategory.count, `clearing shows more than just that category again (${afterClear} rows)`);
+  }
+
+  // 6c. Budget is its own page: the full breakdown and Hard month live only here
   await page.goto(`${BASE}/budget`);
   await ready();
   check((await page.getByRole('heading', { level: 1 }).first().innerText()).trim() === 'Budget', 'Budget page has its own title');
   check((await page.locator('body').innerText()).includes(inr(api.budgetPacing.safeTotalDailyBurn)), `Budget shows the safe daily spend (${inr(api.budgetPacing.safeTotalDailyBurn)})`);
+  const hard = page.getByRole('button', { name: /^Hard month/ });
+  check((await hard.count()) === 1, 'the Hard month toggle is on the Budget page, once');
+  if (await hard.count()) {
+    await hard.first().click();
+    await page.waitForTimeout(200);
+    check((await hard.first().innerText()).includes('on') && (await page.locator('body').innerText()).includes(inr(api.budgetPacing.worstCaseDailyBurn)), `Hard month shows the ceiling (${inr(api.budgetPacing.worstCaseDailyBurn)})`);
+    await hard.first().click();
+  }
+
+  // 6d. Applying several config changes at once keeps all of them, not just the last one
+  await page.goto(`${BASE}/budget`);
+  await ready();
+  await page.getByRole('button', { name: 'Configure Dates & Meter' }).click();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: '6th of Month' }).click();
+  await page.getByRole('button', { name: '10th', exact: true }).click();
+  const beforeApply = finRequests.length;
+  await page.getByRole('button', { name: 'Apply & Save Configuration' }).click();
+  await page.waitForTimeout(1500);
+  check(finRequests.length > beforeApply, 'applying settings refetches');
+  const applied = finRequests.at(-1);
+  check(
+    applied.searchParams.get('budgetRecurringDay') === '6' && applied.searchParams.get('rentRecurringDay') === '10',
+    `both changed settings took effect in one Apply (got budgetRecurringDay=${applied.searchParams.get('budgetRecurringDay')}, rentRecurringDay=${applied.searchParams.get('rentRecurringDay')})`
+  );
+  // (the rendered label itself isn't checked here: every /api/financials call in this script is
+  // fulfilled with one fixed, captured response regardless of query params, so the two checks
+  // above — the real outgoing request, which is exactly what the bug corrupted — are the proof.)
 
   // 7. a saved budget setting is used from the first request (no duplicate request with defaults)
   const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await ctx.storageState() });

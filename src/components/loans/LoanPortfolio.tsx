@@ -38,18 +38,12 @@ export function LoanPortfolio({
       {/* Portfolio Summary Header (Unified Styling) */}
       <div className="rounded-3xl border border-white/[0.07] bg-[#121214] p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs tabular-nums font-bold text-amber-400 border border-amber-500/20">
-              UNIFIED DEBT HUB
-            </span>
-            <span className="text-xs text-zinc-400">All 7 Loans & Liabilities</span>
-          </div>
-          <h3 className="text-base sm:text-lg tabular-nums font-bold text-white flex items-center gap-2 mt-1">
+          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-amber-400" />
-            <span>Complete Liabilities Portfolio</span>
+            <span>All {loans.length} loans</span>
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Click any loan card below to log payments, record external payments (Khushboo/Bhaiya), or settle.
+            Tap a loan to log a payment, record a payment by someone else, or settle it.
           </p>
         </div>
 

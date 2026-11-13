@@ -278,8 +278,8 @@ export function ModernBudgetPacing({
         </div>
       )}
 
-      {/* 4 Factor Pacing Cards (Unified Palette: #18181B Surface, White Figures, Amber Accents) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Three cards: what you can spend, electricity, rent. One number lives in one place. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Factor 1: General Discretionary Expenses */}
         <div className="rounded-2xl border border-white/[0.07] bg-[#18181B] p-4 sm:p-5 flex flex-col justify-between hover:border-white/[0.14] transition-colors">
           <div>
@@ -293,32 +293,50 @@ export function ModernBudgetPacing({
               </span>
             </div>
 
-            {/* Daily Burn Rate Card */}
+            {/* Safe daily spend (the one place it is shown), with the Hard month switch */}
             <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
-              <span className="text-xs text-zinc-400 font-medium block">
-                Safe Daily Spend:
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-zinc-400 font-medium">
+                  {hardMonth ? 'Hard month ceiling' : 'Safe daily spend'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setHardMonth((v) => !v)}
+                  aria-pressed={hardMonth}
+                  className={`min-h-11 sm:min-h-0 rounded-md px-3 sm:px-2 py-0.5 text-xs tabular-nums font-semibold border transition-colors ${
+                    hardMonth
+                      ? 'bg-orange-500/15 text-orange-300 border-orange-500/30'
+                      : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
+                  }`}
+                >
+                  {hardMonth ? 'Hard month: on' : 'Hard month'}
+                </button>
+              </div>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="tabular-nums text-3xl font-bold text-white">
-                  {formatINR(pacing.generalPerDayLimit)}
+                <span className={`tabular-nums text-3xl font-bold ${hardMonth ? 'text-orange-300' : 'text-white'}`}>
+                  {formatINR(hardMonth ? pacing.worstCaseDailyBurn : pacing.generalPerDayLimit)}
                 </span>
                 <span className="text-xs tabular-nums text-zinc-400">/ day</span>
               </div>
               <span className="text-xs text-zinc-500 block mt-1">
-                For the remaining {pacing.daysRemainingInCycle} days of this cycle
+                {hardMonth
+                  ? pacing.projectedCycleSavings <= 0
+                    ? `No extra room this cycle: projected saving is ${formatINR(pacing.projectedCycleSavings)}, so the ceiling is the normal budget.`
+                    : `Most you can spend without touching savings: budget left + this cycle's projected saving (${formatINR(pacing.projectedCycleSavings)}). Normal: ${formatINR(pacing.generalPerDayLimit)}/day.`
+                  : `From the budget only, never from savings, for the remaining ${pacing.daysRemainingInCycle} days`}
               </span>
             </div>
 
             {/* Spent vs Remaining breakdown */}
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-zinc-400">
-                <span>Spent Since {pacing.budgetRecurringDay}th:</span>
+                <span>Spent since the {pacing.budgetRecurringDay}th</span>
                 <span className="tabular-nums font-bold text-zinc-200">
                   {formatINR(pacing.generalSpentSoFar)} ({pacing.generalSpentPercent}%)
                 </span>
               </div>
               <div className="flex justify-between text-zinc-400">
-                <span>Remaining Pool:</span>
+                <span>Left in the budget</span>
                 <span className="tabular-nums font-bold text-white">
                   {formatINR(pacing.generalRemaining)}
                 </span>
@@ -335,7 +353,7 @@ export function ModernBudgetPacing({
           </div>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
-            <span>{pacing.generalExpensesList.length} cycle ad-hocs</span>
+            <span>{pacing.generalExpensesList.length} spends this cycle</span>
             <button
               onClick={() => setShowTxList(!showTxList)}
               className="min-h-11 sm:min-h-0 px-2 text-amber-400 hover:text-amber-300 font-semibold"
@@ -438,7 +456,7 @@ export function ModernBudgetPacing({
             {/* Rent Countdown Card */}
             <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
               <span className="text-xs text-zinc-400 font-medium block">
-                Fixed Rent Commitment:
+                Rent
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="tabular-nums text-3xl font-bold text-white">
@@ -454,109 +472,22 @@ export function ModernBudgetPacing({
             {/* Rent buffer breakdown */}
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-zinc-400">
-                <span>Due Date:</span>
+                <span>Due date</span>
                 <span className="tabular-nums font-bold text-zinc-200">
                   {formatDisplayDate(pacing.nextRentDate)}
                 </span>
               </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Lowest Balance Before Salary:</span>
-                <span className="tabular-nums font-bold text-white">
-                  {formatINR(pacing.postRentBuffer)}
-                </span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Secured Status:</span>
-                <span className="tabular-nums font-semibold text-credit">
-                  Funded in Bank Reserve
+              <div className="flex justify-between gap-2 text-zinc-400">
+                <span>After rent and every bill (cycle cushion on Home)</span>
+                <span className={`font-semibold ${pacing.postRentBuffer < 0 ? 'text-orange-400' : 'text-credit'}`}>
+                  {pacing.postRentBuffer < 0 ? 'Short' : 'Covered'}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400 tabular-nums">
-            <span>Cycle: Every {pacing.rentRecurringDay}th</span>
-            <span className="font-bold text-zinc-300">100% Guaranteed</span>
-          </div>
-        </div>
-
-        {/* Factor 4: Available Bank Balance & Total Liquid Runway */}
-        <div className="rounded-2xl border border-white/[0.07] bg-[#18181B] p-4 sm:p-5 flex flex-col justify-between hover:border-white/[0.14] transition-colors">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs tabular-nums font-semibold text-zinc-300 flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-amber-400" />
-                Available Balance Factor
-              </span>
-              <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-xs font-bold text-zinc-300 border border-white/[0.06] tabular-nums">
-                Liquid Bank
-              </span>
-            </div>
-
-            {/* Total Safe Daily Spend Card */}
-            <div className="p-3.5 rounded-xl border border-white/[0.06] bg-black/40 mb-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-zinc-400 font-medium">
-                  {hardMonth ? 'Hard Month Ceiling:' : 'Safe Daily Spend:'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setHardMonth((v) => !v)}
-                  aria-pressed={hardMonth}
-                  className={`min-h-11 sm:min-h-0 rounded-md px-3 sm:px-2 py-0.5 text-xs tabular-nums font-semibold border transition-colors ${
-                    hardMonth
-                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
-                      : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
-                  }`}
-                >
-                  {hardMonth ? 'Hard month: on' : 'Hard month'}
-                </button>
-              </div>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className={`tabular-nums text-3xl font-bold ${hardMonth ? 'text-rose-300' : 'text-white'}`}>
-                  {formatINR(hardMonth ? pacing.worstCaseDailyBurn : pacing.safeTotalDailyBurn)}
-                </span>
-                <span className="text-xs tabular-nums text-zinc-400">/ day</span>
-              </div>
-              <span className="text-xs text-zinc-500 block mt-1">
-                {hardMonth
-                  ? pacing.projectedCycleSavings <= 0
-                    ? `No extra room this cycle: projected saving is ${formatINR(pacing.projectedCycleSavings)}, so the ceiling is the normal budget.`
-                    : `Most you can spend without touching savings: budget left + this cycle's projected saving (${formatINR(pacing.projectedCycleSavings)}). Normal: ${formatINR(pacing.safeTotalDailyBurn)}/day.`
-                  : `From the expenses budget (${formatINR(pacing.generalRemaining)} left), never from savings`}
-              </span>
-            </div>
-
-            {/* Buffer stats */}
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-zinc-400">
-                <span>Current Bank Balance:</span>
-                <span className="tabular-nums font-bold text-zinc-200">
-                  {formatINR(pacing.availableBalance)}
-                </span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Cycle Cushion (before salary):</span>
-                <span className="tabular-nums font-bold text-white">
-                  {formatINR(pacing.postFixedObligationsBuffer)}
-                </span>
-              </div>
-              {hardMonth && (
-                <div className="flex justify-between text-zinc-400">
-                  <span>Projected Saving This Cycle:</span>
-                  <span className={`tabular-nums font-semibold ${pacing.projectedCycleSavings < 0 ? 'text-rose-400' : 'text-zinc-300'}`}>
-                    {formatINR(pacing.projectedCycleSavings)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400 tabular-nums">
-            <span className="flex items-center gap-1 text-credit">
-              <CheckCircle2 className="h-3 w-3" />
-              Capital Safety Secured
-            </span>
+            <span>Every month on the {pacing.rentRecurringDay}th</span>
           </div>
         </div>
       </div>

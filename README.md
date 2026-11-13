@@ -23,23 +23,19 @@
 
 ## ⚡ Core Features
 
-- 📊 **Executive Dashboard** — live tracking of:
-  - Liquid Operating Balance: **₹1,14,021** (11 Nov 2026)
-  - 5-Day Immediate Obligations: **₹75,865** (Phone EMI ₹58,465 + Electricity ₹2,400 + Rent ₹15,000; today's entries are already paid)
-  - Post-Rent Cushion: **₹38,156**
-  - Late-2027 terminal sovereign wealth projection: **₹2,55,989** (12 Nov 2026: includes the 13th bike EMI on 6 Aug 2027 and the Phone EMI Settlement at ₹61,465 on 16 Nov)
-- ⚡ **4-Pillar Budget Burn & Runway Engine**
-  - **General Expenses** — ₹15,000 monthly target anchored to the 7th (salary cycle). Daily allowance = $\frac{\text{Remaining Expenses Budget}}{\text{Remaining Days}}$ (**₹423/day**).
-  - **Electricity Recharge Budget** — ₹3,200 total pool (₹3,000 base + ₹200 surplus carryover); ₹800 recharged, ₹2,400 remaining.
-  - **Room Rent Commitment** — ₹15,000 due on the 15th, with a tracked post-rent liquidity buffer.
-  - **Safe Daily Spend** — comes from the expenses budget only, never from savings: Remaining Expenses Budget ÷ days left (**₹423/day**). A **Hard month** toggle shows the worst-case ceiling: budget left + this cycle's projected saving (if positive) ÷ days left. The 7 Nov–6 Dec cycle projects −₹37,865, so its ceiling is also ₹423/day.
-- 📑 **Excel Grid Engine**
-  - Dynamic Date Anchor highlights today's active baseline (Row 240).
-  - **Multi-level global undo** (`Ctrl+Z` / `Cmd+Z`) for cell edits, drag-and-drop row moves and date sorts.
-  - Cycle budget formulas (Row 247 sums every general spend logged this cycle; Row 248 `=15000-(C247)`) and Column E running-balance lineage defense.
-  - Sort and drag-reorder move whole rows, so the Loans tab, column F notes and `Dashboard_Data` keep pointing at the same transactions.
-- 🎯 **Unified Debt Hub** — tracks 7 liabilities: 2 active amortizations (Royal Enfield Meteor Loan, BCA Education Loan) and 5 retired debts, toward a debt-free milestone in August 2027 (**+₹14,771/month** unlocked cash flow).
-- 🤝 **Peer Split Ledger** — shared expense splits and settlements with friends and roommates.
+One navigation, one page frame, data-driven copy throughout — **Home, Ledger, Excel, Loans, Splits, Budget**:
+
+- 📊 **Home** — the executive hero (every sentence built from the live API response, no hardcoded figures), a compact budget + debt summary, the balance timeline, savings meter, and a spending breakdown whose categories link straight into the Ledger pre-filtered (`/expenses?category=...`).
+- ⚡ **Budget** — the full 4-Pillar Budget Burn & Runway Engine, its own page:
+  - **General Expenses** — monthly target anchored to the salary cycle; daily allowance = Remaining Expenses Budget ÷ Remaining Days.
+  - **Electricity Recharge Budget** — a pool with prior-cycle surplus carryover.
+  - **Room Rent Commitment**, with a tracked post-rent liquidity buffer.
+  - **Safe Daily Spend** — expenses budget only, never savings; an opt-in **Hard month** toggle shows the worst-case ceiling.
+- 📑 **Excel** — the Excel Grid Engine: dynamic date anchor, multi-level global undo (`Ctrl+Z`/`Cmd+Z`), cycle budget formulas and Column E running-balance lineage defense, sort/drag-reorder that moves whole rows so the Loans tab and other cross-tab references stay correct, a phone-friendly pinned Description column.
+- 📒 **Ledger** — the expense table, with a clearable category filter (arrived at from Home or picked directly), sticky header, and a `Bhaiya Udhar` category for a personal loan between the owner and his brother (same-date/same-amount pairing, never counted as spending or a gift — hidden from Home's breakdown but still filterable here).
+- 🎯 **Loans** — the Unified Debt Hub: active and retired amortizations toward a debt-free milestone.
+- 🤝 **Splits** — the peer ledger for shared expenses and settlements with friends and roommates.
+- 📱 **Installable PWA** (mobile-first) — a service worker covers the whole app; a read-only offline copy of the last known balance (never other data) is shown with a "Showing saved copy from HH:MM" banner when a request genuinely fails; a "Synced N min ago" chip in the top bar; a mobile-only install prompt (laptop/desktop stays browser-only by design).
 
 ---
 

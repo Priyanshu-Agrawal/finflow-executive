@@ -38,12 +38,12 @@ flowchart TD
     User(["Executive User"]) <-->|"HTTPS / session cookies"| NextApp["FinFlow Executive OS<br/>Next.js 16 App Router"]
 
     subgraph UI_Layer ["Frontend Layer"]
-        NextApp --> Dash["Dashboard & Executive Hero"]
+        NextApp --> Dash["Home: Executive Hero"]
         NextApp --> Timeline["Cash Flow & Balance Timeline"]
-        NextApp --> Engine["4-Pillar Budget Burn Engine"]
-        NextApp --> Grid["Excel Mode Grid Engine"]
-        NextApp --> Hub["Unified Debt Hub"]
-        NextApp --> Ledger["Peer Split Ledger"]
+        NextApp --> Engine["Budget: 4-Pillar Burn Engine"]
+        NextApp --> Grid["Excel: Grid Engine"]
+        NextApp --> Hub["Loans: Unified Debt Hub"]
+        NextApp --> Ledger["Splits: Peer Ledger"]
     end
 
     subgraph Service_Layer ["Backend & Engine Layer"]
@@ -99,15 +99,20 @@ The login exists for privacy: when the app is reachable over the internet, nobod
 
 ### 2.3 Application pages
 
-| Path | Page |
-|---|---|
-| `/` | Executive dashboard (hero KPIs, budget pacing, balance timeline, spending breakdown) |
-| `/excel` | Excel Grid Engine |
-| `/expenses` | Expense table with edit modal and duplicate-entry alerts |
-| `/log` | Quick transaction logger and EMI scheduler |
-| `/loans` | Unified Debt Hub (portfolio, simulator, BCA cycle panel, milestone timeline) |
-| `/ledger` | Peer Split Ledger |
-| `/login` | Sign-in |
+As of the 13 Nov 2026 UI polish, every page shares one `AppFrame` (one `useFinancials` query, one reference date, one Log/EMI dialog state — `src/components/layout/AppFrame.tsx`) instead of each page repeating its own frame. Nav labels and URLs:
+
+| Path | Nav label | Page |
+|---|---|---|
+| `/` | Home | Executive hero (data-driven copy), compact budget + debt summaries, balance timeline, spending breakdown (links into Ledger, filterable by category) |
+| `/budget` | Budget | Full 4-Pillar Budget Burn & Runway Engine (moved off Home into its own page) |
+| `/excel` | Excel | Excel Grid Engine |
+| `/expenses` | Ledger | Expense table with edit modal, duplicate-entry alerts, and an optional `?category=` filter |
+| `/log` | — | Quick transaction logger and EMI scheduler (dialog, not a nav destination) |
+| `/loans` | Loans | Unified Debt Hub (portfolio, simulator, BCA cycle panel, milestone timeline) |
+| `/ledger` | Splits | Peer Split Ledger |
+| `/login` | — | Sign-in |
+
+The app is also an installable PWA (service worker at `/sw.js`, registered from the root layout): see §8 for what it caches and the mobile-only install prompt.
 
 ---
 
@@ -115,22 +120,23 @@ The login exists for privacy: when the app is reachable over the internet, nobod
 
 ```mermaid
 graph LR
-    A["FinFlow Executive OS"] --> B["1. Executive Dashboard"]
+    A["FinFlow Executive OS"] --> B["1. Home: Executive Hero"]
     A --> C["2. Budget Burn Engine"]
     A --> D["3. Excel Grid Engine"]
     A --> E["4. Debt Amortization Hub"]
-    A --> F["5. Peer Split Ledger"]
+    A --> F["5. Splits: Peer Ledger"]
     A --> G["6. Timeline & Projections"]
 ```
 
-### 3.1 Module 1: Executive Dashboard & Hero KPIs
+### 3.1 Module 1: Home / Executive Hero
 
-Gives an at-a-glance view of liquid capital, short-term obligations and cash runway:
+Gives an at-a-glance view of liquid capital, short-term obligations and cash runway. As of 13 Nov 2026 every sentence in this module is built from the live API response in `ExecutiveHero.tsx` (`src/lib/home-text.ts`) — there is no hardcoded money text or fixed growth percentage:
 
-- **Current Liquid Operating Balance** — the settled bank balance as of the dynamic anchor date (e.g. **₹1,14,021** on 11 Nov 2026).
-- **Upcoming Immediate Bills (5-day horizon)** — every `DEBIT` dated tomorrow through 5 days ahead (e.g. Phone EMI ₹58,465 + Remaining Electricity ₹2,400 + Rent ₹15,000 = ₹75,865). Entries dated today are already paid and already inside the balance, so they are not counted again.
-- **Post-Obligation Real Cushion** — liquidity left once all current-cycle obligations settle: the running balance after the 15 Nov rent row (e.g. **₹38,156** = ₹1,14,021 − ₹58,465 − ₹2,400 − ₹15,000).
-- **Sovereign Wealth Projection (late 2027)** — the running balance on the last projected row (Row 315, **₹2,55,989** on 12 Nov 2026). The UI labels it **+100.7% growth**; that label is fixed text, not a computed figure.
+- **Current Liquid Operating Balance** — the settled bank balance as of the dynamic anchor date (e.g. **₹1,14,021** on 11 Nov 2026), computed by `anchorRowFor()` (last row dated ≤ the reference date), the same rule the integrity check uses.
+- **Upcoming Immediate Bills (5-day horizon)** — every `DEBIT` dated tomorrow through 5 days ahead. Entries dated today are already paid and already inside the balance, so they are not counted again.
+- **Post-Obligation Real Cushion / Cycle Cushion** — the lowest projected balance before the next salary.
+- **Sovereign Wealth Projection** — the running balance on the last projected row, with a growth caption computed from the actual starting and projected balances.
+- **Spending breakdown** — categorized by `computeSpendingCategories()` (server) / `categorizeExpenses()` (client, kept in parity by test); each category links into the Ledger (`/expenses?category=...`). The `Bhaiya Udhar` category (a personal loan between the owner and his brother, not spending — see §3.5) is excluded from this view only, via `homeSpendingCategories()`.
 
 ---
 
@@ -283,13 +289,15 @@ pie title Total Historical Liabilities (₹4,47,165)
 
 ---
 
-### 3.5 Module 5: Peer Split Ledger (`PeerLedgerTable.tsx`)
+### 3.5 Module 5: Splits — Peer Ledger (`PeerLedgerTable.tsx`, route `/ledger`)
 
 Handles shared expenses (roommate utilities, shared meals, bulk orders):
 
 - Calculates each person's net share.
 - Separates settled reimbursements from open receivables.
 - Reads from and writes to the `Ledger` tab (reads arrive via `GET /api/financials`; new entries go through `POST /api/ledger`).
+
+Not to be confused with the **`Bhaiya Udhar` expense category** (in the `Ledger` nav label at `/expenses`, i.e. the expense table, not this Splits tab): a personal loan between the owner and his brother, found by pairing same-date/same-amount/opposite-type rows around any transaction mentioning "bhaiya" (`findBhaiyaLinkedRows()` in `src/lib/computations.ts`). It is never counted as a gift or a spending leak, is excluded from Home's spending breakdown, but stays filterable from the Ledger expense table.
 
 ---
 
@@ -474,3 +482,6 @@ git push app main
 6. **Sheet-safe write paths (11 Nov)** — logging inserts by date, delete clears instead of removing rows, sort and drag-reorder move whole rows; the Loans tab, column F notes and `Dashboard_Data` stay on the same transactions. The sheet was sorted by date on 11 Nov (a backup tab `Expenses backup 2026-11-11` was kept).
 7. **Per-spend general budget (11 Nov)** — each general spend is logged separately; Row 247 sums them for the cycle and the app's remaining budget follows every logged spend.
 8. **Upcoming bills exclude today (11 Nov)** — the 5-day horizon starts tomorrow, since today's entries are already paid (₹75,865).
+9. **Old-UI consistency pass (13 Nov)** — one navigation (Home/Ledger/Excel/Loans/Splits/Budget) via a shared `AppFrame`, one page frame, one sticky Today control, one type system, blue credits, 44px tap targets, every page fits on phone without sideways scroll, and every piece of dashboard copy is now computed from live data instead of hardcoded. New `Bhaiya Udhar` expense category (a personal loan, not spending). Spending-breakdown categories link into the Ledger, filterable.
+10. **Installable PWA (13 Nov)** — the service worker now covers the whole app (not just the parked `/v2` shell): caches the app shell and the last successful `/api/financials` response only, serves that read-only copy with a visible "Showing saved copy from HH:MM" banner and a "Synced N min ago" chip when a request genuinely fails, clears the cache on sign-out, and disables all writes while offline (`networkMode: 'always'` fails fast rather than queueing against row numbers that may have shifted). Install prompt is mobile-only by owner decision — laptop/desktop stays a website. Full detail, including the Critical bug this surfaced and fixed (the banner was initially dead code because of TanStack Query's default `networkMode`), is in `docs/HANDOVER_2026-11-13.md`.
+11. **Integrity check no longer pinned to fixed row numbers (13 Nov)** — `src/scripts/integrity-check.ts` locates rows by date + description instead of hardcoded cell refs, so a back-dated log entry that shifts rows no longer produces false failures.

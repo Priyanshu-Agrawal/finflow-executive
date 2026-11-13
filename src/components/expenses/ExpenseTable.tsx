@@ -43,7 +43,7 @@ import { TableScroller } from '@/components/ui/TableScroller';
 import { TodayFab } from '@/components/ui/TodayFab';
 import { useAnchorInView } from '@/hooks/useAnchorInView';
 import { formatDate, formatDateShort } from '@/lib/format';
-import { categoryForDescription } from '@/lib/spending-category';
+import { categorizeExpenses } from '@/lib/spending-category';
 
 interface ExpenseTableProps {
   expenses: ExpenseEntry[];
@@ -147,6 +147,10 @@ export function ExpenseTable({ expenses, referenceDate, categoryFilter = null, o
     return closest;
   }, [expenses, referenceDate]);
 
+  // Same rule "Where the money goes" uses, over every row (not just the search/type-filtered
+  // subset): DEBIT rows only, including a row only identifiable as Bhaiya's by its date and amount.
+  const categoryByRow = useMemo(() => categorizeExpenses(expenses), [expenses]);
+
   // Base filtered by search and type
   const baseFilteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
@@ -157,12 +161,11 @@ export function ExpenseTable({ expenses, referenceDate, categoryFilter = null, o
 
       const matchesType = selectedType === 'ALL' || e.type === selectedType;
 
-      // Same rule "Where the money goes" uses: DEBIT rows only, same keyword categorisation.
-      const matchesCategory = !categoryFilter || (e.type === 'DEBIT' && categoryForDescription(e.description) === categoryFilter);
+      const matchesCategory = !categoryFilter || (e.type === 'DEBIT' && categoryByRow.get(e.rowIndex) === categoryFilter);
 
       return matchesSearch && matchesType && matchesCategory;
     });
-  }, [expenses, searchQuery, selectedType, categoryFilter]);
+  }, [expenses, searchQuery, selectedType, categoryFilter, categoryByRow]);
 
   // Window segmentation counts
   const earlierCount = useMemo(() => {

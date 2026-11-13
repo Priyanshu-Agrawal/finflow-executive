@@ -489,6 +489,24 @@ export function detectDuplicates(expenses: ExpenseEntry[]): DuplicateGroup[] {
   }));
 }
 
+// Transactions that move money with Bhaiya are a personal IOU (tracked on the Loans page as
+// "Bhaiya Udhar"), not spending: owner decision 13 Nov 2026. Any row whose own description names
+// him is linked directly; the other leg of a same-day, same-amount, opposite-type pair is linked
+// too (e.g. he once used a card, paid back the same day: one leg says "bhaiya", the other is just
+// "SBI Card Payment"). Matched by date+amount, not row number, since rows get sorted and reordered.
+function findBhaiyaLinkedRows(expenses: ExpenseEntry[]): Set<number> {
+  const linked = new Set<number>();
+  const bhaiyaRows = expenses.filter((e) => e.description.toLowerCase().includes('bhaiya'));
+  for (const b of bhaiyaRows) {
+    linked.add(b.rowIndex);
+    for (const e of expenses) {
+      if (e.rowIndex === b.rowIndex) continue;
+      if (e.date === b.date && e.amount === b.amount && e.type !== b.type) linked.add(e.rowIndex);
+    }
+  }
+  return linked;
+}
+
 export function computeSpendingCategories(expenses: ExpenseEntry[]): SpendingCategorySummary[] {
   const totals: Record<string, { amount: number; count: number; color: string }> = {
     'Housing & Utilities': { amount: 0, count: 0, color: '#F59E0B' }, // Warm Amber Gold
@@ -496,9 +514,11 @@ export function computeSpendingCategories(expenses: ExpenseEntry[]): SpendingCat
     'General & Ad-Hoc': { amount: 0, count: 0, color: '#FCD34D' },    // Light Gold
     'Family & Gifts': { amount: 0, count: 0, color: '#E4E4E7' },      // Crisp Zinc-200
     'Tech & Subscriptions': { amount: 0, count: 0, color: '#A1A1AA' },// Medium Zinc-400
+    'Bhaiya Udhar': { amount: 0, count: 0, color: '#3B82F6' },        // Credit blue: not spending
     'Other Expenses': { amount: 0, count: 0, color: '#71717A' },      // Muted Zinc-500
   };
 
+  const bhaiyaLinkedRows = findBhaiyaLinkedRows(expenses);
   let grandTotal = 0;
 
   for (const e of expenses) {
@@ -506,13 +526,15 @@ export function computeSpendingCategories(expenses: ExpenseEntry[]): SpendingCat
     const desc = e.description.toLowerCase();
 
     let cat = 'Other Expenses';
-    if (desc.includes('rent') || desc.includes('electricity') || desc.includes('recharge')) {
+    if (bhaiyaLinkedRows.has(e.rowIndex)) {
+      cat = 'Bhaiya Udhar';
+    } else if (desc.includes('rent') || desc.includes('electricity') || desc.includes('recharge')) {
       cat = 'Housing & Utilities';
     } else if (desc.includes('emi') || desc.includes('loan') || desc.includes('settlement') || desc.includes('card payment')) {
       cat = 'Loan EMIs';
     } else if (desc.includes('subscription') || desc.includes('cursor') || desc.includes('chatgpt') || desc.includes('claude')) {
       cat = 'Tech & Subscriptions';
-    } else if (desc.includes('mummy') || desc.includes('gift') || desc.includes('ring') || desc.includes('suit') || desc.includes('bhaiya')) {
+    } else if (desc.includes('mummy') || desc.includes('gift') || desc.includes('ring') || desc.includes('suit')) {
       cat = 'Family & Gifts';
     } else if (desc.includes('general') || desc.includes('food') || desc.includes('petrol') || desc.includes('tea')) {
       cat = 'General & Ad-Hoc';

@@ -15,10 +15,11 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { referenceDate, setReferenceDate, resetToToday, openLog, openEmi, refetch, isFetching, data, lastSyncedAt } = useFrame();
-  // Forces the "synced N ago" chip to advance even with nothing else re-rendering.
-  const [, forceTick] = useState(0);
+  // Advances the "synced N ago" chip even with nothing else re-rendering. Date.now() is read
+  // here, in an effect, never inline in the render body (an impure call during render).
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => forceTick((t) => t + 1), 30_000);
+    const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -159,7 +160,7 @@ export function Navbar() {
 
             {/* Synced N ago, and Sync now */}
             <span className="hidden sm:block text-xs text-zinc-500" title={lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : undefined}>
-              {isFetching ? 'Syncing…' : `Synced ${formatSyncedAgo(lastSyncedAt, Date.now())}`}
+              {isFetching ? 'Syncing…' : `Synced ${formatSyncedAgo(lastSyncedAt, now)}`}
             </span>
             <button
               type="button"

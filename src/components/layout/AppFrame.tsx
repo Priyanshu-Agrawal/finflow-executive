@@ -57,6 +57,13 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const [emiOpen, setEmiOpen] = useState(false);
   const isOnline = useOnlineStatus();
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(readLastSynced);
+  // For the offline banner's relative time, read in an effect, never inline in the render body
+  // (Date.now() there is an impure call during render).
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const { data, isLoading, error, refetch, isFetching } = useFinancials(
     referenceDate,
@@ -141,7 +148,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           >
             <WifiOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>
-              Offline — showing a copy saved {formatSyncedAgo(lastSyncedAt, Date.now())}. Reconnect to see the latest, and to log anything.
+              Offline — showing a copy saved {formatSyncedAgo(lastSyncedAt, now)}. Reconnect to see the latest, and to log anything.
             </span>
           </div>
         )}

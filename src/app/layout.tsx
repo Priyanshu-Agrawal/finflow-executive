@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, JetBrains_Mono, Newsreader } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -20,8 +20,23 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FinFlow Executive | Wealth & Expense OS',
-  description: 'Private wealth intelligence, Google Sheets ledger tracking, and debt amortization engine.',
+  title: 'FinFlow',
+  description: 'Private money cockpit on your Google Sheet.',
+  appleWebApp: {
+    capable: true,
+    title: 'FinFlow',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#0B0B0C',
 };
 
 export default function RootLayout({

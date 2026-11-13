@@ -20,15 +20,17 @@
   --accent-border: rgba(245, 158, 11, 0.25);
   --credit: #3b82f6;
   --credit-soft: rgba(59, 130, 246, 0.12);
-  /* Layout tokens: sticky layers stack as top bar, then page control bar, then table header. */
-  --topbar-h: 3.5rem;
+  /* Layout tokens: sticky layers stack as top bar, then page control bar, then table header.
+     The top bar's own padding-top (Navbar.tsx) grows by the same inset on a notched phone, so
+     anything that positions itself at "top: var(--topbar-h)" (StickyBar) must grow with it too. */
+  --topbar-h: calc(3.5rem + env(safe-area-inset-top, 0px));
   --sticky-bar-h: 0px;
   --today-fab-bottom: 6rem;
 }
 
 @media (min-width: 640px) {
   :root {
-    --topbar-h: 4rem;
+    --topbar-h: calc(4rem + env(safe-area-inset-top, 0px));
   }
 }
 

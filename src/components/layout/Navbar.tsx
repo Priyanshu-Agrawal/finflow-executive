@@ -41,7 +41,7 @@ export function Navbar() {
   return (
     <>
       {/* Top Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-white/[0.07] bg-[#0B0B0C]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-white/[0.07] bg-[#0B0B0C]/90 backdrop-blur-xl pt-[env(safe-area-inset-top,0px)]">
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           {/* Left: Brand Monogram & Title */}
           <div className="flex items-center gap-3">
@@ -243,7 +243,7 @@ export function Navbar() {
       </header>
 
       {/* Phone bottom bar: the first two destinations, the Log button, then the rest of the phone items */}
-      <nav aria-label="Bottom" className="fixed bottom-3 inset-x-3 z-40 lg:hidden">
+      <nav aria-label="Bottom" className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] inset-x-3 z-40 lg:hidden">
         <div className="mx-auto max-w-md rounded-2xl border border-white/[0.08] bg-[#121214]/95 p-1.5 shadow-2xl backdrop-blur-xl flex items-center justify-around">
           {phoneItems.map((link, i) => {
             const Icon = link.icon;

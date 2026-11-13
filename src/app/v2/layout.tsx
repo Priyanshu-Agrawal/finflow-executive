@@ -3,7 +3,8 @@ import { Mona_Sans } from 'next/font/google';
 import '@/v2/styles/tokens.css';
 import { V2Providers } from '@/v2/V2Providers';
 import { AppShell } from '@/v2/shell/AppShell';
-import { RegisterSW } from '@/v2/pwa/RegisterSW';
+// The service worker is now registered once, from the root layout (scope "/" already covers
+// /v2), so this hidden shell no longer registers it a second time.
 
 const mona = Mona_Sans({ subsets: ['latin'], variable: '--font-mona', axes: ['wdth'] });
 
@@ -27,7 +28,6 @@ export const viewport: Viewport = {
 export default function V2Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`v2 ${mona.variable}`}>
-      <RegisterSW />
       <V2Providers>
         <AppShell>{children}</AppShell>
       </V2Providers>

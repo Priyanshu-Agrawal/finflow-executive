@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, JetBrains_Mono, Newsreader } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { RegisterSW } from '@/components/pwa/RegisterSW';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${newsreader.variable} ${jetbrainsMono.variable} min-h-screen bg-[#0B0B0C] font-sans text-white antialiased selection:bg-amber-500/30 selection:text-amber-400`}
       >
+        <RegisterSW />
         <Providers>{children}</Providers>
       </body>
     </html>

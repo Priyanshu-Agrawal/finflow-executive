@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Calendar, CreditCard, LogOut, MoreHorizontal, Plus, RefreshCw, Wallet, X } from 'lucide-react';
@@ -8,12 +8,19 @@ import { NAV_ITEMS } from './nav-items';
 import { useFrame } from './FrameContext';
 import { anchorRowFor } from '@/lib/anchor';
 import { formatDate, formatDateShort, formatMoney } from '@/lib/format';
+import { formatSyncedAgo } from '@/lib/sync-status';
 import { clearOfflineFinancialsCache } from '@/lib/offline-cache';
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { referenceDate, setReferenceDate, resetToToday, openLog, openEmi, refetch, isFetching, data } = useFrame();
+  const { referenceDate, setReferenceDate, resetToToday, openLog, openEmi, refetch, isFetching, data, lastSyncedAt } = useFrame();
+  // Forces the "synced N ago" chip to advance even with nothing else re-rendering.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showMobileMore, setShowMobileMore] = useState(false);
   const todayStr = new Date().toLocaleDateString('en-CA');
@@ -150,12 +157,16 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Refresh */}
+            {/* Synced N ago, and Sync now */}
+            <span className="hidden sm:block text-xs text-zinc-500" title={lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : undefined}>
+              {isFetching ? 'Syncing…' : `Synced ${formatSyncedAgo(lastSyncedAt, Date.now())}`}
+            </span>
             <button
               type="button"
               onClick={refetch}
               disabled={isFetching}
-              aria-label="Refresh from Google Sheets"
+              aria-label="Sync now"
+              title="Sync now"
               className="flex h-11 w-11 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-[#121214] text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin text-amber-400' : ''}`} />

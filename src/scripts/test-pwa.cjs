@@ -78,6 +78,16 @@ async function swActive(page) {
   check(!(await page.getByText(/Offline — showing a copy/).isVisible().catch(() => false)), 'no offline banner while online');
   const syncedAt = await page.evaluate(() => Number(localStorage.getItem('finflow_last_synced')));
   check(Number.isFinite(syncedAt) && Date.now() - syncedAt < 60000, 'a recent sync timestamp is recorded while online');
+  // The "Synced ..." text is hidden on the phone top bar (space is tight there; the icon stays),
+  // same as the "scriptingBear" subtitle — check it on a laptop-width page.
+  const laptopCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, storageState: await ctx.storageState() });
+  await laptopCtx.route(/\/api\/financials/, (r) => r.fulfill({ json: api }));
+  const lp2 = await laptopCtx.newPage();
+  await lp2.goto(`${BASE}/`);
+  await lp2.getByText('Balance now').waitFor({ timeout: 20000 });
+  const chip = await lp2.getByText(/^Synced (just now|\d+ min ago)$/).first().isVisible().catch(() => false);
+  check(chip, 'the top bar shows a "Synced ..." chip matching the recent timestamp (laptop)');
+  await laptopCtx.close();
 
   // The SW writes the cache entry via event.waitUntil after responding; give it a moment, and
   // confirm directly before trusting the UI assertions below (a clearer failure if it's empty).

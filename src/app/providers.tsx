@@ -16,6 +16,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: true,
             retry: 2,
           },
+          mutations: {
+            // 'always': a write attempted offline fails immediately instead of TanStack Query's
+            // default behaviour of silently queueing it and replaying it on reconnect — "offline
+            // = read only" means no queued writes anywhere, not just the two dialogs that show a
+            // notice; without this, a drag-reorder or an edit made while offline would optimistically
+            // show as done, then actually run later against row numbers that may have moved by then.
+            networkMode: 'always',
+          },
         },
       })
   );

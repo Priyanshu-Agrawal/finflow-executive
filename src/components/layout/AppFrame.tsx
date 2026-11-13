@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { WifiOff, X } from 'lucide-react';
 import { useFinancials } from '@/hooks/useFinancials';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
@@ -75,12 +75,13 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     config.electricityRemaining
   );
 
-  // Record "last genuinely synced" only when a fetch actually resolves (not when isOnline flips
-  // on its own, which would otherwise claim "just synced" a tick before the next fetch starts).
-  // navigator.onLine, not the isOnline state, so a stale closure can't record a sync while offline.
+  // Record "last genuinely synced" only when a fetch resolves with data that is NOT the offline
+  // copy — never from navigator.onLine, which stays true for "online but the request is
+  // actually failing" (flaky wifi, a captive portal, DNS, the server down), exactly the case
+  // data.offlineCopy exists to catch. Without this gate, that case would overwrite the correct
+  // last-sync time with "just now" every time it was served a stale cached response.
   useEffect(() => {
-    if (!data) return;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    if (!data || data.offlineCopy) return;
     const now = Date.now();
     setLastSyncedAt(now);
     try {
@@ -90,8 +91,31 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     }
   }, [data]);
 
-  // True once we have data but it can only have come from the offline cache.
-  const isShowingOfflineCopy = !isOnline && !!data;
+  // True whenever the data we have is known to be the offline copy — set by the service worker
+  // (see useFinancials), not inferred from navigator.onLine.
+  const isShowingOfflineCopy = !!data?.offlineCopy;
+
+  // Publishes the offline banner's own height, the same way StickyBar publishes its own, so a
+  // page's sticky control bar (which also sticks at --topbar-h) stacks below the banner instead
+  // of painting over it once the page is scrolled.
+  const bannerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!isShowingOfflineCopy) {
+      root.style.setProperty('--offline-banner-h', '0px');
+      return;
+    }
+    const el = bannerRef.current;
+    if (!el) return;
+    const publish = () => root.style.setProperty('--offline-banner-h', `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.setProperty('--offline-banner-h', '0px');
+    };
+  }, [isShowingOfflineCopy]);
 
   // The functional updater is required: ModernBudgetPacing's "Apply" calls this once per
   // changed field in the same tick, so each call must build on the one before it, not on
@@ -142,6 +166,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         <Navbar />
         {isShowingOfflineCopy && (
           <div
+            ref={bannerRef}
             role="status"
             className="sticky z-30 flex items-center justify-center gap-2 bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 text-center text-xs font-medium text-amber-300"
             style={{ top: 'var(--topbar-h)' }}

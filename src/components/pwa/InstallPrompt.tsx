@@ -16,6 +16,10 @@ function isStandalone(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
 }
 
+// Same 1024px cutover the rest of the app already uses for phone vs laptop (e.g. the bottom bar
+// is lg:hidden, TableScroller checks the same breakpoint).
+const MOBILE_QUERY = '(max-width: 1023px)';
+
 function readDismissed(): boolean {
   try {
     return typeof window !== 'undefined' && localStorage.getItem(DISMISSED_KEY) === '1';
@@ -31,6 +35,7 @@ function readDismissed(): boolean {
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(readDismissed);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches);
 
   useEffect(() => {
     const onPrompt = (e: Event) => {
@@ -41,7 +46,14 @@ export function InstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', onPrompt);
   }, []);
 
-  if (!shouldShowInstallPrompt({ promptAvailable: !!deferred, isStandalone: isStandalone(), dismissed })) return null;
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  if (!shouldShowInstallPrompt({ promptAvailable: !!deferred, isStandalone: isStandalone(), dismissed, isMobile })) return null;
 
   const dismiss = () => {
     setDismissed(true);

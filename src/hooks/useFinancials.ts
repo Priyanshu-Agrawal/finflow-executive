@@ -44,8 +44,20 @@ export function useFinancials(
         const error = await res.json();
         throw new Error(error.error || 'Failed to fetch financials');
       }
-      return res.json();
+      const json = await res.json();
+      // Set by the service worker when this came from its offline cache, not a live read —
+      // never inferred from navigator.onLine, which stays true for "online but the request is
+      // actually failing" (flaky wifi, a captive portal, DNS, the server being down), exactly
+      // the case this flag exists to catch.
+      if (res.headers.get('x-finflow-offline-copy') === '1') json.offlineCopy = true;
+      return json;
     },
+    // 'always': a genuinely offline fetch attempt still runs (TanStack Query's default,
+    // 'online', pauses it instead and silently keeps showing old in-memory data with no way to
+    // know it's stale). Letting it run is what lets the service worker's catch branch above —
+    // and the offlineCopy flag it sets — ever engage for a real offline session, not only a
+    // same-tab network hiccup while the browser still thinks it's connected.
+    networkMode: 'always',
   });
 }
 

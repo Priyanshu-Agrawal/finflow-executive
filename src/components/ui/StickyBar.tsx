@@ -26,7 +26,7 @@ export function StickyBar({ children }: { children: ReactNode }) {
       ref={ref}
       data-sticky-bar
       className="sticky z-30 -mx-3 border-b border-white/[0.07] bg-[#0B0B0C]/95 px-3 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-      style={{ top: 'var(--topbar-h)' }}
+      style={{ top: 'calc(var(--topbar-h) + var(--offline-banner-h, 0px))' }}
     >
       {children}
     </div>

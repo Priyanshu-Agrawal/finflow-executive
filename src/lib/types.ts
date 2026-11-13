@@ -190,6 +190,8 @@ export interface FinancialsResponse {
   meteorCosts: MeteorCapitalCost[];
   referenceDate: string;
   lastUpdated: string;
+  /** True only when the service worker served this from its offline cache, not the live sheet. */
+  offlineCopy?: boolean;
 }
 
 export interface LogExpenseInput {

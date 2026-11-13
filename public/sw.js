@@ -51,7 +51,15 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           caches.open(DATA_CACHE)
             .then((c) => c.match('/api/financials'))
-            .then((cached) => cached || Response.error())
+            .then((cached) => {
+              if (!cached) return Response.error();
+              // Marks this response as a saved copy, not a live read — the page reads this
+              // header and must never treat the cached figures as current without saying so
+              // (a failed-but-"online" fetch looks identical to a genuine success otherwise).
+              const headers = new Headers(cached.headers);
+              headers.set('x-finflow-offline-copy', '1');
+              return new Response(cached.body, { status: cached.status, statusText: cached.statusText, headers });
+            })
         )
     );
   }

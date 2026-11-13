@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, CreditCard, LogOut, MoreHorizontal, Plus, RefreshCw, Wallet, X } from 'lucide-react';
 import { NAV_ITEMS } from './nav-items';
 import { useFrame } from './FrameContext';
@@ -14,6 +15,7 @@ import { clearOfflineFinancialsCache } from '@/lib/offline-cache';
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { referenceDate, setReferenceDate, resetToToday, openLog, openEmi, refetch, isFetching, data, lastSyncedAt } = useFrame();
   // Advances the "synced N ago" chip even with nothing else re-rendering. Date.now() is read
   // here, in an effect, never inline in the render body (an impure call during render).
@@ -35,6 +37,10 @@ export function Navbar() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
+    // Cancel any financials fetch still in flight first: its SW cache write (event.waitUntil)
+    // would otherwise land after the clear below, leaving this device's next sign-in with a
+    // leftover copy of the previous session's balance.
+    await queryClient.cancelQueries({ queryKey: ['financials'] });
     await clearOfflineFinancialsCache();
     router.push('/login');
     router.refresh();

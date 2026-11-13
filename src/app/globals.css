@@ -25,6 +25,7 @@
      anything that positions itself at "top: var(--topbar-h)" (StickyBar) must grow with it too. */
   --topbar-h: calc(3.5rem + env(safe-area-inset-top, 0px));
   --sticky-bar-h: 0px;
+  --offline-banner-h: 0px;
   --today-fab-bottom: 6rem;
 }
 
